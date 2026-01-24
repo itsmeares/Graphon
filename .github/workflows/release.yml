@@ -1,10 +1,11 @@
 name: Release
+
 on:
   push:
-    branches:
-      - main
+    tags:
+      - 'v*' # Triggers only when you push a tag (e.g., v1.0.0)
 
-permissions: # <--- FIX 1: Grant permission to write releases
+permissions:
   contents: write
 
 jobs:
@@ -28,6 +29,6 @@ jobs:
 
       - name: Publish Release
         env:
-          # FIX 2: Use the automatic GitHub token provided by Actions
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx electron-builder --win --publish always
+        # Added '-c.publish.releaseType=release' to force it out of Draft mode
+        run: npx electron-builder --win --publish always -c.publish.releaseType=release
