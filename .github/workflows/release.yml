@@ -2,8 +2,10 @@ name: Release
 
 on:
   push:
-    tags:
-      - 'v*' # Triggers only when you push a tag (e.g., v1.0.0)
+    branches:
+      - main
+    paths:
+      - 'package.json' # <--- CRITICAL FIX: Only runs if you changed the version/package file
 
 permissions:
   contents: write
@@ -30,5 +32,5 @@ jobs:
       - name: Publish Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        # Added '-c.publish.releaseType=release' to force it out of Draft mode
+        # FIX: 'releaseType=release' forces it to be Public (not Draft)
         run: npx electron-builder --win --publish always -c.publish.releaseType=release
