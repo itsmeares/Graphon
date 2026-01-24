@@ -4,6 +4,9 @@ on:
     branches:
       - main
 
+permissions: # <--- FIX 1: Grant permission to write releases
+  contents: write
+
 jobs:
   release:
     runs-on: windows-latest
@@ -25,5 +28,6 @@ jobs:
 
       - name: Publish Release
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          # FIX 2: Use the automatic GitHub token provided by Actions
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx electron-builder --win --publish always
