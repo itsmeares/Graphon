@@ -1,10 +1,13 @@
 name: Release
+
 on:
   push:
     branches:
       - main
+    paths:
+      - 'package.json' # <--- CRITICAL FIX: Only runs if you changed the version/package file
 
-permissions: # <--- FIX 1: Grant permission to write releases
+permissions:
   contents: write
 
 jobs:
@@ -28,6 +31,6 @@ jobs:
 
       - name: Publish Release
         env:
-          # FIX 2: Use the automatic GitHub token provided by Actions
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx electron-builder --win --publish always
+        # FIX: 'releaseType=release' forces it to be Public (not Draft)
+        run: npx electron-builder --win --publish always -c.publish.releaseType=release
