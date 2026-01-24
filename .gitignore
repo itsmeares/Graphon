@@ -1,6 +1,35 @@
-node_modules
-dist
-out
-.DS_Store
-.eslintcache
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+out/
+release/
+build/
+.electron-builder/
+
+# TypeScript
+*.tsbuildinfo
+
+# Secrets & Environment variables (KRİTİK)
+.env
+.env.*
+!.env.example
+
+# Logs
 *.log*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Tools
+.eslintcache
+.stylelintcache
+
+# IDEs
+.vscode/
+.idea/
