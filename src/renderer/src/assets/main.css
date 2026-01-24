@@ -1,0 +1,233 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@import 'tailwindcss';
+@plugin "@tailwindcss/typography";
+
+@theme {
+  /* Graphon Colors */
+  --color-graphon-bg: #fffcf8;
+  --color-graphon-sidebar: #f8f6f2;
+  --color-graphon-border: rgba(55, 53, 47, 0.08);
+  --color-graphon-hover: rgba(55, 53, 47, 0.05);
+  --color-graphon-text-main: #2c2b27;
+  --color-graphon-text-secondary: rgba(44, 43, 39, 0.6);
+
+  --color-graphon-dark-bg: #1c1c1a;
+  --color-graphon-dark-sidebar: #242422;
+  --color-graphon-dark-border: rgba(255, 255, 255, 0.08);
+  --color-graphon-dark-hover: rgba(255, 255, 255, 0.04);
+  --color-graphon-dark-text-main: rgba(248, 246, 242, 0.9);
+  --color-graphon-dark-text-secondary: rgba(248, 246, 242, 0.5);
+
+  /* System Gray */
+  --color-systemGray-1: #8e8e93;
+  --color-systemGray-2: #aeaeb2;
+  --color-systemGray-3: #c7c7cc;
+  --color-systemGray-4: #d1d1d6;
+  --color-systemGray-5: #e5e5ea;
+  --color-systemGray-6: #f2f2f7;
+
+  --color-systemGrayDark-1: #8e8e93;
+  --color-systemGrayDark-2: #636366;
+  --color-systemGrayDark-3: #48484a;
+  --color-systemGrayDark-4: #3a3a3c;
+  --color-systemGrayDark-5: #2c2c2e;
+  --color-systemGrayDark-6: #1c1c1e;
+
+  /* System Background */
+  --color-systemBackground-primary: #ffffff;
+  --color-systemBackground-secondary: #f2f2f7;
+  --color-systemBackground-tertiary: #ffffff;
+
+  --color-systemBackgroundDark-primary: #000000;
+  --color-systemBackgroundDark-secondary: #1c1c1e;
+  --color-systemBackgroundDark-tertiary: #2c2c2e;
+
+  /* System Blue */
+  --color-systemBlue-light: #007aff;
+  --color-systemBlue-dark: #0a84ff;
+
+  /* Fonts */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+
+  /* Backdrop Blur */
+  --backdrop-blur-xs: 2px;
+
+  /* Transition Duration */
+  --transition-duration-400: 400ms;
+
+  /* Transition Timing Function */
+  --ease-apple: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-squish: cubic-bezier(0.4, 0, 0.2, 1.4);
+
+  /* Scale */
+  --scale-98: 0.98;
+  --scale-97: 0.97;
+}
+
+/* Helper for class-based dark mode if needed (v4 usually auto-detects 'dark' class if configured, 
+   but strictly speaking we might need to rely on the default 'media' logic or override.
+   For now, assuming standard class usage.) 
+*/
+
+@layer base {
+  body {
+    @apply font-sans antialiased;
+    @apply bg-graphon-bg dark:bg-graphon-dark-bg;
+    @apply text-graphon-text-main dark:text-graphon-dark-text-main;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  #root {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+  }
+}
+
+/* Utilities */
+/* Glassmorphism utilities */
+@utility glass {
+  @apply backdrop-blur-xl bg-white/70 dark:bg-[#202022]/40;
+  @apply border border-graphon-border dark:border-graphon-dark-border;
+}
+
+.glass-sidebar {
+  @apply backdrop-blur-3xl bg-graphon-sidebar/70 dark:bg-graphon-dark-sidebar/70;
+  @apply border-r border-graphon-border dark:border-graphon-dark-border;
+}
+
+.glass-header {
+  @apply sticky top-0 z-40 backdrop-blur-2xl bg-graphon-bg/80 dark:bg-graphon-dark-bg/80;
+  @apply border-b border-graphon-border dark:border-graphon-dark-border;
+}
+
+/* Smooth transitions */
+@utility transition-smooth {
+  @apply transition-all duration-400 ease-apple;
+}
+
+@utility transition-squish {
+  @apply transition-all duration-200 ease-squish;
+}
+
+/* Subtle Borders */
+.shadow-graphon {
+  @apply border border-graphon-border dark:border-graphon-dark-border;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.05),
+    0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+.shadow-graphon-dark {
+  @apply border border-graphon-dark-border;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+}
+
+/* Interactives with squish */
+.btn-squish {
+  @apply transition-squish active:scale-95 hover:scale-[1.02];
+}
+
+/* Event card styles - Graphon inspired */
+.event-card {
+  @apply rounded-lg px-3 py-2 cursor-pointer transition-squish;
+  @apply border border-graphon-border dark:border-graphon-dark-border;
+  @apply bg-white/60 dark:bg-white/5 backdrop-blur-md;
+  @apply hover:bg-white/90 dark:hover:bg-white/10;
+  font-size: 0.8rem;
+  line-height: 1.2;
+}
+
+/* Modal styles */
+.modal-overlay {
+  @apply fixed inset-0 bg-graphon-text-main/20 dark:bg-black/40;
+  @apply backdrop-blur-md transition-smooth;
+  z-index: 1000;
+}
+
+.modal-content {
+  @apply glass rounded-2xl shadow-2xl;
+  @apply transition-smooth;
+  z-index: 1001;
+}
+
+/* Current time indicator */
+.current-time-line {
+  @apply absolute left-0 right-0 h-0.5 bg-red-500 pointer-events-none;
+  z-index: 100;
+}
+
+.current-time-dot {
+  @apply absolute -left-1 -top-1 w-2 h-2 bg-red-500 rounded-full;
+}
+
+/* Custom scrollbar - Graphon style */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-graphon-border dark:bg-graphon-dark-border rounded-full;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-graphon-text-secondary/30 dark:bg-graphon-dark-text-secondary/30;
+}
+
+/* Tiptap Editor Styles - Graphon clean appearance */
+.ProseMirror,
+.graphon-editor .ProseMirror {
+  outline: none;
+  background: transparent;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'SF Pro Display',
+    'Segoe UI',
+    sans-serif;
+  color: inherit;
+  padding: 0 4px;
+}
+
+.graphon-editor .ProseMirror > * + * {
+  margin-top: 0.75em;
+}
+
+.graphon-editor .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #adb5bd;
+  pointer-events: none;
+  height: 0;
+  font-size: 1.125rem;
+}
+
+.graphon-editor .ProseMirror:focus {
+  outline: none;
+}
+
+/* Ensure proper line height for readability */
+.graphon-editor .ProseMirror p {
+  line-height: 1.75;
+}
+
+.graphon-editor .ProseMirror h1 {
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.graphon-editor .ProseMirror h2 {
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
