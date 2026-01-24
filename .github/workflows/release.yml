@@ -33,4 +33,4 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         # FIX: 'releaseType=release' forces it to be Public (not Draft)
-        run: npx electron-builder --win --publish always -c.publish.releaseType=release
+        run: npx electron-builder --win --publish always
