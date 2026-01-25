@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'package.json' # Versiyon değişince tetiklenir
+      - 'package.json' # Sadece versiyon değişince çalışır
 
 permissions:
   contents: write
@@ -32,7 +32,7 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      # Genel Build (TypeScript -> JS dönüşümü)
+      # Genel Build (TypeScript derlemesi)
       - name: Build Application Source
         run: npm run build
 

@@ -22,7 +22,7 @@ nsis:
   uninstallDisplayName: ${productName}
   createDesktopShortcut: always
   createStartMenuShortcut: true
-  oneClick: false # Kurulum sihirbazı aktif
+  oneClick: false # Kurulum sihirbazı ile yer seçimi
   allowToChangeInstallationDirectory: true # Klasör seçmeye izin ver
   perMachine: false
   runAfterFinish: true
@@ -31,26 +31,21 @@ nsis:
 # MACOS
 mac:
   target:
-    - target: default # dmg ve zip oluşturur
+    - target: default
       arch:
-        - universal # Tek dosya, hem M1/M2 hem Intel çalıştırır
+        - universal # Hem M1/M2 hem Intel Mac'lerde çalışır
   entitlementsInherit: build/entitlements.mac.plist
-  extendInfo:
-    - NSCameraUsageDescription: Application requests access to the device's camera.
-    - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
-    - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
-    - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
-  notarize: false # Apple Developer hesabı olmadan build almak için false olmalı
+  notarize: false # Apple Developer hesabı olmadan build almak için
 dmg:
   artifactName: ${name}-${version}.${ext}
 
 # LINUX
 linux:
   target:
-    - target: AppImage
+    - target: AppImage # Portable
       arch:
         - x64
-    - target: deb
+    - target: deb # Ubuntu Installer
       arch:
         - x64
   maintainer: itsmeares
