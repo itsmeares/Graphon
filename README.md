@@ -9,16 +9,16 @@
 
 ## ✨ Features
 
-- 🎨 **Apple Design Language**: SystemGray and SystemBackground color palettes.
+- 🎨 **Modern Design Language**: SystemGray and SystemBackground color palettes.
 - 🌓 **Dark/Light Mode**: Automatic synchronization with your system theme.
 - ✍️ **Rich Text Editor**: Notion-style editor powered by Tiptap.
 - 📝 **Floating Toolbar**: Dynamic toolbar that appears upon text selection.
-- 📅 **Weekly Calendar**: 7-day, hour-based calendar view.
+- 📅 **Calendar**: Weekly/Monthly, hour-based calendar view.
 - ✨ **Enhanced Glassmorphism**: High-quality blur effects for a premium feel.
-- 🎭 **Zen Browser Sidebar**: Compact menu that expands on hover.
+- 🎭 **Compact Sidebar**: Compact menu that expands on hover.
 - 💾 **Auto-Save**: Automatic data persistence using LocalStorage.
-- 🚀 **Smooth Animations**: Apple-style 400ms transitions.
-- 📐 **Notion Layout**: Centered content with a maximum width of 800px.
+- 🚀 **Smooth Animations**: Smooth modern transitions.
+- 📐 **Notes Layout**: Centered content with the ability to edit.
 - 🔷 **TypeScript**: Enhanced code quality with full type safety.
 - 🔄 **Auto-Updates**: Automatically checks for and installs updates from GitHub.
 
