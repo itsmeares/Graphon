@@ -10,8 +10,10 @@ files:
   - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
 asarUnpack:
   - resources/**
+
+# WINDOWS
 win:
-  executableName: graphon
+  executableName: Graphon
   target:
     - nsis
 nsis:
@@ -19,30 +21,43 @@ nsis:
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
   createDesktopShortcut: always
-  oneClick: true
+  createStartMenuShortcut: true
+  oneClick: false # Kurulum sihirbazı aktif
+  allowToChangeInstallationDirectory: true # Klasör seçmeye izin ver
   perMachine: false
-  allowToChangeInstallationDirectory: false
   runAfterFinish: true
   warningsAsErrors: false
+
+# MACOS
 mac:
+  target:
+    - target: default # dmg ve zip oluşturur
+      arch:
+        - universal # Tek dosya, hem M1/M2 hem Intel çalıştırır
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
     - NSCameraUsageDescription: Application requests access to the device's camera.
     - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
     - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
-  notarize: false
+  notarize: false # Apple Developer hesabı olmadan build almak için false olmalı
 dmg:
   artifactName: ${name}-${version}.${ext}
+
+# LINUX
 linux:
   target:
-    - AppImage
-    - snap
-    - deb
+    - target: AppImage
+      arch:
+        - x64
+    - target: deb
+      arch:
+        - x64
   maintainer: itsmeares
   category: Utility
 appImage:
   artifactName: ${name}-${version}.${ext}
+
 npmRebuild: false
 publish:
   provider: github

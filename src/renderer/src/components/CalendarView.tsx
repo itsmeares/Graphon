@@ -643,7 +643,7 @@ export default function CalendarView({
         {/* Header Toolbar */}
         <div
           className={`
-          h-14 border-b border-graphon-border dark:border-graphon-dark-border flex items-center justify-between px-4 flex-shrink-0
+          h-14 border-b border-graphon-border dark:border-graphon-dark-border flex items-center justify-between px-4 shrink-0
           ${!isSidebarIntegrated ? 'pl-14' : ''}
         `}
         >
@@ -674,7 +674,7 @@ export default function CalendarView({
               </button>
               {/* Month Picker Dropdown */}
               {showMonthPicker && (
-                <div className="absolute top-full left-0 mt-2 bg-graphon-bg dark:bg-graphon-dark-sidebar border border-graphon-border dark:border-graphon-dark-border rounded-xl shadow-xl z-50 p-4 min-w-[280px]">
+                <div className="absolute top-full left-0 mt-2 bg-graphon-bg dark:bg-graphon-dark-sidebar border border-graphon-border dark:border-graphon-dark-border rounded-xl shadow-xl z-50 p-4 min-w-70">
                   <div className="flex items-center justify-between mb-3">
                     <button
                       onClick={goToPreviousMonth}
@@ -797,10 +797,10 @@ export default function CalendarView({
               events={displayEvents}
             />
           ) : (
-            <div className="min-w-[800px] pb-10">
+            <div className="min-w-200 pb-10">
               {/* Days Header */}
               <div className="sticky top-0 z-20 bg-graphon-bg/95 dark:bg-graphon-dark-bg/95 backdrop-blur-md border-b border-graphon-border dark:border-graphon-dark-border flex">
-                <div className="w-16 flex-shrink-0 border-r border-graphon-border/30 dark:border-graphon-dark-border/10" />
+                <div className="w-16 shrink-0 border-r border-graphon-border/30 dark:border-graphon-dark-border/10" />
                 {weekDays.map((day) => {
                   const dayIsToday = isToday(day)
                   const isSelected = selectedDate ? isSameDay(day, selectedDate) : false
@@ -829,9 +829,9 @@ export default function CalendarView({
               </div>
               {/* Body */}
               <div className="flex">
-                <div className="w-16 flex-shrink-0 border-r border-gray-100 dark:border-gray-800/50 bg-white dark:bg-[#191919] z-10">
+                <div className="w-16 shrink-0 border-r border-gray-100 dark:border-gray-800/50 bg-white dark:bg-[#191919] z-10">
                   {hours.map((h) => (
-                    <div key={h} className="relative h-[60px]">
+                    <div key={h} className="relative h-15">
                       <div className="absolute -top-3 right-2 text-[10px] text-gray-400 font-bold uppercase">
                         {h !== 0 && formatHour(h).replace(' ', '')}
                       </div>
@@ -847,7 +847,7 @@ export default function CalendarView({
                     <div
                       key={day.toISOString()}
                       className={`
-                        flex-1 relative border-r border-gray-100 dark:border-gray-800/50 last:border-r-0 h-[1440px]
+                        flex-1 relative border-r border-gray-100 dark:border-gray-800/50 last:border-r-0 h-360
                         ${isSelected ? 'bg-blue-50/30 dark:bg-blue-900/10' : ''}
                     `}
                     >

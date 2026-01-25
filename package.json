@@ -1,6 +1,6 @@
 {
   "name": "graphon",
-  "version": "0.0.9",
+  "version": "0.1.0",
   "description": "An Electron application with React",
   "main": "./out/main/index.js",
   "author": "example.com",

@@ -7,7 +7,7 @@ import {
   ReactNode,
   useRef
 } from 'react'
-import type { CalendarEvent } from '../types'
+import type { CalendarEvent, FileNode, Tab } from '../types'
 
 // Database types (simplified for storage)
 interface DatabaseIndex {
@@ -24,8 +24,18 @@ interface DatabaseMeta {
 interface VaultContextType {
   // Vault state
   currentVaultPath: string | null
-  files: string[]
+  files: FileNode[]
   isLoading: boolean
+
+  // Tab State
+  tabs: Tab[]
+  activeTabIndex: number
+  openTab: (tab: Tab) => void
+  closeTab: (index: number) => void
+  setActiveTab: (index: number) => void
+
+  // Legacy/Helper for files
+  openFile: (path: string) => Promise<void>
 
   // Active file (for notes)
   activeFile: string | null
@@ -49,7 +59,7 @@ interface VaultContextType {
   // File I/O for notes
   readNoteContent: (filename: string) => Promise<string | null>
   writeNoteContent: (filename: string, content: string) => Promise<void>
-  createNote: (filename: string) => Promise<void>
+  createNote: (filename?: string) => Promise<void>
   deleteNote: (filename: string) => Promise<void>
 
   // Pending save flush (for data integrity)
@@ -62,9 +72,17 @@ const VaultContext = createContext<VaultContextType | undefined>(undefined)
 
 export function VaultProvider({ children }: { children: ReactNode }) {
   const [currentVaultPath, setCurrentVaultPath] = useState<string | null>(null)
-  const [files, setFiles] = useState<string[]>([])
+  const [files, setFiles] = useState<FileNode[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [activeFile, setActiveFileState] = useState<string | null>(null)
+
+  // Tab State
+  const [tabs, setTabs] = useState<Tab[]>([])
+  const [activeTabIndex, setActiveTabIndex] = useState<number>(-1)
+
+  // Computed active file (for backward compat / specific checks)
+  const activeTab = activeTabIndex >= 0 ? tabs[activeTabIndex] : null
+  const activeFile = activeTab?.type === 'file' ? activeTab.path || null : null
+
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([])
   const [databaseIndex, setDatabaseIndex] = useState<DatabaseMeta[]>([])
 
@@ -185,24 +203,12 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     }
   }, [loadFiles, loadCalendar, loadDatabaseIndex])
 
-  // Load saved vault on mount
+  // Load saved vault on mount - DISABLED to always show Main Menu
   useEffect(() => {
-    const loadVault = async () => {
-      try {
-        const savedPath = await window.api.getVaultPath()
-        if (savedPath) {
-          setCurrentVaultPath(savedPath)
-          await loadVaultData()
-        }
-      } catch (error) {
-        console.error('Failed to load vault:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    loadVault()
-  }, [loadVaultData])
+    // We intentionally do NOT load the saved vault path on startup
+    // so that the user always lands on the main menu (WelcomeView).
+    setIsLoading(false)
+  }, [])
 
   // Select a new vault
   const selectVault = useCallback(async () => {
@@ -213,7 +219,8 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       const selectedPath = await window.api.selectVault()
       if (selectedPath) {
         // Clear all state for new vault
-        setActiveFileState(null)
+        setTabs([])
+        setActiveTabIndex(-1)
         setCalendarEvents([])
         setDatabaseIndex([])
         setFiles([])
@@ -242,21 +249,78 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       } else {
         setFiles([])
         setCalendarEvents([])
+        setCalendarEvents([])
         setDatabaseIndex([])
-        setActiveFileState(null)
+        setTabs([])
+        setActiveTabIndex(-1)
       }
     },
     [loadVaultData]
   )
 
-  // Set active file with pending write flush
+  // Open a Tab
+  const openTab = useCallback((tab: Tab) => {
+    setTabs((prev) => {
+      // Check if tab already exists (by ID or path)
+      const idx = prev.findIndex(
+        (t) => t.id === tab.id || (t.type === 'file' && t.path === tab.path && tab.type === 'file')
+      )
+      if (idx !== -1) {
+        setActiveTabIndex(idx)
+        return prev
+      }
+      setTimeout(() => setActiveTabIndex(prev.length), 0)
+      return [...prev, tab]
+    })
+  }, [])
+
+  // Open a file (Legacy Compat wrapper)
+  const openFile = useCallback(
+    async (path: string) => {
+      await flushPendingWrites()
+      const filename = path.split(/[/\\]/).pop() || path
+      openTab({
+        id: path,
+        type: 'file',
+        title: filename,
+        path: path
+      })
+    },
+    [flushPendingWrites, openTab]
+  )
+
+  // Close a tab
+  const closeTab = useCallback((index: number) => {
+    setTabs((prev) => {
+      const newTabs = prev.filter((_, i) => i !== index)
+
+      // Adjust active index
+      setActiveTabIndex((current) => {
+        if (current >= newTabs.length) return Math.max(0, newTabs.length - 1)
+        if (current === index) return Math.max(0, index - 1)
+        if (current > index) return current - 1
+        return current
+      })
+
+      return newTabs
+    })
+  }, [])
+
+  // Set active tab
+  const setActiveTab = useCallback((index: number) => {
+    setActiveTabIndex(index)
+  }, [])
+
+  // Legacy setActiveFile compatibility
   const setActiveFile = useCallback(
     async (filename: string | null) => {
-      // DATA INTEGRITY: Flush pending writes before switching files
-      await flushPendingWrites()
-      setActiveFileState(filename)
+      if (filename) {
+        await openFile(filename)
+      } else {
+        setActiveTabIndex(-1)
+      }
     },
-    [flushPendingWrites]
+    [openFile]
   )
 
   // Read note content
@@ -278,20 +342,41 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  // Create a new note
+  // Create a new note with smart naming
   const createNote = useCallback(
-    async (filename: string): Promise<void> => {
+    async (filename?: string): Promise<void> => {
       try {
+        let finalName = filename
+
+        // If no filename provided, generate "Untitled Note" active naming
+        if (!finalName) {
+          const base = 'Untitled Note'
+          let candidate = base
+          let counter = 1
+
+          // Helper to check if file exists in root (simplified check against flat list or re-fetch)
+          // For accuracy, let's just use a loop with readFile or better, check against current 'files' state if it matches root.
+          // Since 'files' is a tree, we check top-level items.
+          const rootFiles = files.map((f) => f.name.toLowerCase())
+
+          while (rootFiles.includes(`${candidate.toLowerCase()}.md`)) {
+            candidate = `${base} (${counter})`
+            counter++
+          }
+          finalName = candidate
+        }
+
         // Ensure .md extension
-        const fn = filename.endsWith('.md') ? filename : `${filename}.md`
+        const fn = finalName.endsWith('.md') ? finalName : `${finalName}.md`
+
         await window.api.writeFile(fn, '')
         await loadFiles()
-        setActiveFileState(fn)
+        await openFile(fn)
       } catch (error) {
         console.error(`Failed to create note ${filename}:`, error)
       }
     },
-    [loadFiles]
+    [loadFiles, files, openFile]
   )
 
   // Delete a note
@@ -301,7 +386,14 @@ export function VaultProvider({ children }: { children: ReactNode }) {
         await window.api.deleteFile(filename)
         await loadFiles()
         if (activeFile === filename) {
-          setActiveFileState(null)
+          // If the deleted file was active, close it?
+          // The check below handles closing the tab.
+        }
+
+        // Close tab if deleted
+        const tabIndex = tabs.findIndex((t) => t.path === filename)
+        if (tabIndex !== -1) {
+          closeTab(tabIndex)
         }
       } catch (error) {
         console.error(`Failed to delete note ${filename}:`, error)
@@ -316,8 +408,21 @@ export function VaultProvider({ children }: { children: ReactNode }) {
         currentVaultPath,
         files,
         isLoading,
+
+        // Tab State Exposure
+        tabs,
+        activeTabIndex,
+        openTab,
+        closeTab,
+        setActiveTab,
+
+        // Legacy
+        openFile,
+
+        // Legacy/Computed Active File
         activeFile,
         setActiveFile,
+
         calendarEvents,
         saveCalendar,
         databaseIndex,

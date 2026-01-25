@@ -172,7 +172,17 @@ export interface PositionedEvent extends CalendarEvent {
 // KEYBINDINGS
 // ============================================
 
-export type KeybindingAction = 'deleteItem' | 'closeModal' | 'save' | 'undo' | 'redo' | 'newItem'
+export type KeybindingAction =
+  | 'deleteItem'
+  | 'closeModal'
+  | 'save'
+  | 'undo'
+  | 'redo'
+  | 'newItem'
+  | 'closeTab'
+  | 'nextTab'
+  | 'previousTab'
+  | 'newTab'
 
 export interface KeybindingConfig {
   [action: string]: string[] // e.g., 'deleteItem': ['Delete', 'Backspace']
@@ -184,5 +194,35 @@ export const DEFAULT_KEYBINDINGS: KeybindingConfig = {
   save: ['Control+s', 'Meta+s'],
   undo: ['Control+z', 'Meta+z'],
   redo: ['Control+y', 'Meta+y', 'Control+Shift+z', 'Meta+Shift+z'],
-  newItem: ['Control+n', 'Meta+n']
+  newItem: ['Control+n', 'Meta+n'],
+  closeTab: ['Control+w', 'Meta+w'],
+  nextTab: ['Control+Tab'],
+  previousTab: ['Control+Shift+Tab'],
+  newTab: ['Control+t', 'Meta+t']
+}
+
+// ============================================
+// FILE SYSTEM TYPES
+// ============================================
+
+export interface FileNode {
+  name: string
+  path: string // Relative path from vault root
+  type: 'file' | 'folder'
+  children?: FileNode[]
+}
+
+// ============================================
+// TAB SYSTEM TYPES
+// ============================================
+
+export type TabType = 'file' | 'settings' | 'calendar' | 'database' | 'new-page'
+
+export interface Tab {
+  id: string
+  type: TabType
+  title: string
+  path?: string // for files
+  icon?: any // Component or string
+  isDirty?: boolean
 }

@@ -1,5 +1,12 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
 
+export interface FileNode {
+  name: string
+  path: string // Relative path from vault root
+  type: 'file' | 'folder'
+  children?: FileNode[]
+}
+
 interface VaultAPI {
   // Update/Window APIs
   onUpdateMessage: (callback: (message: any) => void) => void
@@ -15,7 +22,7 @@ interface VaultAPI {
   getVaultPath: () => Promise<string | null>
 
   // Vault File System API
-  listFiles: () => Promise<string[]>
+  listFiles: () => Promise<FileNode[]>
   openVaultFolder: () => Promise<void>
 
   // Vault File I/O API (for .md notes)
