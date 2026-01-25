@@ -180,9 +180,12 @@ const BoardColumn = memo(function BoardColumn({
 
   const getStatusColor = (val: string) => {
     const v = val.toLowerCase()
-    if (v.includes('to do') || v.includes('not started')) return { dot: 'bg-[#9b9b9b]', text: 'text-[#9b9b9b]', bg: 'bg-[#9b9b9b]/10' }
-    if (v.includes('in progress')) return { dot: 'bg-[#337ea9]', text: 'text-[#337ea9]', bg: 'bg-[#337ea9]/10' }
-    if (v.includes('done') || v.includes('complete')) return { dot: 'bg-[#448361]', text: 'text-[#448361]', bg: 'bg-[#448361]/10' }
+    if (v.includes('to do') || v.includes('not started'))
+      return { dot: 'bg-[#9b9b9b]', text: 'text-[#9b9b9b]', bg: 'bg-[#9b9b9b]/10' }
+    if (v.includes('in progress'))
+      return { dot: 'bg-[#337ea9]', text: 'text-[#337ea9]', bg: 'bg-[#337ea9]/10' }
+    if (v.includes('done') || v.includes('complete'))
+      return { dot: 'bg-[#448361]', text: 'text-[#448361]', bg: 'bg-[#448361]/10' }
     return { dot: 'bg-gray-400', text: 'text-gray-400', bg: 'bg-gray-400/10' }
   }
 
@@ -202,7 +205,9 @@ const BoardColumn = memo(function BoardColumn({
       {/* Column Header */}
       <div className="flex items-center justify-between px-2 py-2 mb-2">
         <div className="flex items-center gap-2 group cursor-pointer">
-          <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md hover:bg-black/5 dark:hover:bg-white/5 transition-colors`}>
+          <div
+            className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md hover:bg-black/5 dark:hover:bg-white/5 transition-colors`}
+          >
             <div className={`w-2 h-2 rounded-full ${statusStyle.dot}`} />
             <span className="text-sm font-medium text-graphon-text-main dark:text-[#dfdfdf]">
               {columnValue}
@@ -292,7 +297,7 @@ export default function BoardView({
 
   const handleAddItemToColumn = useCallback(
     (status: string, title?: string) => {
-      onAddItem({ 
+      onAddItem({
         [groupByColId!]: status,
         title: title || 'Untitled'
       })
@@ -305,7 +310,9 @@ export default function BoardView({
       <div className="flex-1 flex items-center justify-center text-graphon-text-secondary">
         <div className="text-center">
           <div className="text-4xl mb-4 opacity-20">📊</div>
-          <p className="text-lg font-bold text-graphon-text-main dark:text-graphon-dark-text-main mb-1">No group column found</p>
+          <p className="text-lg font-bold text-graphon-text-main dark:text-graphon-dark-text-main mb-1">
+            No group column found
+          </p>
           <p className="text-sm">Add a select column to use Board view</p>
         </div>
       </div>

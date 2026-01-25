@@ -273,7 +273,10 @@ const TableRow = memo(function TableRow({
         <td
           key={column.id}
           className="border-r border-graphon-border dark:border-graphon-dark-border overflow-hidden"
-          style={{ width: column.width || (column.id === 'title' ? 250 : 150), minWidth: column.width || (column.id === 'title' ? 250 : 150) }}
+          style={{
+            width: column.width || (column.id === 'title' ? 250 : 150),
+            minWidth: column.width || (column.id === 'title' ? 250 : 150)
+          }}
         >
           {renderCell(column)}
         </td>
@@ -295,9 +298,11 @@ export default function TableView({
   onItemClick
 }: TableViewProps) {
   const visibleColumns = database.columns
-  const [resizing, setResizing] = useState<{ id: string; startX: number; startWidth: number } | null>(
-    null
-  )
+  const [resizing, setResizing] = useState<{
+    id: string
+    startX: number
+    startWidth: number
+  } | null>(null)
 
   // Load row height presets
   const [rowHeightPresets] = useState<{ label: string; value: number }[]>(() => {
@@ -345,7 +350,7 @@ export default function TableView({
                 <ArrowsUpDownIcon className="w-3.5 h-3.5" />
               </div>
               <div className="opacity-0 group-hover:opacity-100 absolute inset-0 flex items-center justify-center transition-opacity bg-white/90 dark:bg-graphon-dark-sidebar/90">
-                <select 
+                <select
                   className="bg-transparent text-[10px] outline-none cursor-pointer font-bold uppercase w-full h-full text-center appearance-none"
                   value={database.rowHeight || 36}
                   onChange={(e) => onUpdateDatabase({ rowHeight: Number(e.target.value) })}
@@ -421,7 +426,9 @@ export default function TableView({
       {items.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 text-graphon-text-secondary">
           <div className="text-4xl mb-4 opacity-30">📋</div>
-          <p className="text-lg font-bold text-graphon-text-main dark:text-graphon-dark-text-main">No items yet</p>
+          <p className="text-lg font-bold text-graphon-text-main dark:text-graphon-dark-text-main">
+            No items yet
+          </p>
           <p className="text-sm">Click "New" to add your first item</p>
         </div>
       )}

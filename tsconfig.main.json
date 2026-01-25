@@ -12,6 +12,7 @@
   },
   "include": [
     "src/main/**/*",
+    "src/main/env.d.ts",
     "src/preload/**/*",
     "src/preload/index.d.ts",
     "electron.vite.config.mjs"

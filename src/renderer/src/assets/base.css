@@ -24,6 +24,14 @@
 }
 
 :root {
+  --color-background: var(--ev-c-white);
+  --color-background-soft: var(--ev-c-white-soft);
+  --color-background-mute: var(--ev-c-white-mute);
+
+  --color-text: #2c2b27;
+}
+
+.dark {
   --color-background: var(--ev-c-black);
   --color-background-soft: var(--ev-c-black-soft);
   --color-background-mute: var(--ev-c-black-mute);
@@ -37,6 +45,11 @@
   box-sizing: border-box;
   margin: 0;
   font-weight: normal;
+}
+
+/* Ensure all buttons have pointer cursor */
+button {
+  cursor: pointer;
 }
 
 ul {

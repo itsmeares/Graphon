@@ -1,12 +1,5 @@
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
-import {
-  addMonths,
-  subMonths,
-  format,
-  isSameMonth,
-  isToday,
-  isSameDay
-} from 'date-fns'
+import { addMonths, subMonths, format, isSameMonth, isToday, isSameDay } from 'date-fns'
 import { useState, useMemo, useEffect } from 'react'
 import { getMonthGrid, toDateOnly } from '../utils/calendarUtils'
 
@@ -20,14 +13,14 @@ export default function CalendarSidebar({ selectedDate, onSelectDate }: Calendar
   // Initialize to selectedDate's month or today
   const [viewDate, setViewDate] = useState(selectedDate || new Date())
 
-  // Sync viewDate if selectedDate changes drastically? 
+  // Sync viewDate if selectedDate changes drastically?
   // Optionally, we can jump to the month of the selected date if it changes externally.
   useEffect(() => {
     if (selectedDate) {
-       // Only jump if it's a different month to avoid jarring jumps if we were browsing
-       if (!isSameMonth(selectedDate, viewDate)) {
-         setViewDate(selectedDate)
-       }
+      // Only jump if it's a different month to avoid jarring jumps if we were browsing
+      if (!isSameMonth(selectedDate, viewDate)) {
+        setViewDate(selectedDate)
+      }
     }
   }, [selectedDate]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -49,15 +42,17 @@ export default function CalendarSidebar({ selectedDate, onSelectDate }: Calendar
       {/* Mini Calendar Section */}
       <div className="p-4 px-2">
         <div className="flex items-center justify-between mb-4 px-2">
-          <span className="text-sm font-bold text-graphon-text-main dark:text-graphon-dark-text-main">{currentMonthLabel}</span>
+          <span className="text-sm font-bold text-graphon-text-main dark:text-graphon-dark-text-main">
+            {currentMonthLabel}
+          </span>
           <div className="flex space-x-0.5">
-            <button 
+            <button
               onClick={handlePrevMonth}
               className="p-1 hover:bg-graphon-hover dark:hover:bg-graphon-dark-sidebar rounded-md transition-colors"
             >
               <ChevronLeftIcon className="w-3.5 h-3.5 text-graphon-text-secondary dark:text-graphon-dark-text-secondary" />
             </button>
-            <button 
+            <button
               onClick={handleNextMonth}
               className="p-1 hover:bg-graphon-hover dark:hover:bg-graphon-dark-sidebar rounded-md transition-colors"
             >
@@ -70,18 +65,21 @@ export default function CalendarSidebar({ selectedDate, onSelectDate }: Calendar
         <div className="grid grid-cols-7 gap-0 text-center text-[10px] mb-1">
           {/* Week starts on Monday (1) -> Mon, Tue... */}
           {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, i) => (
-            <div key={i} className="text-graphon-text-secondary dark:text-graphon-dark-text-secondary font-bold uppercase py-1">
+            <div
+              key={i}
+              className="text-graphon-text-secondary dark:text-graphon-dark-text-secondary font-bold uppercase py-1"
+            >
               {day}
             </div>
           ))}
         </div>
         <div className="grid grid-cols-7 gap-0 text-center text-xs">
-          {grid.map((week, wIdx) => 
+          {grid.map((week, wIdx) =>
             week.map((day, dIdx) => {
               const dayIsToday = isToday(day)
               const isSelected = selectedDate ? isSameDay(day, selectedDate) : false
               const isCurrentMonth = isSameMonth(day, viewDate)
-              
+
               return (
                 <div
                   key={`${wIdx}-${dIdx}`}
@@ -89,14 +87,16 @@ export default function CalendarSidebar({ selectedDate, onSelectDate }: Calendar
                   className={`
                     w-8 h-8 flex items-center justify-center rounded-full cursor-pointer transition-all duration-200 relative text-[11px] btn-squish
                     ${!isCurrentMonth ? 'text-graphon-text-secondary/30 dark:text-graphon-dark-text-secondary/30' : 'text-graphon-text-main dark:text-graphon-dark-text-main'}
-                    ${dayIsToday 
-                        ? 'bg-blue-600 text-white font-bold shadow-sm' 
+                    ${
+                      dayIsToday
+                        ? 'bg-blue-600 text-white font-bold shadow-sm'
                         : 'hover:bg-graphon-hover dark:hover:bg-graphon-dark-hover'
                     }
-                    ${isSelected && !dayIsToday 
-                        ? 'ring-2 ring-blue-600/50 bg-blue-50 dark:bg-blue-600/20 font-bold text-blue-600 dark:text-blue-400' 
-                        : isSelected && dayIsToday 
-                          ? 'ring-2 ring-blue-600 ring-offset-2 dark:ring-offset-[#1C1C1A] ring-offset-graphon-bg' 
+                    ${
+                      isSelected && !dayIsToday
+                        ? 'ring-2 ring-blue-600/50 bg-blue-50 dark:bg-blue-600/20 font-bold text-blue-600 dark:text-blue-400'
+                        : isSelected && dayIsToday
+                          ? 'ring-2 ring-blue-600 ring-offset-2 dark:ring-offset-[#1C1C1A] ring-offset-graphon-bg'
                           : ''
                     }
                   `}

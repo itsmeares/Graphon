@@ -32,7 +32,7 @@ describe('MonthView', () => {
     )
     const day10 = screen.getByText('10')
     fireEvent.click(day10)
-    
+
     // Expect the handler to be called with Jan 10 2026
     const callArgs = mockOnSelectDate.mock.calls[0][0]
     expect(callArgs.getDate()).toBe(10)
@@ -50,9 +50,9 @@ describe('MonthView', () => {
     // So Dec 29, 30, 31 2025 are visible as gray days, appearing first in list.
     const days29 = screen.getAllByText('29')
     const first29 = days29[0] // Should be Dec 29
-    
+
     fireEvent.click(first29)
-    
+
     expect(mockOnNavigateDate).toHaveBeenCalled()
     const calledDate = mockOnNavigateDate.mock.calls[0][0]
     expect(calledDate.getMonth()).toBe(11) // Dec

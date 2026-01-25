@@ -24,6 +24,7 @@ import EventDetailsPanel from './EventDetailsPanel'
 import { useKeybindings } from '../contexts/KeybindingContext'
 import { WEEK_STARTS_ON, toDateOnly } from '../utils/calendarUtils'
 import MonthView from './MonthView'
+import { useVault } from '../contexts/VaultContext'
 
 // Constants for calendar layout
 const HOUR_HEIGHT = 60 // Each hour slot is 60px tall
@@ -159,34 +160,35 @@ export default function CalendarView({
   // Utilities
   const { showToast } = useToast()
   const history = useHistory()
+  const {
+    calendarEvents: vaultEvents,
+    saveCalendar,
+    currentVaultPath,
+    isLoading: vaultLoading
+  } = useVault()
 
-  // Load/Save Local Storage (Uncontrolled only)
+  // Load events from VaultContext (Uncontrolled only)
   useEffect(() => {
     if (isControlled) {
       setIsLoaded(true)
       return
-    } 
-    const savedEvents = localStorage.getItem('graphon-calendar-events')
-    if (savedEvents) {
-      try {
-        const parsedEvents: CalendarEvent[] = JSON.parse(savedEvents)
-        const eventsWithDates = parsedEvents.map((event) => ({
-          ...event,
-          startDate: new Date(event.startDate),
-          endDate: new Date(event.endDate)
-        }))
-        setInternalEvents(eventsWithDates)
-      } catch (e) {
-        console.error('Failed to parse events', e)
-      }
     }
-    setIsLoaded(true)
-  }, [isControlled])
+    // Use vault events when vault is loaded
+    if (!vaultLoading && currentVaultPath) {
+      setInternalEvents(vaultEvents)
+      setIsLoaded(true)
+    }
+  }, [isControlled, vaultEvents, vaultLoading, currentVaultPath])
 
+  // Save events to vault when they change (Uncontrolled only)
   useEffect(() => {
-    if (isControlled || !isLoaded) return
-    localStorage.setItem('graphon-calendar-events', JSON.stringify(internalEvents))
-  }, [internalEvents, isControlled, isLoaded])
+    if (isControlled || !isLoaded || !currentVaultPath) return
+    // Debounce save to avoid excessive writes
+    const timeout = setTimeout(() => {
+      saveCalendar(internalEvents)
+    }, 500)
+    return () => clearTimeout(timeout)
+  }, [internalEvents, isControlled, isLoaded, saveCalendar, currentVaultPath])
   // Derived Events (Merge confirmed events with resizing shadow/preview)
   const displayEvents = useMemo(() => {
     const baseEvents = isControlled ? externalEvents! : internalEvents
@@ -202,7 +204,7 @@ export default function CalendarView({
     const days: Date[] = []
     const weekStart = startOfWeek(currentDate, { weekStartsOn: WEEK_STARTS_ON }) // Monday Start
     for (let i = 0; i < 7; i++) {
-        days.push(addDays(weekStart, i))
+      days.push(addDays(weekStart, i))
     }
     return days
   }, [currentDate])
@@ -639,10 +641,12 @@ export default function CalendarView({
     <div className="flex flex-1 h-full bg-graphon-bg dark:bg-graphon-dark-bg overflow-hidden text-graphon-text-main dark:text-graphon-dark-text-main font-sans">
       <div className="flex-1 flex flex-col min-w-0 bg-graphon-bg dark:bg-graphon-dark-bg">
         {/* Header Toolbar */}
-        <div className={`
+        <div
+          className={`
           h-14 border-b border-graphon-border dark:border-graphon-dark-border flex items-center justify-between px-4 flex-shrink-0
           ${!isSidebarIntegrated ? 'pl-14' : ''}
-        `}>
+        `}
+        >
           <div className="flex items-center space-x-3">
             <div className="flex items-center space-x-1">
               <button
@@ -665,7 +669,8 @@ export default function CalendarView({
                 onClick={() => setShowMonthPicker(!showMonthPicker)}
                 className="text-xl font-bold hover:bg-graphon-hover dark:hover:bg-graphon-dark-sidebar px-3 py-1 rounded-lg flex items-center gap-2"
               >
-                {currentMonthYear} <CalendarIcon className="w-4 h-4 text-graphon-text-secondary/50" />
+                {currentMonthYear}{' '}
+                <CalendarIcon className="w-4 h-4 text-graphon-text-secondary/50" />
               </button>
               {/* Month Picker Dropdown */}
               {showMonthPicker && (
@@ -759,15 +764,15 @@ export default function CalendarView({
               </div>
             )}
             <div className="hidden sm:flex bg-graphon-hover dark:bg-graphon-dark-sidebar rounded-lg p-1 items-center border border-graphon-border/30 dark:border-graphon-dark-border/20">
-              <button 
+              <button
                 onClick={() => setViewType('week')}
-              className={`px-3 py-1 text-xs font-semibold rounded-md transition-shadow ${viewType === 'week' ? 'bg-white dark:bg-graphon-dark-sidebar border border-graphon-border dark:border-graphon-dark-border text-graphon-text-main dark:text-white' : 'text-graphon-text-secondary dark:text-graphon-dark-text-secondary'}`}
+                className={`px-3 py-1 text-xs font-semibold rounded-md transition-shadow ${viewType === 'week' ? 'bg-white dark:bg-graphon-dark-sidebar border border-graphon-border dark:border-graphon-dark-border text-graphon-text-main dark:text-white' : 'text-graphon-text-secondary dark:text-graphon-dark-text-secondary'}`}
               >
                 Week
               </button>
-              <button 
-                 onClick={() => setViewType('month')}
-                 className={`px-3 py-1 text-xs font-semibold rounded-md transition-shadow ${viewType === 'month' ? 'bg-white dark:bg-[#191919] border border-graphon-border/30 dark:border-graphon-dark-border/20 text-graphon-text-main dark:text-white' : 'text-graphon-text-secondary dark:text-graphon-dark-text-secondary'}`}
+              <button
+                onClick={() => setViewType('month')}
+                className={`px-3 py-1 text-xs font-semibold rounded-md transition-shadow ${viewType === 'month' ? 'bg-white dark:bg-[#191919] border border-graphon-border/30 dark:border-graphon-dark-border/20 text-graphon-text-main dark:text-white' : 'text-graphon-text-secondary dark:text-graphon-dark-text-secondary'}`}
               >
                 Month
               </button>
@@ -784,137 +789,136 @@ export default function CalendarView({
 
         {/* Calendar Grid */}
         <div className="flex-1 overflow-y-auto relative bg-graphon-bg dark:bg-graphon-dark-bg scrollbar-thin">
-          
           {viewType === 'month' ? (
-             <MonthView 
-                selectedDate={selectedDate || currentDate} 
-                onSelectDate={onSelectDate}
-                onNavigateDate={(date) => setCurrentDate(date)}
-                events={displayEvents}
-             />
+            <MonthView
+              selectedDate={selectedDate || currentDate}
+              onSelectDate={onSelectDate}
+              onNavigateDate={(date) => setCurrentDate(date)}
+              events={displayEvents}
+            />
           ) : (
-             <div className="min-w-[800px] pb-10">
-            {/* Days Header */}
-            <div className="sticky top-0 z-20 bg-graphon-bg/95 dark:bg-graphon-dark-bg/95 backdrop-blur-md border-b border-graphon-border dark:border-graphon-dark-border flex">
-              <div className="w-16 flex-shrink-0 border-r border-graphon-border/30 dark:border-graphon-dark-border/10" />
-              {weekDays.map((day) => {
-                const dayIsToday = isToday(day)
-                const isSelected = selectedDate ? isSameDay(day, selectedDate) : false
-                
-                return (
-                  <div
-                    key={day.toISOString()}
-                    className="flex-1 py-4 text-center border-r border-gray-100 dark:border-gray-800/50 last:border-r-0"
-                  >
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-1">
-                      {format(day, 'EEE')}
-                    </div>
+            <div className="min-w-[800px] pb-10">
+              {/* Days Header */}
+              <div className="sticky top-0 z-20 bg-graphon-bg/95 dark:bg-graphon-dark-bg/95 backdrop-blur-md border-b border-graphon-border dark:border-graphon-dark-border flex">
+                <div className="w-16 flex-shrink-0 border-r border-graphon-border/30 dark:border-graphon-dark-border/10" />
+                {weekDays.map((day) => {
+                  const dayIsToday = isToday(day)
+                  const isSelected = selectedDate ? isSameDay(day, selectedDate) : false
+
+                  return (
                     <div
-                      className={`
+                      key={day.toISOString()}
+                      className="flex-1 py-4 text-center border-r border-gray-100 dark:border-gray-800/50 last:border-r-0"
+                    >
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-1">
+                        {format(day, 'EEE')}
+                      </div>
+                      <div
+                        className={`
                         inline-flex items-center justify-center w-9 h-9 rounded-full text-xl font-bold
                         ${dayIsToday ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-800 dark:text-gray-200'}
                         ${isSelected && !dayIsToday ? 'ring-2 ring-blue-500' : ''}
                         ${isSelected && dayIsToday ? 'ring-2 ring-white dark:ring-[#191919] ring-offset-2 ring-offset-blue-600' : ''} 
                       `}
-                    >
-                      {day.getDate()}
+                      >
+                        {day.getDate()}
+                      </div>
                     </div>
-                  </div>
-                )
-              })}
-            </div>
-            {/* Body */}
-            <div className="flex">
-              <div className="w-16 flex-shrink-0 border-r border-gray-100 dark:border-gray-800/50 bg-white dark:bg-[#191919] z-10">
-                {hours.map((h) => (
-                  <div key={h} className="relative h-[60px]">
-                    <div className="absolute -top-3 right-2 text-[10px] text-gray-400 font-bold uppercase">
-                      {h !== 0 && formatHour(h).replace(' ', '')}
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
-              {weekDays.map((day) => {
-                const positionedEvents = getPositionedEventsForDay(day)
-                // Highlight selection column slightly?
-                 const isSelected = selectedDate ? isSameDay(day, selectedDate) : false
-                
-                return (
-                  <div
-                    key={day.toISOString()}
-                    className={`
+              {/* Body */}
+              <div className="flex">
+                <div className="w-16 flex-shrink-0 border-r border-gray-100 dark:border-gray-800/50 bg-white dark:bg-[#191919] z-10">
+                  {hours.map((h) => (
+                    <div key={h} className="relative h-[60px]">
+                      <div className="absolute -top-3 right-2 text-[10px] text-gray-400 font-bold uppercase">
+                        {h !== 0 && formatHour(h).replace(' ', '')}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {weekDays.map((day) => {
+                  const positionedEvents = getPositionedEventsForDay(day)
+                  // Highlight selection column slightly?
+                  const isSelected = selectedDate ? isSameDay(day, selectedDate) : false
+
+                  return (
+                    <div
+                      key={day.toISOString()}
+                      className={`
                         flex-1 relative border-r border-gray-100 dark:border-gray-800/50 last:border-r-0 h-[1440px]
                         ${isSelected ? 'bg-blue-50/30 dark:bg-blue-900/10' : ''}
                     `}
-                  >
-                    {/* Horizontal grid lines */}
-                    {hours.map((h) => (
-                      <div
-                        key={h}
-                        className="absolute w-full border-b border-gray-50 dark:border-gray-800/30"
-                        style={{ top: `${h * 60}px` }}
-                      />
-                    ))}
+                    >
+                      {/* Horizontal grid lines */}
+                      {hours.map((h) => (
+                        <div
+                          key={h}
+                          className="absolute w-full border-b border-gray-50 dark:border-gray-800/30"
+                          style={{ top: `${h * 60}px` }}
+                        />
+                      ))}
 
-                    {/* Current Time Indicator */}
-                    {isToday(day) && (
-                      <div
-                        className="current-time-line"
-                        style={{ top: `${getCurrentTimePosition()}px` }}
-                      >
-                        <div className="current-time-dot" />
-                      </div>
-                    )}
+                      {/* Current Time Indicator */}
+                      {isToday(day) && (
+                        <div
+                          className="current-time-line"
+                          style={{ top: `${getCurrentTimePosition()}px` }}
+                        >
+                          <div className="current-time-dot" />
+                        </div>
+                      )}
 
-                    {positionedEvents.map((event) => {
-                      const style = calculateEventStyle(event)
-                      const isSelected = selectedEventId === event.id
-                      return (
-                        <EventCard
-                          key={event.id}
-                          event={event}
-                          style={style}
-                          isSelected={isSelected}
-                          isDragging={!!draggedEvent && draggedEvent.id === event.id}
-                          onDragStart={(e) => handleDragStart(e, event)}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setSelectedEventId(event.id)
-                          }}
-                          onResizeStart={(e) => {
-                            e.preventDefault()
-                            e.stopPropagation()
-                            setResizingEvent(event)
-                            setResizeStartY(e.clientY)
-                            const initialDuration =
-                              event.duration ||
-                              (new Date(event.endDate).getTime() -
-                                new Date(event.startDate).getTime()) /
-                                60000
-                            setResizeOriginalDuration(initialDuration)
+                      {positionedEvents.map((event) => {
+                        const style = calculateEventStyle(event)
+                        const isSelected = selectedEventId === event.id
+                        return (
+                          <EventCard
+                            key={event.id}
+                            event={event}
+                            style={style}
+                            isSelected={isSelected}
+                            isDragging={!!draggedEvent && draggedEvent.id === event.id}
+                            onDragStart={(e) => handleDragStart(e, event)}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setSelectedEventId(event.id)
+                            }}
+                            onResizeStart={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              setResizingEvent(event)
+                              setResizeStartY(e.clientY)
+                              const initialDuration =
+                                event.duration ||
+                                (new Date(event.endDate).getTime() -
+                                  new Date(event.startDate).getTime()) /
+                                  60000
+                              setResizeOriginalDuration(initialDuration)
+                            }}
+                          />
+                        )
+                      })}
+
+                      {/* Drop target visual feedback (simple) */}
+                      {draggedEvent && (
+                        <div
+                          className="absolute inset-0 z-0 bg-blue-50/10"
+                          onDragOver={handleDragOver}
+                          onDrop={(e) => {
+                            const rect = e.currentTarget.getBoundingClientRect()
+                            const yInCell = e.clientY - rect.top
+                            const hour = Math.floor(yInCell / HOUR_HEIGHT)
+                            handleDrop(e, day, hour)
                           }}
                         />
-                      )
-                    })}
-
-                    {/* Drop target visual feedback (simple) */}
-                    {draggedEvent && (
-                      <div
-                        className="absolute inset-0 z-0 bg-blue-50/10"
-                        onDragOver={handleDragOver}
-                        onDrop={(e) => {
-                          const rect = e.currentTarget.getBoundingClientRect()
-                          const yInCell = e.clientY - rect.top
-                          const hour = Math.floor(yInCell / HOUR_HEIGHT)
-                          handleDrop(e, day, hour)
-                        }}
-                      />
-                    )}
-                  </div>
-                )
-              })}
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
             </div>
-          </div>
           )}
         </div>
 

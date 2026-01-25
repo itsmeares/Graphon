@@ -67,7 +67,9 @@ export default function DatabaseList({ onSelectDatabase }: DatabaseListProps) {
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-graphon-text-main dark:text-graphon-dark-text-main mb-2">Databases</h1>
+            <h1 className="text-3xl font-bold text-graphon-text-main dark:text-graphon-dark-text-main mb-2">
+              Databases
+            </h1>
             <p className="text-graphon-text-secondary dark:text-graphon-dark-text-secondary">
               Manage your collections and verified data sources.
             </p>
