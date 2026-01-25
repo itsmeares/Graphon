@@ -27,16 +27,21 @@ const GalleryCard = memo(function GalleryCard({
   const title = item.values['title'] || 'Untitled'
 
   return (
-    <div 
+    <div
       className="group relative bg-white dark:bg-[#252525] rounded-xl border border-graphon-border dark:border-white/5 overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-gray-300 dark:hover:border-white/10 cursor-pointer flex flex-col h-56 shadow-sm"
       onClick={onClick}
     >
       {/* Visual Area / Cover Placeholder */}
       <div className="flex-1 bg-[#f9f9f8] dark:bg-[#1a1a1a] relative overflow-hidden">
         {/* Subtle grid pattern or placeholder visual could go here */}
-        <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none" 
-             style={{ backgroundImage: 'radial-gradient(#000 0.5px, transparent 0.5px)', backgroundSize: '10px 10px' }} />
-        
+        <div
+          className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none"
+          style={{
+            backgroundImage: 'radial-gradient(#000 0.5px, transparent 0.5px)',
+            backgroundSize: '10px 10px'
+          }}
+        />
+
         {/* Menu Button */}
         <button
           onClick={(e) => {
@@ -70,7 +75,7 @@ const GalleryCard = memo(function GalleryCard({
           {String(title)}
         </h3>
         <div className="text-[11px] text-graphon-text-secondary dark:text-graphon-dark-text-secondary/60 flex items-center gap-2 mt-2 font-medium">
-            <span>{new Date(item.updatedAt).toLocaleDateString()}</span>
+          <span>{new Date(item.updatedAt).toLocaleDateString()}</span>
         </div>
       </div>
     </div>
@@ -107,7 +112,9 @@ export default function GalleryView({
             <PlusIcon className="w-8 h-8 stroke-1" />
           </div>
           <div className="w-full p-4 text-left">
-            <span className="text-[14px] font-medium text-graphon-text-secondary/60 dark:text-graphon-dark-text-secondary/60 group-hover:text-blue-500/80 transition-colors">+ New page</span>
+            <span className="text-[14px] font-medium text-graphon-text-secondary/60 dark:text-graphon-dark-text-secondary/60 group-hover:text-blue-500/80 transition-colors">
+              + New page
+            </span>
           </div>
         </button>
       </div>
@@ -116,11 +123,12 @@ export default function GalleryView({
       {items.length === 0 && (
         <div className="flex flex-col items-center justify-center py-24 text-graphon-text-secondary/40">
           <div className="text-7xl mb-6 opacity-20">🖼️</div>
-          <p className="text-xl font-bold text-graphon-text-main dark:text-graphon-dark-text-main mb-2">No items yet</p>
+          <p className="text-xl font-bold text-graphon-text-main dark:text-graphon-dark-text-main mb-2">
+            No items yet
+          </p>
           <p className="text-sm">Click the "+ New page" card to begin your collection</p>
         </div>
       )}
     </div>
   )
 }
-

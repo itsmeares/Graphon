@@ -6,8 +6,19 @@
     <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:"
     />
+    <script>
+      ;(function () {
+        try {
+          const theme = localStorage.getItem('graphon-theme') || 'system'
+          const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+          if (theme === 'dark' || (theme === 'system' && systemPrefersDark)) {
+            document.documentElement.classList.add('dark')
+          }
+        } catch (e) {}
+      })()
+    </script>
   </head>
 
   <body>

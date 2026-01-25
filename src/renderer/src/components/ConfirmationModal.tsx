@@ -64,7 +64,9 @@ export default function ConfirmationModal({
                 {title}
               </h3>
               <div className="mt-2">
-                <p className="text-sm text-graphon-text-secondary dark:text-graphon-dark-text-secondary leading-relaxed">{message}</p>
+                <p className="text-sm text-graphon-text-secondary dark:text-graphon-dark-text-secondary leading-relaxed">
+                  {message}
+                </p>
               </div>
 
               {showDontAskAgain && (

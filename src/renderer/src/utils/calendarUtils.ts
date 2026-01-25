@@ -40,7 +40,7 @@ export function getMonthGrid(year: number, month: number): Date[][] {
   // We want to ensure we cover at least the full month and often a full 6 weeks for consistent height
   // or just enough to cover the month. Standard calendars often use 6 rows.
   // Let's generate 42 days (6 weeks * 7 days).
-  
+
   const grid: Date[][] = []
   let current = startDate
 
@@ -63,7 +63,7 @@ export function getWeekDays(): string[] {
   const now = new Date()
   const start = startOfWeek(now, { weekStartsOn: WEEK_STARTS_ON })
   const days: string[] = []
-  
+
   for (let i = 0; i < 7; i++) {
     days.push(format(addDays(start, i), 'EEE')) // 'Mon', 'Tue', etc.
   }

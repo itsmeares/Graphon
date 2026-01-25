@@ -1,5 +1,4 @@
-
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
@@ -15,23 +14,82 @@ import {
   Bars3BottomLeftIcon,
   CheckIcon
 } from '@heroicons/react/24/outline'
-import type { Note } from '../types'
+import { useVault } from '../contexts/VaultContext'
 
 interface NotesViewProps {
   isSidebarVisible?: boolean
-  activeNoteId: string | null
-  notes: Note[]
-  onUpdateNote: (id: string, updates: Partial<Note>) => void
 }
 
-export default function NotesView({ 
-  isSidebarVisible = true,
-  activeNoteId,
-  notes,
-  onUpdateNote
-}: NotesViewProps) {
+// Debounce helper
+function debounce<T extends (...args: any[]) => any>(fn: T, delay: number) {
+  let timeoutId: ReturnType<typeof setTimeout>
+  const debouncedFn = (...args: Parameters<T>) => {
+    clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => fn(...args), delay)
+  }
+  debouncedFn.cancel = () => clearTimeout(timeoutId)
+  debouncedFn.flush = () => {
+    clearTimeout(timeoutId)
+  }
+  return debouncedFn
+}
+
+export default function NotesView({ isSidebarVisible = true }: NotesViewProps) {
   const [showToolbar, setShowToolbar] = useState<boolean>(false)
-  const activeNote = notes.find(n => n.id === activeNoteId)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const {
+    activeFile,
+    readNoteContent,
+    writeNoteContent,
+    registerPendingWrite,
+    unregisterPendingWrite,
+    isLoading: vaultLoading
+  } = useVault()
+
+  // Track pending content to save
+  const pendingContentRef = useRef<string | null>(null)
+  const currentFileRef = useRef<string | null>(null)
+
+  // Save function
+  const saveContent = useCallback(
+    async (content: string) => {
+      if (!currentFileRef.current) return
+      setIsSaving(true)
+      try {
+        await writeNoteContent(currentFileRef.current, content)
+        pendingContentRef.current = null
+      } catch (error) {
+        console.error('Failed to save note:', error)
+      } finally {
+        setIsSaving(false)
+      }
+    },
+    [writeNoteContent]
+  )
+
+  // Debounced save (500ms)
+  const debouncedSave = useMemo(
+    () =>
+      debounce((content: string) => {
+        saveContent(content)
+      }, 1000),
+    [saveContent]
+  )
+
+  // Flush pending writes (called before file switch)
+  const flushPendingSave = useCallback(async () => {
+    debouncedSave.cancel()
+    if (pendingContentRef.current !== null && currentFileRef.current) {
+      await saveContent(pendingContentRef.current)
+    }
+  }, [debouncedSave, saveContent])
+
+  // Register/unregister pending write handler with VaultContext
+  useEffect(() => {
+    registerPendingWrite('notes', flushPendingSave)
+    return () => unregisterPendingWrite('notes')
+  }, [registerPendingWrite, unregisterPendingWrite, flushPendingSave])
 
   // Initialize editor with Tiptap
   const editor = useEditor({
@@ -66,8 +124,10 @@ export default function NotesView({
       }
     },
     onUpdate: ({ editor }) => {
-      if (activeNoteId) {
-        onUpdateNote(activeNoteId, { content: editor.getHTML() })
+      if (currentFileRef.current) {
+        const content = editor.getHTML()
+        pendingContentRef.current = content
+        debouncedSave(content)
       }
     },
     onSelectionUpdate: ({ editor }) => {
@@ -77,17 +137,39 @@ export default function NotesView({
     }
   })
 
-  // Sync editor content with active note
+  // Load file content when activeFile changes
   useEffect(() => {
-    if (editor && activeNote) {
-      // Only update if content is different to avoid cursor jumps
-      if (editor.getHTML() !== activeNote.content) {
-        editor.commands.setContent(activeNote.content || '')
+    const loadFile = async () => {
+      if (!activeFile) {
+        currentFileRef.current = null
+        editor?.commands.setContent('')
+        return
       }
-    } else if (editor && !activeNote) {
-        editor.commands.setContent('')
+
+      // DATA INTEGRITY: Flush any pending saves from previous file
+      // (This is also handled by VaultContext.setActiveFile, but belt-and-suspenders)
+      if (currentFileRef.current && currentFileRef.current !== activeFile) {
+        await flushPendingSave()
+      }
+
+      currentFileRef.current = activeFile
+      setIsLoading(true)
+      try {
+        const content = await readNoteContent(activeFile)
+        if (editor && currentFileRef.current === activeFile) {
+          editor.commands.setContent(content || '')
+          pendingContentRef.current = null
+        }
+      } catch (error) {
+        console.error('Failed to load note:', error)
+        editor?.commands.setContent('')
+      } finally {
+        setIsLoading(false)
+      }
     }
-  }, [activeNoteId, editor]) // Depend on ID mostly
+
+    loadFile()
+  }, [activeFile, editor, readNoteContent, flushPendingSave])
 
   // Global keyboard shortcuts for rich text formatting
   useEffect(() => {
@@ -107,19 +189,41 @@ export default function NotesView({
             e.preventDefault()
             editor.chain().focus().toggleItalic().run()
             break
+          case 's':
+            // Save on Ctrl+S
+            e.preventDefault()
+            flushPendingSave()
+            break
         }
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [editor])
+  }, [editor, flushPendingSave])
 
-  if (!activeNoteId) {
+  // Show loading skeleton
+  if (vaultLoading || isLoading) {
     return (
-      <div className="flex-1 h-screen flex items-center justify-center text-graphon-text-secondary dark:text-graphon-dark-text-secondary">
+      <div className="flex-1 h-screen bg-white dark:bg-graphon-dark-bg p-8">
+        <div className="w-full max-w-3xl mx-auto animate-pulse">
+          <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-lg w-1/2 mb-8" />
+          <div className="space-y-4">
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full" />
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6" />
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-4/6" />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!activeFile) {
+    return (
+      <div className="flex-1 h-screen flex items-center justify-center text-graphon-text-secondary dark:text-graphon-dark-text-secondary bg-white dark:bg-graphon-dark-bg">
         <div className="text-center">
-          <p>Select a note or create a new one.</p>
+          <p className="text-lg mb-2">No file selected</p>
+          <p className="text-sm opacity-60">Select a file from the sidebar to start editing</p>
         </div>
       </div>
     )
@@ -156,8 +260,19 @@ export default function NotesView({
     </button>
   )
 
+  // Get filename without extension for title
+  const fileName = activeFile.replace(/\.(md|txt)$/, '')
+
   return (
     <div className="flex-1 h-screen overflow-hidden bg-white dark:bg-graphon-dark-bg text-graphon-text-main dark:text-graphon-dark-text-main relative">
+      {/* Saving Indicator */}
+      {isSaving && (
+        <div className="absolute top-4 right-4 z-50 px-3 py-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-medium rounded-full flex items-center gap-2">
+          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+          Saving...
+        </div>
+      )}
+
       {/* Toolbar - Fixed at top, only visible when text selected */}
       <div
         className={`
@@ -236,14 +351,10 @@ export default function NotesView({
       {/* Editor Container - Graphon Style Centered */}
       <div className={`h-full overflow-y-auto ${!isSidebarVisible ? 'pt-4 md:pt-0' : ''}`}>
         <div className="w-full max-w-3xl mx-auto px-8 md:px-16 py-12">
-            {/* Title Input */}
-            <input
-                type="text"
-                value={activeNote?.title || ''}
-                onChange={(e) => onUpdateNote(activeNoteId, { title: e.target.value })}
-                placeholder="New page"
-                className="w-full text-4xl font-bold bg-transparent border-none outline-none placeholder-gray-300 dark:placeholder-gray-600 mb-8"
-            />
+          {/* Title - Read from filename */}
+          <h1 className="w-full text-4xl font-bold bg-transparent border-none outline-none placeholder-gray-300 dark:placeholder-gray-600 mb-8 text-graphon-text-main dark:text-graphon-dark-text-main">
+            {fileName}
+          </h1>
 
           {/* Editor */}
           <EditorContent editor={editor} className="graphon-editor" />
@@ -253,42 +364,42 @@ export default function NotesView({
 
       {/* Task List Styles */}
       <style>{`
-                .task-list {
-                    list-style: none;
-                    padding: 0;
-                }
-                .task-item {
-                    display: flex;
-                    align-items: flex-start;
-                    gap: 0.5rem;
-                    margin-bottom: 0.25rem;
-                }
-                .task-item > label {
-                    display: flex;
-                    align-items: center;
-                    margin-top: 0.2rem;
-                }
-                .task-item > label > input[type="checkbox"] {
-                    width: 1.1em;
-                    height: 1.1em;
-                    cursor: pointer;
-                }
-                .graphon-editor .prose {
-                    max-width: 800px;
-                    margin: 0 auto;
-                }
-                /* Placeholder styling */
-                .ProseMirror p.is-editor-empty:first-child::before {
-                    color: #adb5bd;
-                    content: attr(data-placeholder);
-                    float: left;
-                    height: 0;
-                    pointer-events: none;
-                }
-                .dark .ProseMirror p.is-editor-empty:first-child::before {
-                    color: #4b5563;
-                }
-            `}</style>
+        .task-list {
+          list-style: none;
+          padding: 0;
+        }
+        .task-item {
+          display: flex;
+          align-items: flex-start;
+          gap: 0.5rem;
+          margin-bottom: 0.25rem;
+        }
+        .task-item > label {
+          display: flex;
+          align-items: center;
+          margin-top: 0.2rem;
+        }
+        .task-item > label > input[type="checkbox"] {
+          width: 1.1em;
+          height: 1.1em;
+          cursor: pointer;
+        }
+        .graphon-editor .prose {
+          max-width: 800px;
+          margin: 0 auto;
+        }
+        /* Placeholder styling */
+        .ProseMirror p.is-editor-empty:first-child::before {
+          color: #adb5bd;
+          content: attr(data-placeholder);
+          float: left;
+          height: 0;
+          pointer-events: none;
+        }
+        .dark .ProseMirror p.is-editor-empty:first-child::before {
+          color: #4b5563;
+        }
+      `}</style>
     </div>
   )
 }

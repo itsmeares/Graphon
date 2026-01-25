@@ -1,4 +1,3 @@
-
 import { Extension } from '@tiptap/core'
 import Suggestion from '@tiptap/suggestion'
 import { ReactRenderer } from '@tiptap/react'
@@ -32,7 +31,7 @@ export const renderItems = () => {
     onStart: (props: { editor: Editor; clientRect: (() => DOMRect) | null }) => {
       component = new ReactRenderer(SlashCommandList, {
         props,
-        editor: props.editor,
+        editor: props.editor
       })
 
       if (!props.clientRect) {
@@ -47,7 +46,7 @@ export const renderItems = () => {
         showOnCreate: true,
         interactive: true,
         trigger: 'manual',
-        placement: 'bottom-start',
+        placement: 'bottom-start'
       })
     },
 
@@ -59,7 +58,7 @@ export const renderItems = () => {
       }
 
       popup?.[0].setProps({
-        getReferenceClientRect: props.clientRect,
+        getReferenceClientRect: props.clientRect
       })
     },
 
@@ -76,7 +75,7 @@ export const renderItems = () => {
     onExit: () => {
       popup?.[0].destroy()
       component?.destroy()
-    },
+    }
   }
 }
 
@@ -87,7 +86,7 @@ const CommandItems = [
     icon: <Text size={16} />,
     command: ({ editor, range }: CommandProps) => {
       editor.chain().focus().deleteRange(range).toggleNode('paragraph', 'paragraph').run()
-    },
+    }
   },
   {
     title: 'Heading 1',
@@ -95,7 +94,7 @@ const CommandItems = [
     icon: <Heading1 size={16} />,
     command: ({ editor, range }: CommandProps) => {
       editor.chain().focus().deleteRange(range).setNode('heading', { level: 1 }).run()
-    },
+    }
   },
   {
     title: 'Heading 2',
@@ -103,7 +102,7 @@ const CommandItems = [
     icon: <Heading2 size={16} />,
     command: ({ editor, range }: CommandProps) => {
       editor.chain().focus().deleteRange(range).setNode('heading', { level: 2 }).run()
-    },
+    }
   },
   {
     title: 'Heading 3',
@@ -111,7 +110,7 @@ const CommandItems = [
     icon: <Heading3 size={16} />,
     command: ({ editor, range }: CommandProps) => {
       editor.chain().focus().deleteRange(range).setNode('heading', { level: 3 }).run()
-    },
+    }
   },
   {
     title: 'Bulleted list',
@@ -119,7 +118,7 @@ const CommandItems = [
     icon: <List size={16} />,
     command: ({ editor, range }: CommandProps) => {
       editor.chain().focus().deleteRange(range).toggleBulletList().run()
-    },
+    }
   },
   {
     title: 'Numbered list',
@@ -127,7 +126,7 @@ const CommandItems = [
     icon: <ListOrdered size={16} />,
     command: ({ editor, range }: CommandProps) => {
       editor.chain().focus().deleteRange(range).toggleOrderedList().run()
-    },
+    }
   },
   {
     title: 'To-do list',
@@ -135,7 +134,7 @@ const CommandItems = [
     icon: <CheckSquare size={16} />,
     command: ({ editor, range }: CommandProps) => {
       editor.chain().focus().deleteRange(range).toggleTaskList().run()
-    },
+    }
   },
   {
     title: 'Quote',
@@ -143,7 +142,7 @@ const CommandItems = [
     icon: <Quote size={16} />,
     command: ({ editor, range }: CommandProps) => {
       editor.chain().focus().deleteRange(range).toggleBlockquote().run()
-    },
+    }
   },
   {
     title: 'Code',
@@ -151,7 +150,7 @@ const CommandItems = [
     icon: <Code size={16} />,
     command: ({ editor, range }: CommandProps) => {
       editor.chain().focus().deleteRange(range).toggleCodeBlock().run()
-    },
+    }
   },
   {
     title: 'Divider',
@@ -159,15 +158,17 @@ const CommandItems = [
     icon: <Minus size={16} />,
     command: ({ editor, range }: CommandProps) => {
       editor.chain().focus().deleteRange(range).setHorizontalRule().run()
-    },
+    }
   },
   {
     title: 'Image',
     shortcut: '',
     icon: <ImageIcon size={16} />,
     command: ({ editor, range }: CommandProps) => {
-      (editor.chain().focus().deleteRange(range) as any).setImage({ src: 'https://source.unsplash.com/random/800x600' }).run()
-    },
+      ;(editor.chain().focus().deleteRange(range) as any)
+        .setImage({ src: 'https://source.unsplash.com/random/800x600' })
+        .run()
+    }
   }
 ]
 
@@ -188,8 +189,8 @@ export const SlashCommand = Extension.create({
           props.command({ editor, range })
         },
         items: getSuggestionItems,
-        render: renderItems,
-      },
+        render: renderItems
+      }
     }
   },
 
@@ -197,10 +198,8 @@ export const SlashCommand = Extension.create({
     return [
       Suggestion({
         editor: this.editor,
-        ...this.options.suggestion,
-      }),
+        ...this.options.suggestion
+      })
     ]
-  },
+  }
 })
-
-

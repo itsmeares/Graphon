@@ -70,17 +70,21 @@ export const SlashCommandList = forwardRef((props: SlashCommandListProps, ref) =
           onClick={() => selectItem(index)}
         >
           <div className="flex items-center space-x-2.5">
-            <div className={`flex items-center justify-center
+            <div
+              className={`flex items-center justify-center
                 ${index === selectedIndex ? 'text-white' : 'text-gray-500 dark:text-gray-400'}
-            `}>
+            `}
+            >
               {item.icon}
             </div>
             <span className="font-medium">{item.title}</span>
           </div>
           {item.shortcut && (
-               <span className={`text-[10px] font-mono tracking-tighter ${index === selectedIndex ? 'text-blue-100' : 'text-gray-400 dark:text-gray-600'}`}>
-                 {item.shortcut}
-               </span>
+            <span
+              className={`text-[10px] font-mono tracking-tighter ${index === selectedIndex ? 'text-blue-100' : 'text-gray-400 dark:text-gray-600'}`}
+            >
+              {item.shortcut}
+            </span>
           )}
         </button>
       ))}

@@ -1,7 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
 @import 'tailwindcss';
 @plugin "@tailwindcss/typography";
+
+/* Configure dark mode to use 'class' selector instead of 'media' (prefers-color-scheme) */
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
   /* Graphon Colors */
@@ -58,7 +60,7 @@
 
   /* Transition Timing Function */
   --ease-apple: cubic-bezier(0.4, 0, 0.2, 1);
-  --ease-squish: cubic-bezier(0.4, 0, 0.2, 1.4);
+  --ease-squish: cubic-bezier(0.4, 0, 0.2, 1);
 
   /* Scale */
   --scale-98: 0.98;
@@ -84,6 +86,11 @@
     width: 100vw;
     height: 100vh;
     overflow: hidden;
+  }
+
+  /* Ensure all buttons have pointer cursor */
+  button {
+    cursor: pointer;
   }
 }
 
@@ -128,7 +135,7 @@
 
 /* Interactives with squish */
 .btn-squish {
-  @apply transition-squish active:scale-95 hover:scale-[1.02];
+  @apply transition-squish active:scale-95;
 }
 
 /* Event card styles - Graphon inspired */

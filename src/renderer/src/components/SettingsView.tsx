@@ -7,23 +7,27 @@ import {
   InformationCircleIcon,
   ClockIcon,
   TrashIcon,
-  PlusIcon
+  PlusIcon,
+  FolderIcon,
+  FolderOpenIcon
 } from '@heroicons/react/24/outline'
-import type { ExportData } from '../types'
+import type { ExportData, Theme } from '../types'
 import Toast, { useToast } from './Toast'
 import { useKeybindings } from '../contexts/KeybindingContext'
+import { ComputerDesktopIcon } from '@heroicons/react/24/outline'
+import { useVault } from '../contexts/VaultContext'
 
 interface SettingsViewProps {
-  darkMode: boolean
-  onToggleDarkMode: () => void
+  theme: Theme
+  onSetTheme: (theme: Theme) => void
   isSidebarVisible?: boolean
   moduleVisibility?: { notes: boolean; calendar: boolean; database: boolean }
   onToggleModule?: (module: 'notes' | 'calendar' | 'database') => void
 }
 
-export default function SettingsView({ 
-  darkMode, 
-  onToggleDarkMode, 
+export default function SettingsView({
+  theme,
+  onSetTheme,
   isSidebarVisible = true,
   moduleVisibility,
   onToggleModule
@@ -39,20 +43,25 @@ export default function SettingsView({
 
   const { keybindings, updateKeybinding, resetKeybindings } = useKeybindings()
 
+  // Vault context
+  const { currentVaultPath, selectVault } = useVault()
+
   // File input ref
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Row height presets state
-  const [rowHeightPresets, setRowHeightPresets] = useState<{ label: string; value: number }[]>(() => {
-    const saved = localStorage.getItem('graphon-row-height-presets')
-    return saved
-      ? JSON.parse(saved)
-      : [
-          { label: 'S', value: 32 },
-          { label: 'M', value: 44 },
-          { label: 'L', value: 64 }
-        ]
-  })
+  const [rowHeightPresets, setRowHeightPresets] = useState<{ label: string; value: number }[]>(
+    () => {
+      const saved = localStorage.getItem('graphon-row-height-presets')
+      return saved
+        ? JSON.parse(saved)
+        : [
+            { label: 'S', value: 32 },
+            { label: 'M', value: 44 },
+            { label: 'L', value: 64 }
+          ]
+    }
+  )
 
   const savePresets = (newPresets: { label: string; value: number }[]) => {
     setRowHeightPresets(newPresets)
@@ -209,7 +218,9 @@ export default function SettingsView({
   return (
     <div className="flex-1 h-screen overflow-auto bg-graphon-bg dark:bg-graphon-dark-bg text-graphon-text-main dark:text-graphon-dark-text-main transition-colors duration-300">
       {/* Header */}
-      <div className={`h-14 border-b border-graphon-border dark:border-graphon-dark-border flex items-center px-6 ${!isSidebarVisible ? 'pl-14' : ''}`}>
+      <div
+        className={`h-14 border-b border-graphon-border dark:border-graphon-dark-border flex items-center px-6 ${!isSidebarVisible ? 'pl-14' : ''}`}
+      >
         <h1 className="text-xl font-bold">Settings</h1>
       </div>
 
@@ -217,104 +228,261 @@ export default function SettingsView({
       <div className="max-w-2xl mx-auto p-6 space-y-8">
         {/* Appearance Section */}
         <section>
-          <h2 className="text-xs font-bold text-graphon-text-secondary dark:text-graphon-dark-text-secondary mb-3 tracking-widest uppercase px-1">Appearance</h2>
-          <div className="border border-graphon-border dark:border-graphon-dark-border rounded-xl p-4 bg-white dark:bg-graphon-dark-sidebar/50">
-            <div className="flex items-center justify-between">
+          <h2 className="text-xs font-bold text-graphon-text-secondary dark:text-graphon-dark-text-secondary mb-3 tracking-widest uppercase px-1">
+            Appearance
+          </h2>
+          <div className="border border-graphon-border dark:border-graphon-dark-border rounded-xl p-5 bg-white dark:bg-graphon-dark-sidebar/50">
+            <div className="flex flex-col space-y-4">
               <div className="flex items-center space-x-3">
                 <div
                   className="w-10 h-10 rounded-lg bg-graphon-hover dark:bg-graphon-dark-hover 
                                               flex items-center justify-center border border-graphon-border dark:border-graphon-dark-border"
                 >
-                  {darkMode ? (
+                  {theme === 'dark' ? (
                     <MoonIcon className="w-5 h-5 text-graphon-text-secondary dark:text-graphon-dark-text-secondary" />
-                  ) : (
+                  ) : theme === 'light' ? (
                     <SunIcon className="w-5 h-5 text-graphon-text-secondary dark:text-graphon-dark-text-secondary" />
+                  ) : (
+                    <ComputerDesktopIcon className="w-5 h-5 text-graphon-text-secondary dark:text-graphon-dark-text-secondary" />
                   )}
                 </div>
                 <div>
-                  <p className="font-semibold text-graphon-text-main dark:text-graphon-dark-text-main">Theme</p>
-                  <p className="text-sm text-graphon-text-secondary dark:text-graphon-dark-text-secondary">
-                    {darkMode ? 'Dark Mode' : 'Light Mode'}
+                  <p className="font-semibold text-graphon-text-main dark:text-graphon-dark-text-main">
+                    Theme
+                  </p>
+                  <p className="text-sm text-graphon-text-secondary dark:text-graphon-dark-text-secondary capitalize">
+                    {theme} mode enabled
                   </p>
                 </div>
               </div>
 
-              {/* Toggle Switch */}
+              {/* Theme Selector */}
+              <div className="flex p-1 bg-graphon-hover dark:bg-graphon-dark-hover rounded-xl border border-graphon-border dark:border-graphon-dark-border">
+                {[
+                  { id: 'light', label: 'Light', icon: SunIcon },
+                  { id: 'dark', label: 'Dark', icon: MoonIcon },
+                  { id: 'system', label: 'System', icon: ComputerDesktopIcon }
+                ].map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => onSetTheme(item.id as Theme)}
+                    className={`flex-1 flex items-center justify-center space-x-2 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                              ${
+                                theme === item.id
+                                  ? 'bg-white dark:bg-graphon-dark-bg text-blue-600 dark:text-blue-400 shadow-sm border border-graphon-border/50 dark:border-graphon-dark-border/50'
+                                  : 'text-graphon-text-secondary dark:text-graphon-dark-text-secondary hover:text-graphon-text-main dark:hover:text-white'
+                              }`}
+                  >
+                    <item.icon className="w-4 h-4" />
+                    <span>{item.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Vault Section */}
+        <section>
+          <h2 className="text-xs font-bold text-graphon-text-secondary dark:text-graphon-dark-text-secondary mb-3 tracking-widest uppercase px-1">
+            Vault
+          </h2>
+          <div className="border border-graphon-border dark:border-graphon-dark-border rounded-xl p-4 bg-white dark:bg-graphon-dark-sidebar/50 space-y-3">
+            {/* Current Vault Display */}
+            <div className="flex items-start space-x-3 p-4 rounded-lg bg-graphon-hover dark:bg-graphon-dark-hover border border-graphon-border/50 dark:border-graphon-dark-border/50">
+              <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
+                <FolderIcon className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-graphon-text-main dark:text-graphon-dark-text-main mb-1">
+                  Current Vault
+                </p>
+                <p className="text-sm text-graphon-text-secondary dark:text-graphon-dark-text-secondary truncate font-mono">
+                  {currentVaultPath || 'No vault selected'}
+                </p>
+              </div>
+            </div>
+
+            {/* Vault Actions */}
+            <div className="space-y-2">
               <button
-                onClick={onToggleDarkMode}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors
-                                          ${darkMode ? 'bg-blue-600' : 'bg-graphon-border'}`}
+                onClick={async () => {
+                  await selectVault()
+                  showToast('Vault changed successfully!', 'success')
+                }}
+                className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-graphon-hover dark:hover:bg-graphon-dark-hover transition-colors group"
               >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform
-                                              ${darkMode ? 'translate-x-6' : 'translate-x-1'}`}
-                />
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 rounded-lg bg-graphon-hover dark:bg-graphon-dark-hover flex items-center justify-center border border-graphon-border dark:border-graphon-dark-border">
+                    <FolderOpenIcon className="w-5 h-5 text-graphon-text-secondary dark:text-graphon-dark-text-secondary" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-semibold text-graphon-text-main dark:text-graphon-dark-text-main">
+                      Change Vault
+                    </p>
+                    <p className="text-sm text-graphon-text-secondary dark:text-graphon-dark-text-secondary">
+                      Select a different folder for your workspace
+                    </p>
+                  </div>
+                </div>
+                <svg
+                  className="w-5 h-5 text-graphon-text-secondary/50 dark:text-graphon-dark-text-secondary/50 group-hover:translate-x-1 transition-transform"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
               </button>
+
+              {currentVaultPath && (
+                <button
+                  onClick={async () => {
+                    try {
+                      await (window as any).api.openVaultFolder(currentVaultPath)
+                      showToast('Opened vault folder', 'success')
+                    } catch (error) {
+                      showToast('Failed to open vault folder', 'error')
+                    }
+                  }}
+                  className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-graphon-hover dark:hover:bg-graphon-dark-hover transition-colors group"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-lg bg-graphon-hover dark:bg-graphon-dark-hover flex items-center justify-center border border-graphon-border dark:border-graphon-dark-border">
+                      <svg
+                        className="w-5 h-5 text-graphon-text-secondary dark:text-graphon-dark-text-secondary"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                        />
+                      </svg>
+                    </div>
+                    <div className="text-left">
+                      <p className="font-semibold text-graphon-text-main dark:text-graphon-dark-text-main">
+                        Open Vault Folder
+                      </p>
+                      <p className="text-sm text-graphon-text-secondary dark:text-graphon-dark-text-secondary">
+                        Open in file explorer
+                      </p>
+                    </div>
+                  </div>
+                  <svg
+                    className="w-5 h-5 text-graphon-text-secondary/50 dark:text-graphon-dark-text-secondary/50 group-hover:translate-x-1 transition-transform"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </button>
+              )}
             </div>
           </div>
         </section>
 
         {/* Sidebar Modules Section */}
         <section>
-          <h2 className="text-xs font-bold text-graphon-text-secondary dark:text-graphon-dark-text-secondary mb-3 tracking-widest uppercase px-1">Sidebar Modules</h2>
+          <h2 className="text-xs font-bold text-graphon-text-secondary dark:text-graphon-dark-text-secondary mb-3 tracking-widest uppercase px-1">
+            Sidebar Modules
+          </h2>
           <div className="border border-graphon-border dark:border-graphon-dark-border rounded-xl p-4 bg-white dark:bg-graphon-dark-sidebar/50 space-y-3">
-             {/* Notes Toggle */}
-             <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                   <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                   </div>
-                   <span className="font-semibold text-graphon-text-main dark:text-graphon-dark-text-main">Notes</span>
+            {/* Notes Toggle */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
                 </div>
-                <button
-                 onClick={() => onToggleModule?.('notes')}
-                 className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${moduleVisibility?.notes ? 'bg-blue-600' : 'bg-graphon-border'}`}
-               >
-                 <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${moduleVisibility?.notes ? 'translate-x-5' : 'translate-x-0.5'}`} />
-               </button>
-             </div>
+                <span className="font-semibold text-graphon-text-main dark:text-graphon-dark-text-main">
+                  Notes
+                </span>
+              </div>
+              <button
+                onClick={() => onToggleModule?.('notes')}
+                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${moduleVisibility?.notes ? 'bg-blue-600' : 'bg-graphon-border'}`}
+              >
+                <span
+                  className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${moduleVisibility?.notes ? 'translate-x-5' : 'translate-x-0.5'}`}
+                />
+              </button>
+            </div>
 
-             {/* Calendar Toggle */}
-             <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                   <div className="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-600 dark:text-red-400">
-                      <ClockIcon className="w-4 h-4" />
-                   </div>
-                   <span className="font-semibold text-graphon-text-main dark:text-graphon-dark-text-main">Calendar</span>
+            {/* Calendar Toggle */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-600 dark:text-red-400">
+                  <ClockIcon className="w-4 h-4" />
                 </div>
-                <button
-                 onClick={() => onToggleModule?.('calendar')}
-                 className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${moduleVisibility?.calendar ? 'bg-blue-600' : 'bg-graphon-border'}`}
-               >
-                 <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${moduleVisibility?.calendar ? 'translate-x-5' : 'translate-x-0.5'}`} />
-               </button>
-             </div>
+                <span className="font-semibold text-graphon-text-main dark:text-graphon-dark-text-main">
+                  Calendar
+                </span>
+              </div>
+              <button
+                onClick={() => onToggleModule?.('calendar')}
+                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${moduleVisibility?.calendar ? 'bg-blue-600' : 'bg-graphon-border'}`}
+              >
+                <span
+                  className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${moduleVisibility?.calendar ? 'translate-x-5' : 'translate-x-0.5'}`}
+                />
+              </button>
+            </div>
 
-             {/* Database Toggle */}
-             <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                   <div className="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400">
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7-6h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                      </svg>
-                   </div>
-                   <span className="font-semibold text-graphon-text-main dark:text-graphon-dark-text-main">Database</span>
+            {/* Database Toggle */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 10h18M3 14h18m-9-4v8m-7-6h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                    />
+                  </svg>
                 </div>
-                <button
-                 onClick={() => onToggleModule?.('database')}
-                 className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${moduleVisibility?.database ? 'bg-blue-600' : 'bg-graphon-border'}`}
-               >
-                 <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${moduleVisibility?.database ? 'translate-x-5' : 'translate-x-0.5'}`} />
-               </button>
-             </div>
+                <span className="font-semibold text-graphon-text-main dark:text-graphon-dark-text-main">
+                  Database
+                </span>
+              </div>
+              <button
+                onClick={() => onToggleModule?.('database')}
+                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${moduleVisibility?.database ? 'bg-blue-600' : 'bg-graphon-border'}`}
+              >
+                <span
+                  className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${moduleVisibility?.database ? 'translate-x-5' : 'translate-x-0.5'}`}
+                />
+              </button>
+            </div>
           </div>
         </section>
 
         {/* History Section */}
         <section>
-          <h2 className="text-xs font-bold text-graphon-text-secondary dark:text-graphon-dark-text-secondary mb-3 tracking-widest uppercase px-1">History</h2>
+          <h2 className="text-xs font-bold text-graphon-text-secondary dark:text-graphon-dark-text-secondary mb-3 tracking-widest uppercase px-1">
+            History
+          </h2>
           <div className="border border-graphon-border dark:border-graphon-dark-border rounded-xl p-4 bg-white dark:bg-graphon-dark-sidebar/50">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
@@ -325,7 +493,9 @@ export default function SettingsView({
                   <ClockIcon className="w-5 h-5 text-graphon-text-secondary dark:text-graphon-dark-text-secondary" />
                 </div>
                 <div>
-                  <p className="font-semibold text-graphon-text-main dark:text-graphon-dark-text-main">Undo/Redo</p>
+                  <p className="font-semibold text-graphon-text-main dark:text-graphon-dark-text-main">
+                    Undo/Redo
+                  </p>
                   <p className="text-sm text-graphon-text-secondary dark:text-graphon-dark-text-secondary">
                     {historyEnabled ? 'Enabled (Ctrl+Z / Ctrl+Y)' : 'Disabled'}
                   </p>
@@ -349,7 +519,9 @@ export default function SettingsView({
 
         {/* Data Section */}
         <section>
-          <h2 className="text-xs font-bold text-graphon-text-secondary dark:text-graphon-dark-text-secondary mb-3 tracking-widest uppercase px-1">Data</h2>
+          <h2 className="text-xs font-bold text-graphon-text-secondary dark:text-graphon-dark-text-secondary mb-3 tracking-widest uppercase px-1">
+            Data
+          </h2>
           <div className="border border-graphon-border dark:border-graphon-dark-border rounded-xl p-2 bg-white dark:bg-graphon-dark-sidebar/50 space-y-1">
             {/* Export Button */}
             <button
@@ -366,7 +538,9 @@ export default function SettingsView({
                   <ArrowDownTrayIcon className="w-5 h-5 text-graphon-text-secondary dark:text-graphon-dark-text-secondary" />
                 </div>
                 <div className="text-left">
-                  <p className="font-semibold text-graphon-text-main dark:text-graphon-dark-text-main">Export Data</p>
+                  <p className="font-semibold text-graphon-text-main dark:text-graphon-dark-text-main">
+                    Export Data
+                  </p>
                   <p className="text-sm text-graphon-text-secondary dark:text-graphon-dark-text-secondary">
                     Download all notes and events as JSON
                   </p>
@@ -403,7 +577,9 @@ export default function SettingsView({
                   <ArrowUpTrayIcon className="w-5 h-5 text-graphon-text-secondary dark:text-graphon-dark-text-secondary" />
                 </div>
                 <div className="text-left">
-                  <p className="font-semibold text-graphon-text-main dark:text-graphon-dark-text-main">Import Data</p>
+                  <p className="font-semibold text-graphon-text-main dark:text-graphon-dark-text-main">
+                    Import Data
+                  </p>
                   <p className="text-sm text-graphon-text-secondary dark:text-graphon-dark-text-secondary">
                     Restore from a Graphon backup file
                   </p>
@@ -455,7 +631,9 @@ export default function SettingsView({
               {isAdding && (
                 <div className="flex items-end gap-3 p-4 rounded-xl bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/20 mb-4 animate-in slide-in-from-top-2 duration-300">
                   <div className="flex-1 space-y-1">
-                    <label className="text-[10px] font-bold text-blue-600/70 dark:text-blue-400/70 uppercase px-1">Label</label>
+                    <label className="text-[10px] font-bold text-blue-600/70 dark:text-blue-400/70 uppercase px-1">
+                      Label
+                    </label>
                     <input
                       type="text"
                       placeholder="e.g. XL"
@@ -465,7 +643,9 @@ export default function SettingsView({
                     />
                   </div>
                   <div className="flex-1 space-y-1">
-                    <label className="text-[10px] font-bold text-blue-600/70 dark:text-blue-400/70 uppercase px-1">Height (px)</label>
+                    <label className="text-[10px] font-bold text-blue-600/70 dark:text-blue-400/70 uppercase px-1">
+                      Height (px)
+                    </label>
                     <input
                       type="number"
                       placeholder="e.g. 80"
@@ -477,7 +657,7 @@ export default function SettingsView({
                   <button
                     onClick={handleAddPreset}
                     disabled={!newPresetLabel || !newPresetValue}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold rounded-lg transition-colors h-[38px]"
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold rounded-lg transition-colors h-9.5"
                   >
                     Save Preset
                   </button>
@@ -515,22 +695,22 @@ export default function SettingsView({
 
         {/* About Section */}
         <section>
-          <h2 className="text-xs font-bold text-graphon-text-secondary dark:text-graphon-dark-text-secondary mb-3 tracking-widest uppercase px-1">About</h2>
+          <h2 className="text-xs font-bold text-graphon-text-secondary dark:text-graphon-dark-text-secondary mb-3 tracking-widest uppercase px-1">
+            About
+          </h2>
           <div className="border border-graphon-border dark:border-graphon-dark-border rounded-xl p-6 space-y-4 bg-white dark:bg-graphon-dark-sidebar/50">
             <div className="flex items-start space-x-4">
-              <div
-                className="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center flex-shrink-0"
-              >
+              <div className="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center shrink-0">
                 <span className="text-white font-bold text-2xl">G</span>
               </div>
               <div className="flex-1">
                 <h3 className="text-2xl font-bold mb-1">Graphon</h3>
                 <p className="text-sm text-graphon-text-secondary dark:text-graphon-dark-text-secondary mb-3">
-                  Version 0.0.4
+                  Version 0.0.9
                 </p>
                 <p className="text-sm leading-relaxed text-graphon-text-main dark:text-graphon-dark-text-main opacity-80">
-                  A beautiful Productivity app combining powerful note-taking with
-                  an elegant calendar system. Built with modern web technologies.
+                  A beautiful Productivity app combining powerful note-taking with an elegant
+                  calendar system. Built with modern web technologies.
                 </p>
               </div>
             </div>
@@ -553,7 +733,9 @@ export default function SettingsView({
         {/* Keybindings Section */}
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xs font-bold text-graphon-text-secondary dark:text-graphon-dark-text-secondary tracking-widest uppercase px-1">Keybindings</h2>
+            <h2 className="text-xs font-bold text-graphon-text-secondary dark:text-graphon-dark-text-secondary tracking-widest uppercase px-1">
+              Keybindings
+            </h2>
             <button
               onClick={resetKeybindings}
               className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-bold"

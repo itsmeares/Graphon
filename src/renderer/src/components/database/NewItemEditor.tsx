@@ -137,9 +137,15 @@ export default function NewItemEditor({
             onChange={(e) => updateValue(columnId, e.target.value)}
             className="w-full px-1.5 py-0.5 text-sm bg-transparent border-none focus:ring-0 outline-none transition-colors text-graphon-text-secondary/50"
           >
-            <option value="" className="bg-white dark:bg-[#1c1c1c]">Empty</option>
+            <option value="" className="bg-white dark:bg-[#1c1c1c]">
+              Empty
+            </option>
             {column?.options?.map((option, idx) => (
-              <option key={idx} value={option} className="bg-white dark:bg-[#1c1c1c] text-graphon-text-main dark:text-[#dfdfdf]">
+              <option
+                key={idx}
+                value={option}
+                className="bg-white dark:bg-[#1c1c1c] text-graphon-text-main dark:text-[#dfdfdf]"
+              >
                 {option}
               </option>
             ))}
@@ -147,47 +153,56 @@ export default function NewItemEditor({
         )
 
       default:
-        return <span className="text-graphon-text-secondary/30 dark:text-[#444444] text-sm px-2">Empty</span>
+        return (
+          <span className="text-graphon-text-secondary/30 dark:text-[#444444] text-sm px-2">
+            Empty
+          </span>
+        )
     }
   }
 
   const isModal = mode === 'modal' && !isFullPage
-  const layoutMode = isFullPage ? 'full-page' : (isModal ? 'modal' : 'side-panel')
+  const layoutMode = isFullPage ? 'full-page' : isModal ? 'modal' : 'side-panel'
 
   return (
     <>
       {(layoutMode === 'modal' || layoutMode === 'side-panel') && (
-        <div 
+        <div
           className={`fixed inset-0 z-50 transition-all duration-500 ${layoutMode === 'modal' ? 'bg-black/20 dark:bg-black/60 backdrop-blur-[2px]' : 'bg-transparent'} animate-in fade-in`}
-          onClick={onClose} 
+          onClick={onClose}
         />
       )}
-      
-      <div 
+
+      <div
         className={`
           fixed z-[60] flex flex-col bg-white/95 dark:bg-[#1c1c1c]/90 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-graphon-border dark:border-[#333333] transition-all duration-500 ease-apple
-          ${layoutMode === 'full-page'
-            ? 'inset-0'
-            : layoutMode === 'modal'
-              ? 'inset-y-12 inset-x-4 md:inset-x-[15%] lg:inset-x-[20%] xl:inset-x-[25%] rounded-2xl animate-in zoom-in-95' 
-              : 'inset-y-0 right-0 w-[650px] border-l animate-in slide-in-from-right'
+          ${
+            layoutMode === 'full-page'
+              ? 'inset-0'
+              : layoutMode === 'modal'
+                ? 'inset-y-12 inset-x-4 md:inset-x-[15%] lg:inset-x-[20%] xl:inset-x-[25%] rounded-2xl animate-in zoom-in-95'
+                : 'inset-y-0 right-0 w-[650px] border-l animate-in slide-in-from-right'
           }
         `}
       >
         {/* Top Control Bar */}
-        <div 
+        <div
           className="flex items-center justify-between px-3 py-2 text-graphon-text-secondary dark:text-graphon-dark-text-secondary border-b border-graphon-border dark:border-[#333333]"
           style={{ WebkitAppRegion: 'no-drag' } as any}
         >
           <div className="flex items-center gap-1">
             {layoutMode === 'full-page' ? (
               <div className="flex items-center gap-2 text-xs font-medium px-2">
-                <span className="hover:text-graphon-text-main dark:text-[#9b9b9b] dark:hover:text-[#dfdfdf] cursor-pointer">{database.name}</span>
+                <span className="hover:text-graphon-text-main dark:text-[#9b9b9b] dark:hover:text-[#dfdfdf] cursor-pointer">
+                  {database.name}
+                </span>
                 <span className="text-graphon-text-secondary/30 dark:text-[#444]">/</span>
-                <span className="text-graphon-text-main dark:text-[#dfdfdf]">{String(localItem.values.title || 'Untitled')}</span>
+                <span className="text-graphon-text-main dark:text-[#dfdfdf]">
+                  {String(localItem.values.title || 'Untitled')}
+                </span>
               </div>
             ) : (
-              <button 
+              <button
                 onClick={toggleFullPage}
                 className="p-1.5 hover:bg-black/5 dark:hover:bg-white/5 rounded transition-colors"
                 title="Open in full page"
@@ -197,7 +212,7 @@ export default function NewItemEditor({
             )}
 
             {layoutMode === 'full-page' && (
-              <button 
+              <button
                 onClick={toggleFullPage}
                 className="p-1.5 hover:bg-black/5 dark:hover:bg-white/5 rounded transition-colors"
                 title="Back to normal view"
@@ -206,22 +221,26 @@ export default function NewItemEditor({
               </button>
             )}
           </div>
-          
+
           <div className="flex items-center gap-2">
             <div className="flex items-center text-[11px] text-graphon-text-secondary/50 dark:text-graphon-dark-text-secondary/50 mr-2">
-              Edited {new Date(localItem.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              Edited{' '}
+              {new Date(localItem.updatedAt).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
             </div>
             <button className="flex items-center gap-1 px-2 py-1 text-xs font-medium hover:bg-black/5 dark:hover:bg-white/5 rounded transition-colors text-graphon-text-secondary dark:text-graphon-dark-text-secondary hover:text-graphon-text-main dark:hover:text-white">
               Share
             </button>
-            <button 
+            <button
               onClick={() => onToggleFavorite?.(localItem)}
               className={`p-1.5 hover:bg-black/5 dark:hover:bg-white/5 rounded transition-colors ${isFavorite ? 'text-yellow-500' : ''}`}
             >
               <Star className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
             </button>
             <div className="relative">
-              <button 
+              <button
                 onClick={() => setShowHistory(!showHistory)}
                 className="p-1.5 hover:bg-black/5 dark:hover:bg-white/5 rounded transition-colors"
               >
@@ -229,22 +248,32 @@ export default function NewItemEditor({
               </button>
               {showHistory && (
                 <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-[#252525] border border-graphon-border dark:border-[#333333] rounded-lg shadow-xl z-70 p-3">
-                  <h3 className="text-xs font-bold uppercase tracking-wider mb-2 text-graphon-text-secondary/50">History</h3>
+                  <h3 className="text-xs font-bold uppercase tracking-wider mb-2 text-graphon-text-secondary/50">
+                    History
+                  </h3>
                   <div className="space-y-3">
                     <div className="text-[11px]">
-                      <div className="text-graphon-text-main dark:text-[#dfdfdf] font-medium">Original Version</div>
-                      <div className="text-graphon-text-secondary dark:text-[#666]">{new Date(localItem.createdAt).toLocaleString()}</div>
+                      <div className="text-graphon-text-main dark:text-[#dfdfdf] font-medium">
+                        Original Version
+                      </div>
+                      <div className="text-graphon-text-secondary dark:text-[#666]">
+                        {new Date(localItem.createdAt).toLocaleString()}
+                      </div>
                     </div>
                     <div className="text-[11px]">
-                      <div className="text-graphon-text-main dark:text-[#dfdfdf] font-medium">Last Edited</div>
-                      <div className="text-graphon-text-secondary dark:text-[#666]">{new Date(localItem.updatedAt).toLocaleString()}</div>
+                      <div className="text-graphon-text-main dark:text-[#dfdfdf] font-medium">
+                        Last Edited
+                      </div>
+                      <div className="text-graphon-text-secondary dark:text-[#666]">
+                        {new Date(localItem.updatedAt).toLocaleString()}
+                      </div>
                     </div>
                   </div>
                 </div>
               )}
             </div>
             <div className="relative">
-              <button 
+              <button
                 onClick={() => setShowMoreMenu(!showMoreMenu)}
                 className="p-1.5 hover:bg-black/5 dark:hover:bg-white/5 rounded transition-colors"
               >
@@ -252,7 +281,7 @@ export default function NewItemEditor({
               </button>
               {showMoreMenu && (
                 <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#252525] border border-graphon-border dark:border-[#333333] rounded-lg shadow-xl z-70 py-1 overflow-hidden">
-                  <button 
+                  <button
                     onClick={() => {
                       if (onDeleteItem) {
                         onDeleteItem(localItem.id)
@@ -267,7 +296,7 @@ export default function NewItemEditor({
                 </div>
               )}
             </div>
-            <button 
+            <button
               onClick={onClose}
               className="p-1.5 hover:bg-black/5 dark:hover:bg-white/5 rounded transition-colors ml-1"
             >
@@ -277,14 +306,16 @@ export default function NewItemEditor({
         </div>
 
         {/* Content Area */}
-        <div 
-          className="flex-1 overflow-y-auto custom-scrollbar" 
+        <div
+          className="flex-1 overflow-y-auto custom-scrollbar"
           onClick={() => {
             if (showMoreMenu) setShowMoreMenu(false)
             if (showHistory) setShowHistory(false)
           }}
         >
-          <div className={`${layoutMode === 'full-page' ? 'max-w-4xl' : 'max-w-3xl'} mx-auto px-12 py-10`}>
+          <div
+            className={`${layoutMode === 'full-page' ? 'max-w-4xl' : 'max-w-3xl'} mx-auto px-12 py-10`}
+          >
             {/* Title */}
             <input
               type="text"
@@ -309,7 +340,7 @@ export default function NewItemEditor({
                   </div>
                 </div>
               ))}
-              
+
               <button
                 onClick={handleAddProperty}
                 className="flex items-center gap-2 px-2 py-1.5 text-sm text-graphon-text-secondary dark:text-graphon-dark-text-secondary hover:bg-black/5 dark:hover:bg-white/5 rounded transition-colors w-full mt-1 group"
@@ -321,13 +352,15 @@ export default function NewItemEditor({
 
             {/* Comments Placeholder */}
             <div className="border-t border-graphon-border dark:border-[#333333] mt-8 pt-6">
-              <h4 className="text-xs font-semibold text-graphon-text-secondary dark:text-[#9b9b9b] mb-4 uppercase tracking-wider">Comments</h4>
+              <h4 className="text-xs font-semibold text-graphon-text-secondary dark:text-[#9b9b9b] mb-4 uppercase tracking-wider">
+                Comments
+              </h4>
               <div className="flex items-center gap-3">
                 <div className="w-6 h-6 rounded-full bg-graphon-hover dark:bg-[#333] flex items-center justify-center">
                   <User className="w-4 h-4 text-graphon-text-secondary dark:text-graphon-dark-text-secondary" />
                 </div>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="Add a comment..."
                   className="flex-1 bg-transparent border-none focus:ring-0 text-sm text-graphon-text-main dark:text-[#dfdfdf] placeholder-graphon-text-secondary/30 dark:placeholder-[#444444]"
                 />
