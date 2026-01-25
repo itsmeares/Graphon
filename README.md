@@ -1,3 +1,5 @@
+This project is still in development; any feedbacks, suggestions and contributions will be appreciated.
+
 # Graphon
 
 > A modern desktop application developed with TypeScript, featuring Apple-inspired aesthetics.
