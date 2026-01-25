@@ -23,6 +23,11 @@ interface SettingsViewProps {
   isSidebarVisible?: boolean
   moduleVisibility?: { notes: boolean; calendar: boolean; database: boolean }
   onToggleModule?: (module: 'notes' | 'calendar' | 'database') => void
+  titlebarStyle?: 'macos' | 'windows'
+  onSetTitlebarStyle?: (style: 'macos' | 'windows') => void
+  accentColor: string
+  onSetAccentColor: (color: string) => void
+  accentColors: { id: string; label: string; value: string }[]
 }
 
 export default function SettingsView({
@@ -30,7 +35,12 @@ export default function SettingsView({
   onSetTheme,
   isSidebarVisible = true,
   moduleVisibility,
-  onToggleModule
+  onToggleModule,
+  titlebarStyle = 'macos',
+  onSetTitlebarStyle,
+  accentColor,
+  onSetAccentColor,
+  accentColors
 }: SettingsViewProps) {
   // History enabled state
   const [historyEnabled, setHistoryEnabled] = useState<boolean>(() => {
@@ -108,7 +118,7 @@ export default function SettingsView({
         notes: notesData ? JSON.parse(notesData) : [],
         events: eventsData ? JSON.parse(eventsData) : [],
         exportDate: new Date().toISOString(),
-        version: '0.0.3'
+        version: '0.1.0'
       }
 
       // Also include current note if present
@@ -269,7 +279,7 @@ export default function SettingsView({
                     className={`flex-1 flex items-center justify-center space-x-2 py-2 rounded-lg text-sm font-medium transition-all duration-200
                               ${
                                 theme === item.id
-                                  ? 'bg-white dark:bg-graphon-dark-bg text-blue-600 dark:text-blue-400 shadow-sm border border-graphon-border/50 dark:border-graphon-dark-border/50'
+                                  ? 'bg-white dark:bg-graphon-dark-bg text-(--color-accent) shadow-sm border border-graphon-border/50 dark:border-graphon-dark-border/50'
                                   : 'text-graphon-text-secondary dark:text-graphon-dark-text-secondary hover:text-graphon-text-main dark:hover:text-white'
                               }`}
                   >
@@ -277,6 +287,59 @@ export default function SettingsView({
                     <span>{item.label}</span>
                   </button>
                 ))}
+              </div>
+
+              {/* Titlebar Style Selector */}
+              <div className="mt-4 pt-4 border-t border-graphon-border dark:border-graphon-dark-border">
+                <h3 className="text-sm font-semibold text-graphon-text-main dark:text-graphon-dark-text-main mb-3">
+                  Window Controls
+                </h3>
+                <div className="flex p-1 bg-graphon-hover dark:bg-graphon-dark-hover rounded-xl border border-graphon-border dark:border-graphon-dark-border">
+                  <button
+                    onClick={() => onSetTitlebarStyle?.('macos')}
+                    className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all duration-200 
+                      ${
+                        titlebarStyle === 'macos'
+                          ? 'bg-white dark:bg-graphon-dark-bg text-(--color-accent) shadow-sm border border-graphon-border/50 dark:border-graphon-dark-border/50'
+                          : 'text-graphon-text-secondary dark:text-graphon-dark-text-secondary hover:text-graphon-text-main dark:hover:text-white'
+                      }`}
+                  >
+                    macOS Style
+                  </button>
+                  <button
+                    onClick={() => onSetTitlebarStyle?.('windows')}
+                    className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all duration-200 
+                      ${
+                        titlebarStyle === 'windows'
+                          ? 'bg-white dark:bg-graphon-dark-bg text-(--color-accent) shadow-sm border border-graphon-border/50 dark:border-graphon-dark-border/50'
+                          : 'text-graphon-text-secondary dark:text-graphon-dark-text-secondary hover:text-graphon-text-main dark:hover:text-white'
+                      }`}
+                  >
+                    Windows Style
+                  </button>
+                </div>
+              </div>
+
+              {/* Accent Color Selector */}
+              <div className="mt-4 pt-4 border-t border-graphon-border dark:border-graphon-dark-border">
+                <h3 className="text-sm font-semibold text-graphon-text-main dark:text-graphon-dark-text-main mb-3">
+                  Accent Color
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {accentColors.map((color) => (
+                    <button
+                      key={color.id}
+                      onClick={() => onSetAccentColor(color.id)}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 border-2 ${accentColor === color.id ? 'border-graphon-text-main dark:border-white scale-110' : 'border-transparent hover:scale-105'}`}
+                      style={{ backgroundColor: color.value }}
+                      title={color.label}
+                    >
+                      {accentColor === color.id && (
+                        <div className="w-2.5 h-2.5 rounded-full bg-white shadow-sm" />
+                      )}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -290,7 +353,12 @@ export default function SettingsView({
           <div className="border border-graphon-border dark:border-graphon-dark-border rounded-xl p-4 bg-white dark:bg-graphon-dark-sidebar/50 space-y-3">
             {/* Current Vault Display */}
             <div className="flex items-start space-x-3 p-4 rounded-lg bg-graphon-hover dark:bg-graphon-dark-hover border border-graphon-border/50 dark:border-graphon-dark-border/50">
-              <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
+              <div
+                className="w-10 h-10 rounded-lg flex items-center justify-center text-(--color-accent) shrink-0"
+                style={{
+                  backgroundColor: `color-mix(in srgb, var(--color-accent), transparent 90%)`
+                }}
+              >
                 <FolderIcon className="w-5 h-5" />
               </div>
               <div className="flex-1 min-w-0">
@@ -405,7 +473,12 @@ export default function SettingsView({
             {/* Notes Toggle */}
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-(--color-accent)"
+                  style={{
+                    backgroundColor: `color-mix(in srgb, var(--color-accent), transparent 90%)`
+                  }}
+                >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path
                       strokeLinecap="round"
@@ -421,7 +494,7 @@ export default function SettingsView({
               </div>
               <button
                 onClick={() => onToggleModule?.('notes')}
-                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${moduleVisibility?.notes ? 'bg-blue-600' : 'bg-graphon-border'}`}
+                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${moduleVisibility?.notes ? 'bg-(--color-accent)' : 'bg-graphon-border'}`}
               >
                 <span
                   className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${moduleVisibility?.notes ? 'translate-x-5' : 'translate-x-0.5'}`}
@@ -441,7 +514,7 @@ export default function SettingsView({
               </div>
               <button
                 onClick={() => onToggleModule?.('calendar')}
-                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${moduleVisibility?.calendar ? 'bg-blue-600' : 'bg-graphon-border'}`}
+                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${moduleVisibility?.calendar ? 'bg-(--color-accent)' : 'bg-graphon-border'}`}
               >
                 <span
                   className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${moduleVisibility?.calendar ? 'translate-x-5' : 'translate-x-0.5'}`}
@@ -468,7 +541,7 @@ export default function SettingsView({
               </div>
               <button
                 onClick={() => onToggleModule?.('database')}
-                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${moduleVisibility?.database ? 'bg-blue-600' : 'bg-graphon-border'}`}
+                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${moduleVisibility?.database ? 'bg-(--color-accent)' : 'bg-graphon-border'}`}
               >
                 <span
                   className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${moduleVisibility?.database ? 'translate-x-5' : 'translate-x-0.5'}`}
@@ -506,7 +579,7 @@ export default function SettingsView({
               <button
                 onClick={handleToggleHistory}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors
-                                          ${historyEnabled ? 'bg-blue-600' : 'bg-graphon-border'}`}
+                                          ${historyEnabled ? 'bg-(--color-accent)' : 'bg-graphon-border'}`}
               >
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform
@@ -620,7 +693,7 @@ export default function SettingsView({
             </h2>
             <button
               onClick={() => setIsAdding(!isAdding)}
-              className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-bold flex items-center gap-1"
+              className="text-xs text-(--color-accent) hover:underline dark:text-(--color-accent) font-bold flex items-center gap-1"
             >
               <PlusIcon className="w-3 h-3" />
               {isAdding ? 'Cancel' : 'Add Preset'}
@@ -643,8 +716,8 @@ export default function SettingsView({
                     />
                   </div>
                   <div className="flex-1 space-y-1">
-                    <label className="text-[10px] font-bold text-blue-600/70 dark:text-blue-400/70 uppercase px-1">
-                      Height (px)
+                    <label className="text-[10px] font-bold text-(--color-accent) opacity-70 uppercase px-1">
+                      Label
                     </label>
                     <input
                       type="number"
@@ -657,7 +730,7 @@ export default function SettingsView({
                   <button
                     onClick={handleAddPreset}
                     disabled={!newPresetLabel || !newPresetValue}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold rounded-lg transition-colors h-9.5"
+                    className="px-4 py-2 bg-(--color-accent) hover:opacity-90 disabled:opacity-50 text-white text-xs font-bold rounded-lg transition-colors h-9.5"
                   >
                     Save Preset
                   </button>
@@ -700,13 +773,13 @@ export default function SettingsView({
           </h2>
           <div className="border border-graphon-border dark:border-graphon-dark-border rounded-xl p-6 space-y-4 bg-white dark:bg-graphon-dark-sidebar/50">
             <div className="flex items-start space-x-4">
-              <div className="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center shrink-0">
+              <div className="w-16 h-16 rounded-2xl bg-(--color-accent) flex items-center justify-center shrink-0">
                 <span className="text-white font-bold text-2xl">G</span>
               </div>
               <div className="flex-1">
                 <h3 className="text-2xl font-bold mb-1">Graphon</h3>
                 <p className="text-sm text-graphon-text-secondary dark:text-graphon-dark-text-secondary mb-3">
-                  Version 0.0.9
+                  Version 0.1.0
                 </p>
                 <p className="text-sm leading-relaxed text-graphon-text-main dark:text-graphon-dark-text-main opacity-80">
                   A beautiful Productivity app combining powerful note-taking with an elegant
@@ -738,7 +811,7 @@ export default function SettingsView({
             </h2>
             <button
               onClick={resetKeybindings}
-              className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-bold"
+              className="text-xs text-(--color-accent) hover:underline dark:text-(--color-accent) font-bold"
             >
               Reset to Default
             </button>

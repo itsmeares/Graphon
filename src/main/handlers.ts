@@ -9,6 +9,17 @@ const SETTINGS_PATH = join(app.getPath('userData'), 'settings.json')
 // This prevents path traversal attacks - renderer cannot specify arbitrary paths
 let currentVaultPath: string | null = null
 
+// =============================================================================
+// TYPES
+// =============================================================================
+
+interface FileNode {
+  name: string
+  path: string
+  type: 'file' | 'folder'
+  children?: FileNode[]
+}
+
 interface VaultSettings {
   vaultPath: string | null
 }
@@ -145,17 +156,58 @@ export async function handleGetVaultPath(): Promise<string | null> {
 }
 
 /**
- * List files in the vault directory (excludes .graphon folder)
+ * Recursive directory scanner
  */
-export async function handleListFiles(): Promise<string[]> {
+async function scanDirectory(rootDir: string, relativeDir: string): Promise<FileNode[]> {
+  const currentPath = join(rootDir, relativeDir)
+  const entries = await fs.readdir(currentPath, { withFileTypes: true })
+
+  const nodes: FileNode[] = []
+
+  for (const entry of entries) {
+    // Ignore hidden files and .graphon
+    if (entry.name.startsWith('.') || entry.name === '.graphon' || entry.name === 'node_modules') {
+      continue
+    }
+
+    const entryRelativePath = relativeDir ? join(relativeDir, entry.name) : entry.name
+
+    if (entry.isDirectory()) {
+      const children = await scanDirectory(rootDir, entryRelativePath)
+      nodes.push({
+        name: entry.name,
+        path: entryRelativePath,
+        type: 'folder',
+        children
+      })
+    } else if (entry.isFile()) {
+      // Only include specific file types
+      if (entry.name.endsWith('.md') || entry.name.endsWith('.txt')) {
+        nodes.push({
+          name: entry.name,
+          path: entryRelativePath,
+          type: 'file'
+        })
+      }
+    }
+  }
+
+  // Sort: Folders first, then files, alphabetically
+  return nodes.sort((a, b) => {
+    if (a.type === b.type) {
+      return a.name.localeCompare(b.name)
+    }
+    return a.type === 'folder' ? -1 : 1
+  })
+}
+
+/**
+ * List files in the vault directory (recursive)
+ */
+export async function handleListFiles(): Promise<FileNode[]> {
   try {
     const vaultPath = getVaultPathOrThrow()
-    const files = await fs.readdir(vaultPath)
-    // Filter to show .md files and directories, excluding .graphon
-    return files.filter((file) => {
-      if (file === '.graphon' || file.startsWith('.')) return false
-      return file.endsWith('.md') || file.endsWith('.txt') || !file.includes('.')
-    })
+    return await scanDirectory(vaultPath, '')
   } catch (error) {
     console.error('Error listing files:', error)
     throw error

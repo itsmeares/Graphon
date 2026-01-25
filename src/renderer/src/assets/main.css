@@ -14,12 +14,15 @@
   --color-graphon-text-main: #2c2b27;
   --color-graphon-text-secondary: rgba(44, 43, 39, 0.6);
 
-  --color-graphon-dark-bg: #1c1c1a;
-  --color-graphon-dark-sidebar: #242422;
+  --color-graphon-dark-bg: #202020;
+  --color-graphon-dark-sidebar: #252525;
   --color-graphon-dark-border: rgba(255, 255, 255, 0.08);
   --color-graphon-dark-hover: rgba(255, 255, 255, 0.04);
   --color-graphon-dark-text-main: rgba(248, 246, 242, 0.9);
   --color-graphon-dark-text-secondary: rgba(248, 246, 242, 0.5);
+
+  /* Accent Color */
+  --color-accent: #007aff;
 
   /* System Gray */
   --color-systemGray-1: #8e8e93;
