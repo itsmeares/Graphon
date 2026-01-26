@@ -304,6 +304,28 @@ app.whenReady().then(() => {
       }
     })
 
+    // Shell handlers
+    ipcMain.on('shell:show-item-in-folder', async (_, filename) => {
+      try {
+        // We reuse the valid filename check logic or similar?
+        // ideally we invoke a handler that is safe.
+        // handlers.ts doesn't export a "showItemInFolder" yet, I can add it or inline valid logic.
+        // Inline logic: get vault path, join, show.
+        const { handleGetVaultPath } = await import('./handlers')
+        const vaultPath = await handleGetVaultPath()
+        if (vaultPath) {
+          const { join, normalize } = await import('path')
+          const fullPath = join(vaultPath, filename)
+          // Basic security check
+          if (fullPath.startsWith(vaultPath)) {
+            shell.showItemInFolder(fullPath)
+          }
+        }
+      } catch (err) {
+        console.error('Error in shell:show-item-in-folder:', err)
+      }
+    })
+
     // File I/O handlers (SECURITY: vault path from main process state)
     ipcMain.handle('vault:read-file', async (_, filename: string) => {
       try {
@@ -328,6 +350,16 @@ app.whenReady().then(() => {
         await handleDeleteFile(filename)
       } catch (err) {
         console.error('Error in vault:delete-file handler:', err)
+        throw err
+      }
+    })
+
+    ipcMain.handle('vault:rename-file', async (_, oldName: string, newName: string) => {
+      try {
+        const { handleRenameFile } = await import('./handlers')
+        await handleRenameFile(oldName, newName)
+      } catch (err) {
+        console.error('Error in vault:rename-file handler:', err)
         throw err
       }
     })

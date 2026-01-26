@@ -251,7 +251,7 @@ export default function NotesView({ isSidebarVisible = true }: NotesViewProps) {
         p-2 rounded-lg transition-smooth
         ${
           isActive
-            ? 'bg-blue-600/10 text-blue-600 dark:text-blue-400'
+            ? 'bg-(--color-accent)/10 text-(--color-accent)'
             : 'text-graphon-text-secondary dark:text-graphon-dark-text-secondary hover:bg-graphon-hover dark:hover:bg-graphon-dark-hover'
         }
       `}
@@ -267,8 +267,8 @@ export default function NotesView({ isSidebarVisible = true }: NotesViewProps) {
     <div className="flex-1 h-screen overflow-hidden bg-white dark:bg-graphon-dark-bg text-graphon-text-main dark:text-graphon-dark-text-main relative">
       {/* Saving Indicator */}
       {isSaving && (
-        <div className="absolute top-4 right-4 z-50 px-3 py-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-medium rounded-full flex items-center gap-2">
-          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+        <div className="absolute top-4 right-4 z-50 px-3 py-1.5 bg-(--color-accent)/10 text-(--color-accent) text-xs font-medium rounded-full flex items-center gap-2">
+          <div className="w-2 h-2 bg-(--color-accent) rounded-full animate-pulse" />
           Saving...
         </div>
       )}

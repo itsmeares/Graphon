@@ -51,7 +51,7 @@ const BoardCard = memo(function BoardCard({
       onDragEnd={handleDragEnd}
       onClick={onClick}
       className={`
-                group relative bg-white dark:bg-[#252525] rounded-xl border border-graphon-border dark:border-[#303030]
+                group relative bg-white dark:bg-graphon-dark-sidebar rounded-xl border border-graphon-border dark:border-[#303030]
                 p-3 cursor-grab active:cursor-grabbing hover:border-gray-400 dark:hover:border-[#404040]
                 transition-all duration-200 shadow-sm
                 ${isDragging ? 'opacity-50 rotate-2 scale-105' : ''}
@@ -69,7 +69,7 @@ const BoardCard = memo(function BoardCard({
       </button>
 
       {showMenu && (
-        <div className="absolute top-8 right-2 w-32 bg-white dark:bg-[#252525] border border-graphon-border dark:border-[#353535] rounded-lg shadow-2xl z-50 overflow-hidden">
+        <div className="absolute top-8 right-2 w-32 bg-white dark:bg-graphon-dark-sidebar border border-graphon-border dark:border-[#353535] rounded-lg shadow-2xl z-50 overflow-hidden">
           <button
             onClick={(e) => {
               e.stopPropagation()
@@ -183,7 +183,11 @@ const BoardColumn = memo(function BoardColumn({
     if (v.includes('to do') || v.includes('not started'))
       return { dot: 'bg-[#9b9b9b]', text: 'text-[#9b9b9b]', bg: 'bg-[#9b9b9b]/10' }
     if (v.includes('in progress'))
-      return { dot: 'bg-[#337ea9]', text: 'text-[#337ea9]', bg: 'bg-[#337ea9]/10' }
+      return {
+        dot: 'bg-(--color-accent)',
+        text: 'text-(--color-accent)',
+        bg: 'bg-(--color-accent)/10'
+      }
     if (v.includes('done') || v.includes('complete'))
       return { dot: 'bg-[#448361]', text: 'text-[#448361]', bg: 'bg-[#448361]/10' }
     return { dot: 'bg-gray-400', text: 'text-gray-400', bg: 'bg-gray-400/10' }
@@ -194,9 +198,9 @@ const BoardColumn = memo(function BoardColumn({
   return (
     <div
       className={`
-                flex-shrink-0 w-72 flex flex-col min-h-full
+                shrink-0 w-72 flex flex-col min-h-full
                 transition-colors duration-200
-                ${isDragOver ? 'bg-blue-500/5 dark:bg-blue-500/5 rounded-xl' : ''}
+                 ${isDragOver ? 'bg-(--color-accent)/5 dark:bg-(--color-accent)/5 rounded-xl' : ''}
             `}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
@@ -244,8 +248,8 @@ const BoardColumn = memo(function BoardColumn({
 
         {/* Inline Creation Input */}
         {isAddingInline && (
-          <div className="bg-white dark:bg-[#252525] rounded-xl border border-graphon-border dark:border-[#303030] p-3 shadow-sm flex items-center gap-2">
-            <DocumentIcon className="w-5 h-5 text-gray-400 flex-shrink-0" />
+          <div className="bg-white dark:bg-graphon-dark-sidebar rounded-xl border border-graphon-border dark:border-[#303030] p-3 shadow-sm flex items-center gap-2">
+            <DocumentIcon className="w-5 h-5 text-gray-400 shrink-0" />
             <input
               autoFocus
               type="text"

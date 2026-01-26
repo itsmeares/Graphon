@@ -29,6 +29,8 @@ interface VaultAPI {
   readFile: (filename: string) => Promise<string | null>
   writeFile: (filename: string, content: string) => Promise<void>
   deleteFile: (filename: string) => Promise<void>
+  renameFile: (oldName: string, newName: string) => Promise<void>
+  showItemInFolder: (filename: string) => void
 
   // Vault Data API (for .graphon/*.json files)
   readData: <T>(key: string) => Promise<T | null>

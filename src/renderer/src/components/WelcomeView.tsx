@@ -12,7 +12,7 @@ export default function WelcomeView() {
     <div className="w-full h-full flex items-center justify-center p-8 overflow-hidden relative">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden opacity-30 dark:opacity-20">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-(--color-accent)/20 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
       </div>
 
@@ -21,7 +21,7 @@ export default function WelcomeView() {
         {/* Logo/Icon */}
         <div className="mb-8 flex justify-center">
           <div className="relative">
-            <div className="w-24 h-24 rounded-3xl bg-linear-to-br from-blue-600 to-purple-600 flex items-center justify-center text-white text-4xl font-bold shadow-2xl animate-in zoom-in duration-500">
+            <div className="w-24 h-24 rounded-3xl bg-linear-to-br from-(--color-accent) to-purple-600 flex items-center justify-center text-white text-4xl font-bold shadow-2xl animate-in zoom-in duration-500">
               G
             </div>
             <div className="absolute -top-2 -right-2 animate-bounce delay-500">
@@ -31,7 +31,7 @@ export default function WelcomeView() {
         </div>
 
         {/* Title */}
-        <h1 className="text-5xl font-bold mb-4 bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-purple-400 animate-in slide-in-from-bottom-4 duration-700 delay-100">
+        <h1 className="text-5xl font-bold mb-4 bg-linear-to-r from-(--color-accent) to-purple-600 bg-clip-text text-transparent dark:from-(--color-accent) dark:to-purple-400 animate-in slide-in-from-bottom-4 duration-700 delay-100">
           Welcome to Graphon
         </h1>
 
@@ -58,9 +58,9 @@ export default function WelcomeView() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center animate-in slide-in-from-bottom-4 duration-700 delay-400">
           <button
             onClick={handleOpenVault}
-            className="group relative px-8 py-4 bg-linear-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold text-lg shadow-2xl hover:shadow-blue-500/50 transition-all duration-300 hover:scale-105 btn-squish overflow-hidden"
+            className="group relative px-8 py-4 bg-linear-to-r from-(--color-accent) to-purple-600 text-white rounded-xl font-semibold text-lg shadow-2xl hover:shadow-(--color-accent)/50 transition-all duration-300 hover:scale-105 btn-squish overflow-hidden"
           >
-            <div className="absolute inset-0 bg-linear-to-r from-blue-700 to-purple-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="absolute inset-0 bg-linear-to-r from-(--color-accent)/80 to-purple-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <div className="relative flex items-center justify-center space-x-3">
               <FolderOpenIcon className="w-6 h-6" />
               <span>Open Vault</span>

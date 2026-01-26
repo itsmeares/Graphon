@@ -313,6 +313,25 @@ export async function handleDeleteFile(filename: string): Promise<void> {
   }
 }
 
+/**
+ * Rename a file in the vault root
+ */
+export async function handleRenameFile(oldName: string, newName: string): Promise<void> {
+  try {
+    if (!isValidFilename(oldName) || !isValidFilename(newName)) {
+      throw new Error(`Invalid filename`)
+    }
+    const vaultPath = getVaultPathOrThrow()
+    const oldPath = join(vaultPath, oldName)
+    const newPath = join(vaultPath, newName)
+
+    await fs.rename(oldPath, newPath)
+  } catch (error) {
+    console.error('Error renaming file:', error)
+    throw error
+  }
+}
+
 // =============================================================================
 // DATA I/O (.graphon/*.json files)
 // =============================================================================

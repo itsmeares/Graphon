@@ -106,7 +106,7 @@ export default function NewItemEditor({
             type="checkbox"
             checked={Boolean(value)}
             onChange={(e) => updateValue(columnId, e.target.checked)}
-            className="ml-2 w-4 h-4 rounded border-graphon-border dark:border-[#333333] text-blue-600 focus:ring-0 bg-transparent dark:bg-[#252525]"
+            className="ml-2 w-4 h-4 rounded border-graphon-border dark:border-[#333333] text-(--color-accent) focus:ring-0 bg-transparent dark:bg-graphon-dark-sidebar"
           />
         )
 
@@ -116,7 +116,7 @@ export default function NewItemEditor({
             type="date"
             value={value ? String(value) : ''}
             onChange={(e) => updateValue(columnId, e.target.value)}
-            className="w-full px-2 py-0.5 text-sm bg-transparent border-none focus:ring-0 outline-none transition-colors text-graphon-text-main dark:text-[#dfdfdf] [color-scheme:light] dark:[color-scheme:dark]"
+            className="w-full px-2 py-0.5 text-sm bg-transparent border-none focus:ring-0 outline-none transition-colors text-graphon-text-main dark:text-[#dfdfdf] scheme-light dark:scheme-dark"
           />
         )
 
@@ -168,20 +168,20 @@ export default function NewItemEditor({
     <>
       {(layoutMode === 'modal' || layoutMode === 'side-panel') && (
         <div
-          className={`fixed inset-0 z-50 transition-all duration-500 ${layoutMode === 'modal' ? 'bg-black/20 dark:bg-black/60 backdrop-blur-[2px]' : 'bg-transparent'} animate-in fade-in`}
+          className={`fixed inset-0 z-50 transition-all duration-500 ${layoutMode === 'modal' ? 'bg-black/20 dark:bg-black/60 backdrop-blur-xs' : 'bg-transparent'} animate-in fade-in`}
           onClick={onClose}
         />
       )}
 
       <div
         className={`
-          fixed z-[60] flex flex-col bg-white/95 dark:bg-[#1c1c1c]/90 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-graphon-border dark:border-[#333333] transition-all duration-500 ease-apple
+          fixed z-60 flex flex-col bg-white/95 dark:bg-[#1c1c1c]/90 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-graphon-border dark:border-[#333333] transition-all duration-500 ease-apple
           ${
             layoutMode === 'full-page'
               ? 'inset-0'
               : layoutMode === 'modal'
                 ? 'inset-y-12 inset-x-4 md:inset-x-[15%] lg:inset-x-[20%] xl:inset-x-[25%] rounded-2xl animate-in zoom-in-95'
-                : 'inset-y-0 right-0 w-[650px] border-l animate-in slide-in-from-right'
+                : 'inset-y-0 right-0 w-162.5 border-l animate-in slide-in-from-right'
           }
         `}
       >
@@ -247,7 +247,7 @@ export default function NewItemEditor({
                 <History className="w-4 h-4" />
               </button>
               {showHistory && (
-                <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-[#252525] border border-graphon-border dark:border-[#333333] rounded-lg shadow-xl z-70 p-3">
+                <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-graphon-dark-sidebar border border-graphon-border dark:border-[#333333] rounded-lg shadow-xl z-70 p-3">
                   <h3 className="text-xs font-bold uppercase tracking-wider mb-2 text-graphon-text-secondary/50">
                     History
                   </h3>
@@ -280,7 +280,7 @@ export default function NewItemEditor({
                 <MoreHorizontal className="w-4 h-4" />
               </button>
               {showMoreMenu && (
-                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#252525] border border-graphon-border dark:border-[#333333] rounded-lg shadow-xl z-70 py-1 overflow-hidden">
+                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-graphon-dark-sidebar border border-graphon-border dark:border-[#333333] rounded-lg shadow-xl z-70 py-1 overflow-hidden">
                   <button
                     onClick={() => {
                       if (onDeleteItem) {
@@ -371,12 +371,12 @@ export default function NewItemEditor({
             <div className="my-8 border-t border-graphon-border dark:border-[#333333]"></div>
 
             {/* Content Editor */}
-            <div className="min-h-[200px]">
+            <div className="min-h-50">
               <textarea
                 value={localItem.content || ''}
                 onChange={(e) => updateContent(e.target.value)}
                 placeholder="Press Enter to continue with an empty page, or create a template"
-                className="w-full min-h-[150px] text-base text-graphon-text-main dark:text-[#dfdfdf] placeholder-graphon-text-secondary/30 dark:placeholder-[#444444] border-none outline-none focus:ring-0 resize-none bg-transparent"
+                className="w-full min-h-37.5 text-base text-graphon-text-main dark:text-[#dfdfdf] placeholder-graphon-text-secondary/30 dark:placeholder-[#444444] border-none outline-none focus:ring-0 resize-none bg-transparent"
               />
             </div>
           </div>

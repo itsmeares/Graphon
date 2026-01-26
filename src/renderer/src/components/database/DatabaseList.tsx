@@ -76,7 +76,7 @@ export default function DatabaseList({ onSelectDatabase }: DatabaseListProps) {
           </div>
           <button
             onClick={handleCreateDatabase}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-colors border border-blue-600/50"
+            className="flex items-center gap-2 px-4 py-2 bg-(--color-accent) hover:brightness-110 text-white font-bold rounded-lg transition-colors border border-(--color-accent)/50 shadow-sm"
           >
             <PlusIcon className="w-5 h-5" />
             Create Database
@@ -88,7 +88,7 @@ export default function DatabaseList({ onSelectDatabase }: DatabaseListProps) {
             <div
               key={db.id}
               onClick={() => onSelectDatabase(db.id)}
-              className="group relative bg-white dark:bg-graphon-dark-sidebar/50 border border-graphon-border dark:border-graphon-dark-border rounded-xl p-5 cursor-pointer hover:border-blue-500 dark:hover:border-blue-500 transition-all duration-200"
+              className="group relative bg-white dark:bg-graphon-dark-sidebar/50 border border-graphon-border dark:border-graphon-dark-border rounded-xl p-5 cursor-pointer hover:border-(--color-accent) dark:hover:border-(--color-accent) transition-all duration-200"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="w-10 h-10 flex items-center justify-center bg-graphon-hover dark:bg-graphon-dark-hover rounded-lg text-2xl border border-graphon-border dark:border-graphon-dark-border">
@@ -123,7 +123,7 @@ export default function DatabaseList({ onSelectDatabase }: DatabaseListProps) {
               </p>
               <button
                 onClick={handleCreateDatabase}
-                className="text-blue-600 hover:text-blue-700 font-bold"
+                className="text-(--color-accent) hover:underline font-bold"
               >
                 Create new database
               </button>

@@ -30,11 +30,16 @@ const api = {
     ipcRenderer.invoke('vault:write-file', filename, content),
   deleteFile: (filename: string): Promise<void> =>
     ipcRenderer.invoke('vault:delete-file', filename),
+  renameFile: (oldName: string, newName: string): Promise<void> =>
+    ipcRenderer.invoke('vault:rename-file', oldName, newName),
 
   // Vault Data API (for .graphon/*.json files)
   readData: <T>(key: string): Promise<T | null> => ipcRenderer.invoke('vault:read-data', key),
   writeData: (key: string, data: any): Promise<void> =>
-    ipcRenderer.invoke('vault:write-data', key, data)
+    ipcRenderer.invoke('vault:write-data', key, data),
+
+  // Shell API
+  showItemInFolder: (filename: string) => ipcRenderer.send('shell:show-item-in-folder', filename)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

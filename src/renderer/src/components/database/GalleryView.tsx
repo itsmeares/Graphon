@@ -1,6 +1,6 @@
 import { memo, useState } from 'react'
 import { PlusIcon, EllipsisHorizontalIcon } from '@heroicons/react/24/outline'
-import type { Database, Item, ViewConfig, Column } from '../../types'
+import type { Database, Item, ViewConfig } from '../../types'
 
 interface GalleryViewProps {
   database: Database
@@ -28,7 +28,7 @@ const GalleryCard = memo(function GalleryCard({
 
   return (
     <div
-      className="group relative bg-white dark:bg-[#252525] rounded-xl border border-graphon-border dark:border-white/5 overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-gray-300 dark:hover:border-white/10 cursor-pointer flex flex-col h-56 shadow-sm"
+      className="group relative bg-white dark:bg-graphon-dark-sidebar rounded-xl border border-graphon-border dark:border-white/5 overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-gray-300 dark:hover:border-white/10 cursor-pointer flex flex-col h-56 shadow-sm"
       onClick={onClick}
     >
       {/* Visual Area / Cover Placeholder */}
@@ -54,7 +54,7 @@ const GalleryCard = memo(function GalleryCard({
         </button>
 
         {showMenu && (
-          <div className="absolute top-10 right-2 w-32 bg-white dark:bg-[#252525] border border-graphon-border dark:border-[#333333] rounded-lg shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+          <div className="absolute top-10 right-2 w-32 bg-white dark:bg-graphon-dark-sidebar border border-graphon-border dark:border-[#333333] rounded-lg shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
             <button
               onClick={(e) => {
                 e.stopPropagation()
@@ -70,7 +70,7 @@ const GalleryCard = memo(function GalleryCard({
       </div>
 
       {/* Title & Info Strip */}
-      <div className="p-4 bg-white dark:bg-[#252525] border-t border-graphon-border dark:border-white/5">
+      <div className="p-4 bg-white dark:bg-graphon-dark-sidebar border-t border-graphon-border dark:border-white/5">
         <h3 className="text-[14px] text-graphon-text-main dark:text-[#dfdfdf] line-clamp-2 font-semibold leading-tight mb-1">
           {String(title)}
         </h3>
@@ -83,17 +83,14 @@ const GalleryCard = memo(function GalleryCard({
 })
 
 export default function GalleryView({
-  database,
-  viewConfig,
   items,
-  onUpdateItem,
   onDeleteItem,
   onAddItem,
   onItemClick
 }: GalleryViewProps) {
   return (
     <div className="h-full overflow-y-auto p-8 bg-graphon-bg dark:bg-[#191919] transition-colors duration-300 custom-scrollbar">
-      <div className="max-w-[1400px] mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+      <div className="max-w-350 mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
         {items.map((item) => (
           <GalleryCard
             key={item.id}
@@ -106,13 +103,13 @@ export default function GalleryView({
         {/* Add New Card (Matched style) */}
         <button
           onClick={() => onAddItem()}
-          className="h-56 group relative flex flex-col bg-transparent rounded-xl border-2 border-dashed border-graphon-border dark:border-white/5 overflow-hidden transition-all duration-300 hover:border-blue-500/50 hover:bg-blue-500/[0.02] dark:hover:bg-white/5"
+          className="h-56 group relative flex flex-col bg-transparent rounded-xl border-2 border-dashed border-graphon-border dark:border-white/5 overflow-hidden transition-all duration-300 hover:border-(--color-accent)/50 hover:bg-(--color-accent)/5 dark:hover:bg-white/5"
         >
-          <div className="flex-1 flex items-center justify-center text-graphon-text-secondary/30 group-hover:text-blue-500/50 transition-colors">
+          <div className="flex-1 flex items-center justify-center text-graphon-text-secondary/30 group-hover:text-(--color-accent)/50 transition-colors">
             <PlusIcon className="w-8 h-8 stroke-1" />
           </div>
           <div className="w-full p-4 text-left">
-            <span className="text-[14px] font-medium text-graphon-text-secondary/60 dark:text-graphon-dark-text-secondary/60 group-hover:text-blue-500/80 transition-colors">
+            <span className="text-[14px] font-medium text-graphon-text-secondary/60 dark:text-graphon-dark-text-secondary/60 group-hover:text-(--color-accent)/80 transition-colors">
               + New page
             </span>
           </div>

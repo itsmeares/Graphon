@@ -14,6 +14,12 @@ interface MainLayoutProps {
   titlebarStyle?: 'macos' | 'windows'
   isSidebarVisible?: boolean
   onToggleSidebar?: () => void
+  darkMode?: boolean
+  onToggleDarkMode?: () => void
+  favorites?: any[]
+  onFavoriteClick?: (databaseId: string, itemId: string) => void
+  onToggleFavorite?: (databaseId: string, item: any) => void
+  moduleVisibility?: { notes: boolean; calendar: boolean; database: boolean }
 }
 
 export default function MainLayout({

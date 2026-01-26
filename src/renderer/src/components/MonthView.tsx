@@ -73,9 +73,9 @@ export default function MonthView({
                   key={`${wIdx}-${dIdx}`}
                   onClick={() => handleDateClick(day)}
                   className={`
-                        min-h-[100px] p-2 relative cursor-pointer hover:bg-graphon-hover dark:hover:bg-graphon-dark-hover transition-colors flex flex-col gap-1
+                        min-h-25 p-2 relative cursor-pointer hover:bg-graphon-hover dark:hover:bg-graphon-dark-hover transition-colors flex flex-col gap-1
                          ${!isCurrentMonth ? 'bg-graphon-sidebar dark:bg-graphon-dark-sidebar opacity-60' : 'bg-white dark:bg-graphon-dark-bg'}
-                         ${isSelected ? 'ring-1 ring-blue-500 z-10' : ''}
+                         ${isSelected ? 'ring-1 ring-(--color-accent) z-10' : ''}
                        `}
                 >
                   <div className="flex items-center justify-between mb-1">
@@ -84,7 +84,7 @@ export default function MonthView({
                                  text-sm font-semibold w-7 h-7 flex items-center justify-center rounded-full
                                  ${
                                    dayIsToday
-                                     ? 'bg-blue-600 text-white font-bold'
+                                     ? 'bg-(--color-accent) text-white font-bold'
                                      : isCurrentMonth
                                        ? 'text-graphon-text-main dark:text-graphon-dark-text-main'
                                        : 'text-graphon-text-secondary/50 dark:text-graphon-dark-text-secondary/50'
@@ -100,7 +100,7 @@ export default function MonthView({
                     {dayEvents.slice(0, 3).map((event) => (
                       <div
                         key={event.id}
-                        className={`text-[10px] px-1.5 py-0.5 rounded truncate text-white ${event.color || 'bg-blue-500'}`}
+                        className={`text-[10px] px-1.5 py-0.5 rounded truncate text-white ${event.color || 'bg-(--color-accent)'}`}
                       >
                         {event.title || 'Untitled'}
                       </div>
