@@ -89,14 +89,14 @@ export default function CalendarSidebar({ selectedDate, onSelectDate }: Calendar
                     ${!isCurrentMonth ? 'text-graphon-text-secondary/30 dark:text-graphon-dark-text-secondary/30' : 'text-graphon-text-main dark:text-graphon-dark-text-main'}
                     ${
                       dayIsToday
-                        ? 'bg-blue-600 text-white font-bold shadow-sm'
+                        ? 'bg-(--color-accent) text-white font-bold shadow-sm'
                         : 'hover:bg-graphon-hover dark:hover:bg-graphon-dark-hover'
                     }
                     ${
                       isSelected && !dayIsToday
-                        ? 'ring-2 ring-blue-600/50 bg-blue-50 dark:bg-blue-600/20 font-bold text-blue-600 dark:text-blue-400'
+                        ? 'ring-2 ring-(--color-accent)/50 bg-(--color-accent)/10 dark:bg-(--color-accent)/20 font-bold text-(--color-accent)'
                         : isSelected && dayIsToday
-                          ? 'ring-2 ring-blue-600 ring-offset-2 dark:ring-offset-[#1C1C1A] ring-offset-graphon-bg'
+                          ? 'ring-2 ring-(--color-accent) ring-offset-2 dark:ring-offset-[#1C1C1A] ring-offset-graphon-bg'
                           : ''
                     }
                   `}
@@ -117,7 +117,7 @@ export default function CalendarSidebar({ selectedDate, onSelectDate }: Calendar
           <span>My Calendars</span>
         </div>
         <ul className="space-y-1">
-          <SidebarItem label="Graphon Personal" color="bg-blue-500" active />
+          <SidebarItem label="Graphon Personal" color="bg-(--color-accent)" active />
           <SidebarItem label="Work" color="bg-green-500" active />
           <SidebarItem label="Family" color="bg-purple-500" />
           <SidebarItem label="Birthdays" color="bg-amber-500" />
@@ -149,7 +149,7 @@ function SidebarItem({
   return (
     <li className="flex items-center group cursor-pointer px-1 py-1 rounded-md hover:bg-graphon-hover dark:hover:bg-graphon-dark-hover transition-colors">
       <div
-        className={`w-3 h-3 rounded-[2px] mr-3 ${color} ${active ? 'opacity-100' : 'opacity-40'} group-hover:opacity-100 transition-opacity`}
+        className={`w-3 h-3 rounded-xs mr-3 ${color} ${active ? 'opacity-100' : 'opacity-40'} group-hover:opacity-100 transition-opacity`}
       />
       <span
         className={`text-[13px] font-medium ${active ? 'text-graphon-text-main dark:text-graphon-dark-text-main' : 'text-graphon-text-secondary dark:text-graphon-dark-text-secondary'} group-hover:text-graphon-text-main dark:group-hover:text-graphon-dark-text-main transition-colors`}

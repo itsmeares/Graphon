@@ -5,7 +5,7 @@ This project is still in development; any feedbacks, suggestions and contributio
 > A modern desktop application developed with TypeScript, featuring Apple-inspired aesthetics.
 
 ![Electron](https://img.shields.io/badge/Electron-v33-47848F?logo=electron)
-![React](https://img.shields.io/badge/React-v18-61DAFB?logo=react)
+![React](https://img.shields.io/badge/React-v19-61DAFB?logo=react)
 ![TypeScript](https://img.shields.io/badge/TypeScript-v5-3178C6?logo=typescript)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-v4-38B2AC?logo=tailwind-css)
 
@@ -126,7 +126,7 @@ Graphon/
 ### Core
 
 - **Framework**: Electron.js v33
-- **UI Library**: React v18
+- **UI Library**: React v19
 - **Language**: TypeScript v5
 - **Build Tool**: Electron Vite
 
@@ -174,4 +174,4 @@ This project is licensed under the MIT License.
 
 ---
 
-**Graphon v0.0.4** - Modern, Minimalist, Masterful. 🚀
+**Graphon v0.1.1** - Modern, Minimalist, Masterful. 🚀

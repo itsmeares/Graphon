@@ -11,6 +11,7 @@ import WelcomeView from './components/WelcomeView'
 import NewPageView from './components/NewPageView'
 import HomeView from './components/HomeView'
 import { Theme } from './types'
+import { CommandPalette } from './components/CommandPalette'
 
 // Accent colors
 export const ACCENT_COLORS = [
@@ -48,6 +49,7 @@ function AppContent() {
   // State
   const [activeActivity, setActiveActivity] = useState<ActivityId>('files')
   const [isSidebarVisible, setIsSidebarVisible] = useState(true)
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false)
 
   // Favorites State
   const [favorites, setFavorites] = useState<
@@ -165,6 +167,16 @@ function AppContent() {
       // If we have a current DB, open it? For now just generic DB view?
       // Maybe open "Databases" list tab
       openTab({ id: 'database-list', type: 'database', title: 'Databases' })
+    } else if (id === 'home') {
+      openTab({
+        id: `new-page-${Date.now()}`,
+        type: 'new-page',
+        title: 'New Page',
+        icon: '📄'
+      })
+    } else if (id === 'notes') {
+      setActiveActivity('files')
+      // If no tab is open, maybe we don't do anything, just let Sidebar show selection?
     } else if (id === 'files') {
       // Just show sidebar? Ensure a file tab is active?
       // If no file active, maybe don't force one.
@@ -382,10 +394,102 @@ function AppContent() {
       >
         {/* Render Content based on Active Tab */}
         {!activeTab && (
-          <div className="flex-1 flex items-center justify-center text-neutral-400 select-none bg-graphon-bg dark:bg-graphon-dark-bg">
-            <div className="text-center">
-              <p className="mb-2">No Open Tabs</p>
-              <p className="text-sm opacity-50">Select a file or activity to get started</p>
+          <div className="flex-1 h-full flex flex-col items-center justify-center select-none bg-graphon-bg dark:bg-graphon-dark-bg transition-colors duration-300">
+            <div className="flex flex-col items-center max-w-lg mx-auto p-12">
+              {/* App Icon / Logo Placeholder */}
+              <div className="w-24 h-24 mb-8 rounded-4xl bg-linear-to-b from-neutral-100 to-white dark:from-[#2C2C2A] dark:to-[#1C1C1A] shadow-xl dark:shadow-2xl dark:shadow-black/20 flex items-center justify-center ring-1 ring-black/5 dark:ring-white/5">
+                <svg
+                  className="w-10 h-10 text-neutral-400 dark:text-neutral-500 drop-shadow-sm"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M12 16V12"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M12 8H12.01"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
+
+              <h2 className="text-2xl font-semibold text-neutral-800 dark:text-neutral-200 mb-3 tracking-tight">
+                Graphon
+              </h2>
+              <p className="text-neutral-500 dark:text-neutral-400 text-center text-sm mb-10 max-w-sm leading-relaxed">
+                Your personal knowledge base. <br /> Open a file or create a new page to begin.
+              </p>
+
+              {/* Shortcuts */}
+              <div className="grid grid-cols-2 gap-x-12 gap-y-4 text-sm w-full">
+                <div className="flex items-center justify-between group">
+                  <span className="text-neutral-500 dark:text-neutral-500 group-hover:text-neutral-700 dark:group-hover:text-neutral-300 transition-colors">
+                    New Page
+                  </span>
+                  <div className="flex gap-1">
+                    <kbd className="px-2 py-0.5 min-w-5 h-6 inline-flex items-center justify-center rounded bg-neutral-200/50 dark:bg-neutral-800/50 border border-neutral-300/30 dark:border-neutral-700/30 text-[10px] font-sans font-medium text-neutral-500 dark:text-neutral-400">
+                      Ctrl
+                    </kbd>
+                    <kbd className="px-2 py-0.5 min-w-5 h-6 inline-flex items-center justify-center rounded bg-neutral-200/50 dark:bg-neutral-800/50 border border-neutral-300/30 dark:border-neutral-700/30 text-[10px] font-sans font-medium text-neutral-500 dark:text-neutral-400">
+                      N
+                    </kbd>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between group">
+                  <span className="text-neutral-500 dark:text-neutral-500 group-hover:text-neutral-700 dark:group-hover:text-neutral-300 transition-colors">
+                    Command Palette
+                  </span>
+                  <div className="flex gap-1">
+                    <kbd className="px-2 py-0.5 min-w-5 h-6 inline-flex items-center justify-center rounded bg-neutral-200/50 dark:bg-neutral-800/50 border border-neutral-300/30 dark:border-neutral-700/30 text-[10px] font-sans font-medium text-neutral-500 dark:text-neutral-400">
+                      Ctrl
+                    </kbd>
+                    <kbd className="px-2 py-0.5 min-w-5 h-6 inline-flex items-center justify-center rounded bg-neutral-200/50 dark:bg-neutral-800/50 border border-neutral-300/30 dark:border-neutral-700/30 text-[10px] font-sans font-medium text-neutral-500 dark:text-neutral-400">
+                      P
+                    </kbd>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between group">
+                  <span className="text-neutral-500 dark:text-neutral-500 group-hover:text-neutral-700 dark:group-hover:text-neutral-300 transition-colors">
+                    New Tab
+                  </span>
+                  <div className="flex gap-1">
+                    <kbd className="px-2 py-0.5 min-w-5 h-6 inline-flex items-center justify-center rounded bg-neutral-200/50 dark:bg-neutral-800/50 border border-neutral-300/30 dark:border-neutral-700/30 text-[10px] font-sans font-medium text-neutral-500 dark:text-neutral-400">
+                      Ctrl
+                    </kbd>
+                    <kbd className="px-2 py-0.5 min-w-5 h-6 inline-flex items-center justify-center rounded bg-neutral-200/50 dark:bg-neutral-800/50 border border-neutral-300/30 dark:border-neutral-700/30 text-[10px] font-sans font-medium text-neutral-500 dark:text-neutral-400">
+                      T
+                    </kbd>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between group">
+                  <span className="text-neutral-500 dark:text-neutral-500 group-hover:text-neutral-700 dark:group-hover:text-neutral-300 transition-colors">
+                    Close Tab
+                  </span>
+                  <div className="flex gap-1">
+                    <kbd className="px-2 py-0.5 min-w-5 h-6 inline-flex items-center justify-center rounded bg-neutral-200/50 dark:bg-neutral-800/50 border border-neutral-300/30 dark:border-neutral-700/30 text-[10px] font-sans font-medium text-neutral-500 dark:text-neutral-400">
+                      Ctrl
+                    </kbd>
+                    <kbd className="px-2 py-0.5 min-w-5 h-6 inline-flex items-center justify-center rounded bg-neutral-200/50 dark:bg-neutral-800/50 border border-neutral-300/30 dark:border-neutral-700/30 text-[10px] font-sans font-medium text-neutral-500 dark:text-neutral-400">
+                      W
+                    </kbd>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -461,6 +565,22 @@ function AppContent() {
             />
           ))}
       </MainLayout>
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        setIsOpen={setIsCommandPaletteOpen}
+        onViewChange={(view) => {
+          // Handle view changes from Palette
+          if (view === 'notes') {
+            setActiveActivity('files')
+          } else if (view === 'calendar') {
+            openTab({ id: 'calendar', type: 'calendar', title: 'Calendar' })
+          } else if (view === 'database') {
+            openTab({ id: 'database-list', type: 'database', title: 'Databases' })
+          }
+        }}
+        darkMode={isDarkMode}
+        onToggleDarkMode={() => handleSetTheme(isDarkMode ? 'light' : 'dark')}
+      />
     </div>
   )
 }

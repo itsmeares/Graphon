@@ -53,7 +53,7 @@ export const SlashCommandList = forwardRef((props: SlashCommandListProps, ref) =
   }))
 
   return (
-    <div className="z-50 h-auto max-h-[330px] w-64 overflow-y-auto rounded-xl border border-graphon-border dark:border-graphon-dark-border bg-white dark:bg-[#252525] shadow-2xl animate-in fade-in zoom-in-95 duration-150 p-1.5 font-sans">
+    <div className="z-50 h-auto max-h-82.5 w-64 overflow-y-auto rounded-xl border border-graphon-border dark:border-graphon-dark-border bg-white dark:bg-graphon-dark-sidebar shadow-2xl animate-in fade-in zoom-in-95 duration-150 p-1.5 font-sans">
       <div className="px-2 py-1.5 text-[11px] font-medium text-gray-400 dark:text-gray-500 select-none uppercase tracking-wider">
         Basic blocks
       </div>
@@ -63,7 +63,7 @@ export const SlashCommandList = forwardRef((props: SlashCommandListProps, ref) =
           className={`group flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-sm text-left transition-all
             ${
               index === selectedIndex
-                ? 'bg-blue-600 text-white dark:bg-blue-600 dark:text-white'
+                ? 'bg-(--color-accent) text-white'
                 : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5'
             }
           `}
@@ -81,7 +81,7 @@ export const SlashCommandList = forwardRef((props: SlashCommandListProps, ref) =
           </div>
           {item.shortcut && (
             <span
-              className={`text-[10px] font-mono tracking-tighter ${index === selectedIndex ? 'text-blue-100' : 'text-gray-400 dark:text-gray-600'}`}
+              className={`text-[10px] font-mono tracking-tighter ${index === selectedIndex ? 'text-white/80' : 'text-gray-400 dark:text-gray-600'}`}
             >
               {item.shortcut}
             </span>

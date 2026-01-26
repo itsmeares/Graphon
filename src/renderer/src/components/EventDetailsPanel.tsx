@@ -28,7 +28,7 @@ export default function EventDetailsPanel({
   const [description, setDescription] = useState('')
   const [startDate, setStartDate] = useState(new Date())
   const [endDate, setEndDate] = useState(new Date())
-  const [color, setColor] = useState('bg-blue-500')
+  const [color, setColor] = useState('bg-(--color-accent)')
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showOverlapWarning, setShowOverlapWarning] = useState(false)
@@ -40,7 +40,7 @@ export default function EventDetailsPanel({
       setDescription(event.description || '')
       setStartDate(new Date(event.startDate))
       setEndDate(new Date(event.endDate))
-      setColor(event.color || 'bg-blue-500')
+      setColor(event.color || 'bg-(--color-accent)')
       setHasUnsavedChanges(false)
     }
   }, [event])
@@ -53,7 +53,7 @@ export default function EventDetailsPanel({
         description !== (event.description || '') ||
         startDate.getTime() !== new Date(event.startDate).getTime() ||
         endDate.getTime() !== new Date(event.endDate).getTime() ||
-        color !== (event.color || 'bg-blue-500')
+        color !== (event.color || 'bg-(--color-accent)')
       setHasUnsavedChanges(hasChanges)
     }
   }, [title, description, startDate, endDate, color, event])
@@ -116,7 +116,7 @@ export default function EventDetailsPanel({
               Event Details
             </span>
             {hasUnsavedChanges && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold">
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-(--color-accent)/10 text-(--color-accent) font-bold">
                 Modified
               </span>
             )}
@@ -178,7 +178,7 @@ export default function EventDetailsPanel({
             </label>
             <div className="flex space-x-2.5">
               {[
-                'bg-blue-500',
+                'bg-(--color-accent)',
                 'bg-red-500',
                 'bg-green-500',
                 'bg-yellow-500',
@@ -188,7 +188,7 @@ export default function EventDetailsPanel({
                 <button
                   key={c}
                   onClick={() => setColor(c)}
-                  className={`w-6 h-6 rounded-full ${c} ${color === c ? 'ring-2 ring-offset-2 ring-blue-500 dark:ring-offset-graphon-dark-bg' : ''} transition-all`}
+                  className={`w-6 h-6 rounded-full ${c} ${color === c ? 'ring-2 ring-offset-2 ring-(--color-accent) dark:ring-offset-graphon-dark-bg' : ''} transition-all`}
                 />
               ))}
             </div>
@@ -200,7 +200,7 @@ export default function EventDetailsPanel({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Add description..."
-              className="w-full h-32 bg-graphon-hover dark:bg-graphon-dark-sidebar border border-graphon-border dark:border-graphon-dark-border rounded-lg p-3 text-sm text-graphon-text-main dark:text-graphon-dark-text-main placeholder-graphon-text-secondary/50 resize-none focus:ring-1 focus:ring-blue-500/30 outline-none"
+              className="w-full h-32 bg-graphon-hover dark:bg-graphon-dark-sidebar border border-graphon-border dark:border-graphon-dark-border rounded-lg p-3 text-sm text-graphon-text-main dark:text-graphon-dark-text-main placeholder-graphon-text-secondary/50 resize-none focus:ring-1 focus:ring-(--color-accent)/30 outline-none"
             />
           </div>
         </div>
@@ -215,7 +215,7 @@ export default function EventDetailsPanel({
                             w-full flex items-center justify-center gap-2 py-2.5 rounded-lg font-bold text-sm transition-all
                             ${
                               hasUnsavedChanges
-                                ? 'bg-blue-600 hover:bg-blue-700 text-white border border-blue-600/50 shadow-sm active:scale-[0.98]'
+                                ? 'bg-(--color-accent) hover:brightness-110 text-white border border-(--color-accent)/50 shadow-sm active:scale-[0.98]'
                                 : 'bg-graphon-hover dark:bg-graphon-dark-hover text-graphon-text-secondary/50 dark:text-graphon-dark-text-secondary/50 cursor-not-allowed border border-graphon-border dark:border-graphon-dark-border'
                             }
                         `}
@@ -336,7 +336,7 @@ function TimePicker({
     <div className="relative" ref={containerRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full text-left px-3 py-2 bg-graphon-hover dark:bg-graphon-dark-sidebar border border-graphon-border dark:border-graphon-dark-border rounded-md text-sm text-graphon-text-main dark:text-graphon-dark-text-main hover:bg-graphon-hover/80 dark:hover:bg-graphon-dark-hover transition-colors focus:outline-none focus:ring-1 focus:ring-blue-500/50"
+        className="w-full text-left px-3 py-2 bg-graphon-hover dark:bg-graphon-dark-sidebar border border-graphon-border dark:border-graphon-dark-border rounded-md text-sm text-graphon-text-main dark:text-graphon-dark-text-main hover:bg-graphon-hover/80 dark:hover:bg-graphon-dark-hover transition-colors focus:outline-none focus:ring-1 focus:ring-(--color-accent)/50"
       >
         {formatTime(date)}
       </button>
@@ -349,8 +349,8 @@ function TimePicker({
               onClick={() => handleSelectTime(slot)}
               className={`
                                 px-3 py-1.5 text-sm cursor-pointer
-                                hover:bg-blue-500/10 text-graphon-text-main dark:text-graphon-dark-text-main transition-colors
-                                ${slot === formatTime(date) ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400 font-bold' : ''}
+                                hover:bg-(--color-accent)/10 text-graphon-text-main dark:text-graphon-dark-text-main transition-colors
+                                ${slot === formatTime(date) ? 'bg-(--color-accent)/20 text-(--color-accent) font-bold' : ''}
                             `}
             >
               {slot}

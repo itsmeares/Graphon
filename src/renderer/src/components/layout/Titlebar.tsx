@@ -76,6 +76,20 @@ export default function Titlebar({ style, isSidebarVisible, onToggleSidebar }: T
           <Bars3Icon className="w-4 h-4" />
         </button>
 
+        {/* Dynamic spacer to push tabs to the right of the sidebar: 
+            330px (Sidebar) - ~124px (Traffic Lights + Toggle Area) = ~206px offset needed
+         */}
+        <div
+          className="h-full transition-all duration-300 ease-in-out shrink-0"
+          style={{
+            width: isSidebarVisible
+              ? style === 'macos'
+                ? '206px'
+                : '290px' // Mac: 330-124; Win: 330-40 (approx)
+              : '10px'
+          }}
+        />
+
         {/* Browser-like Tab Bar */}
         <TabBar />
       </div>

@@ -33,6 +33,7 @@ export default function HomeView({
     name: string
     items: Item[]
     id: string
+    icon?: string
   } | null>(null)
 
   // Database Selection State
@@ -91,7 +92,8 @@ export default function HomeView({
           setHomeDatabase({
             name: db.name,
             items: db.items.slice(0, 50), // Load more so we can scroll
-            id: db.id
+            id: db.id,
+            icon: db.icon
           })
         } catch (e) {
           console.error('Failed to load home database', e)
@@ -105,7 +107,8 @@ export default function HomeView({
     setHomeDatabase({
       name: db.name,
       items: db.items.slice(0, 50),
-      id: db.id
+      id: db.id,
+      icon: db.icon
     })
     setIsSelectingDatabase(false)
   }
@@ -150,8 +153,8 @@ export default function HomeView({
       title: 'Meeting Notes',
       description: 'Standard format for weekly recurring meetings.',
       imageColor:
-        'bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/40 dark:to-blue-800/20',
-      icon: <DocumentTextIcon className="w-6 h-6 text-blue-600 dark:text-blue-400" />,
+        'bg-gradient-to-br from-(--color-accent)/10 to-(--color-accent)/20 dark:from-(--color-accent)/40 dark:to-(--color-accent)/20',
+      icon: <DocumentTextIcon className="w-6 h-6 text-(--color-accent)" />,
       readTime: 'Template'
     },
     {
@@ -200,9 +203,9 @@ export default function HomeView({
             onClick={onCreateNote}
             className="group flex flex-col p-4 rounded-xl text-left bg-white dark:bg-zinc-800/50 hover:bg-zinc-50 dark:hover:bg-zinc-800 border border-graphon-border dark:border-white/5 shadow-sm hover:shadow-md transition-all duration-200 w-full h-32 relative overflow-hidden"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/5 dark:to-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="absolute inset-0 bg-linear-to-br from-transparent to-black/5 dark:to-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
             <div className="mb-auto">
-              <DocumentTextIcon className="w-6 h-6 text-graphon-text-secondary dark:text-graphon-dark-text-secondary group-hover:text-blue-500 transition-colors" />
+              <DocumentTextIcon className="w-6 h-6 text-graphon-text-secondary dark:text-graphon-dark-text-secondary group-hover:text-(--color-accent) transition-colors" />
             </div>
             <div className="z-10">
               <span className="text-sm font-medium text-graphon-text-main dark:text-white block">
@@ -253,7 +256,7 @@ export default function HomeView({
               onClick={() =>
                 handleCreateFromTemplate(template.id, template.title, template.description)
               }
-              className="group cursor-pointer flex flex-col rounded-xl overflow-hidden bg-white dark:bg-zinc-800/50 border border-graphon-border dark:border-white/5 shadow-sm hover:shadow-lg hover:border-blue-500/30 dark:hover:border-blue-400/30 transition-all duration-300"
+              className="group cursor-pointer flex flex-col rounded-xl overflow-hidden bg-white dark:bg-zinc-800/50 border border-graphon-border dark:border-white/5 shadow-sm hover:shadow-lg hover:border-(--color-accent)/30 dark:hover:border-(--color-accent)/30 transition-all duration-300"
             >
               {/* Image/Preview Top Area */}
               <div
@@ -292,7 +295,7 @@ export default function HomeView({
             <h2 className="text-xs font-semibold uppercase tracking-wider">Calendar</h2>
           </div>
 
-          <div className="bg-white dark:bg-zinc-800/30 rounded-xl border border-graphon-border dark:border-white/5 flex flex-col h-[400px]">
+          <div className="bg-white dark:bg-zinc-800/30 rounded-xl border border-graphon-border dark:border-white/5 flex flex-col h-100">
             {/* Mini Calendar Header */}
             <div className="p-4 border-b border-graphon-border/50 dark:border-white/5 flex items-center justify-between">
               <h3 className="font-semibold text-graphon-text-main dark:text-white">
@@ -342,16 +345,16 @@ export default function HomeView({
                                 w-8 h-8 rounded-full flex flex-col items-center justify-center text-xs relative transition-all
                                 ${
                                   isSelected
-                                    ? 'bg-blue-600 text-white shadow-md scale-105'
+                                    ? 'bg-(--color-accent) text-white shadow-md scale-105'
                                     : isTodayDate
-                                      ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                                      ? 'bg-(--color-accent)/10 dark:bg-(--color-accent)/20 text-(--color-accent)'
                                       : 'hover:bg-zinc-100 dark:hover:bg-zinc-700/50 text-graphon-text-main dark:text-white'
                                 }
                             `}
                   >
                     {format(day, 'd')}
                     {!isSelected && hasEvents && (
-                      <div className="absolute bottom-1 w-1 h-1 bg-blue-500 rounded-full" />
+                      <div className="absolute bottom-1 w-1 h-1 bg-(--color-accent) rounded-full" />
                     )}
                   </button>
                 )
@@ -368,7 +371,7 @@ export default function HomeView({
                   <p className="text-xs text-zinc-400 mb-1">No events</p>
                   <button
                     onClick={() => onViewChange('calendar')}
-                    className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400"
+                    className="text-xs text-(--color-accent) hover:opacity-80"
                   >
                     Open Calendar
                   </button>
@@ -401,7 +404,7 @@ export default function HomeView({
             <h2 className="text-xs font-semibold uppercase tracking-wider">Home views</h2>
           </div>
 
-          <div className="bg-white dark:bg-zinc-800/30 rounded-xl border border-graphon-border dark:border-white/5 h-[400px] flex flex-col">
+          <div className="bg-white dark:bg-zinc-800/30 rounded-xl border border-graphon-border dark:border-white/5 h-100 flex flex-col">
             {!homeDatabase ? (
               <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
                 <div className="w-16 h-16 mb-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/80 flex items-center justify-center">
@@ -422,7 +425,7 @@ export default function HomeView({
                           onViewChange('database') // Go create one
                         }
                       }}
-                      className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                      className="text-sm font-medium text-(--color-accent) hover:opacity-80 transition-colors"
                     >
                       Select database
                     </button>
@@ -455,7 +458,7 @@ export default function HomeView({
               </div>
             ) : (
               <div className="flex-1 flex flex-col min-h-0">
-                <div className="p-4 border-b border-graphon-border/50 dark:border-white/5 flex items-center justify-between flex-shrink-0">
+                <div className="p-4 border-b border-graphon-border/50 dark:border-white/5 flex items-center justify-between shrink-0">
                   <div className="flex items-center space-x-2">
                     <span className="text-lg">{homeDatabase.icon || '📋'}</span>{' '}
                     {/* We don't have icon in minimal state, just use default */}
@@ -475,7 +478,7 @@ export default function HomeView({
                     </button>
                     <button
                       onClick={() => onViewChange('database')}
-                      className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                      className="text-xs text-(--color-accent) hover:underline"
                     >
                       Open Full
                     </button>
@@ -487,7 +490,7 @@ export default function HomeView({
                       <p className="text-xs">No items</p>
                       <button
                         onClick={() => onViewChange('database')}
-                        className="mt-2 text-xs text-blue-600"
+                        className="mt-2 text-xs text-(--color-accent)"
                       >
                         + Add Item in Database
                       </button>
@@ -510,7 +513,7 @@ export default function HomeView({
                                           item.values.Status === 'Done'
                                             ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                                             : item.values.Status === 'In Progress'
-                                              ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                              ? 'bg-(--color-accent)/10 text-(--color-accent) dark:bg-(--color-accent)/20'
                                               : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'
                                         }
                                    `}

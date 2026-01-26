@@ -61,6 +61,7 @@ interface VaultContextType {
   writeNoteContent: (filename: string, content: string) => Promise<void>
   createNote: (filename?: string) => Promise<void>
   deleteNote: (filename: string) => Promise<void>
+  renameNote: (oldName: string, newName: string) => Promise<void>
 
   // Pending save flush (for data integrity)
   flushPendingWrites: () => Promise<void>
@@ -402,6 +403,31 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     [loadFiles, activeFile]
   )
 
+  // Rename a note
+  const renameNote = useCallback(
+    async (oldName: string, newName: string): Promise<void> => {
+      try {
+        await window.api.renameFile(oldName, newName)
+        await loadFiles()
+        // If active, update active file? activeFile is derived from tabs.
+        // We need to update tabs that point to this file.
+        setTabs((prev) =>
+          prev.map((t) => {
+            if (t.type === 'file' && t.path === oldName) {
+              return { ...t, path: newName, title: newName, id: newName }
+            }
+            return t
+          })
+        )
+        // If active tab was this file, activeFile naturally updates because it reads from tabs[activeTabIndex]
+      } catch (error) {
+        console.error(`Failed to rename note ${oldName} to ${newName}:`, error)
+        throw error
+      }
+    },
+    [loadFiles]
+  )
+
   return (
     <VaultContext.Provider
       value={{
@@ -436,6 +462,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
         writeNoteContent,
         createNote,
         deleteNote,
+        renameNote,
         flushPendingWrites,
         registerPendingWrite,
         unregisterPendingWrite

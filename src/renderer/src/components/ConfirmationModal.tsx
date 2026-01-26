@@ -40,7 +40,7 @@ export default function ConfirmationModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[100] overflow-y-auto">
+    <div className="fixed inset-0 z-100 overflow-y-auto">
       <div className="flex min-h-screen items-center justify-center p-4 text-center">
         {/* Backdrop */}
         <div
@@ -55,7 +55,7 @@ export default function ConfirmationModal({
         >
           <div className="flex items-start space-x-4">
             <div
-              className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${isDanger ? 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20' : 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'}`}
+              className={`shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${isDanger ? 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20' : 'bg-(--color-accent)/10 text-(--color-accent) border border-(--color-accent)/20'}`}
             >
               <ExclamationTriangleIcon className="w-6 h-6" />
             </div>
@@ -75,7 +75,7 @@ export default function ConfirmationModal({
                     ref={dontAskAgainRef}
                     id="dont-ask-again"
                     type="checkbox"
-                    className="h-4 w-4 rounded border-graphon-border dark:border-graphon-dark-border text-blue-600 focus:ring-blue-500 bg-white dark:bg-graphon-dark-sidebar"
+                    className="h-4 w-4 rounded border-graphon-border dark:border-graphon-dark-border text-(--color-accent) focus:ring-(--color-accent) bg-white dark:bg-graphon-dark-sidebar"
                   />
                   <label
                     htmlFor="dont-ask-again"
@@ -101,7 +101,7 @@ export default function ConfirmationModal({
               className={`px-4 py-2 text-sm font-bold text-white rounded-lg transition-colors ${
                 isDanger
                   ? 'bg-red-600 hover:bg-red-700 border border-red-600/50 shadow-sm'
-                  : 'bg-blue-600 hover:bg-blue-700 border border-blue-600/50 shadow-sm'
+                  : 'bg-(--color-accent) hover:brightness-110 border border-(--color-accent)/50 shadow-sm'
               }`}
               onClick={() => {
                 const dontAsk = dontAskAgainRef.current?.checked || false

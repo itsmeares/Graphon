@@ -118,7 +118,7 @@ export default function SettingsView({
         notes: notesData ? JSON.parse(notesData) : [],
         events: eventsData ? JSON.parse(eventsData) : [],
         exportDate: new Date().toISOString(),
-        version: '0.1.0'
+        version: '0.1.1'
       }
 
       // Also include current note if present
@@ -702,9 +702,9 @@ export default function SettingsView({
           <div className="border border-graphon-border dark:border-graphon-dark-border rounded-xl p-4 bg-white dark:bg-graphon-dark-sidebar/50">
             <div className="space-y-4">
               {isAdding && (
-                <div className="flex items-end gap-3 p-4 rounded-xl bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/20 mb-4 animate-in slide-in-from-top-2 duration-300">
+                <div className="flex items-end gap-3 p-4 rounded-xl bg-(--color-accent)/10 border border-(--color-accent)/20 mb-4 animate-in slide-in-from-top-2 duration-300">
                   <div className="flex-1 space-y-1">
-                    <label className="text-[10px] font-bold text-blue-600/70 dark:text-blue-400/70 uppercase px-1">
+                    <label className="text-[10px] font-bold text-(--color-accent) opacity-70 uppercase px-1">
                       Label
                     </label>
                     <input
@@ -712,7 +712,7 @@ export default function SettingsView({
                       placeholder="e.g. XL"
                       value={newPresetLabel}
                       onChange={(e) => setNewPresetLabel(e.target.value)}
-                      className="w-full px-3 py-2 text-sm bg-white dark:bg-graphon-dark-bg border border-blue-200 dark:border-blue-900/30 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/20"
+                      className="w-full px-3 py-2 text-sm bg-white dark:bg-graphon-dark-bg border border-(--color-accent)/20 rounded-lg outline-none focus:ring-2 focus:ring-(--color-accent)/20"
                     />
                   </div>
                   <div className="flex-1 space-y-1">
@@ -724,7 +724,7 @@ export default function SettingsView({
                       placeholder="e.g. 80"
                       value={newPresetValue}
                       onChange={(e) => setNewPresetValue(e.target.value)}
-                      className="w-full px-3 py-2 text-sm bg-white dark:bg-graphon-dark-bg border border-blue-200 dark:border-blue-900/30 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/20"
+                      className="w-full px-3 py-2 text-sm bg-white dark:bg-graphon-dark-bg border border-(--color-accent)/20 rounded-lg outline-none focus:ring-2 focus:ring-(--color-accent)/20"
                     />
                   </div>
                   <button
@@ -779,7 +779,7 @@ export default function SettingsView({
               <div className="flex-1">
                 <h3 className="text-2xl font-bold mb-1">Graphon</h3>
                 <p className="text-sm text-graphon-text-secondary dark:text-graphon-dark-text-secondary mb-3">
-                  Version 0.1.0
+                  Version 0.1.1
                 </p>
                 <p className="text-sm leading-relaxed text-graphon-text-main dark:text-graphon-dark-text-main opacity-80">
                   A beautiful Productivity app combining powerful note-taking with an elegant
@@ -845,7 +845,7 @@ export default function SettingsView({
                         showToast(`Updated binding for ${action}`, 'success')
                       }
                     }}
-                    className="p-1 text-graphon-text-secondary/50 hover:text-blue-500 transition-colors"
+                    className="p-1 text-graphon-text-secondary/50 hover:text-(--color-accent) transition-colors"
                     title="Edit Keybinding"
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

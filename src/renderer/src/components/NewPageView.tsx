@@ -27,21 +27,21 @@ const NewPageView: React.FC = () => {
       <div className="flex flex-col space-y-6">
         <button
           onClick={handleCreateNote}
-          className="text-xl font-medium text-blue-500 hover:text-blue-400 hover:underline transition-colors focus:outline-none"
+          className="text-xl font-medium text-(--color-accent) hover:brightness-110 hover:underline transition-colors focus:outline-none"
         >
           Create new note (Ctrl + N)
         </button>
 
         <button
           onClick={handleGoToFile}
-          className="text-xl font-medium text-blue-500 hover:text-blue-400 hover:underline transition-colors focus:outline-none"
+          className="text-xl font-medium text-(--color-accent) hover:brightness-110 hover:underline transition-colors focus:outline-none"
         >
           Go to file (Ctrl + O)
         </button>
 
         <button
           onClick={handleClose}
-          className="text-xl font-medium text-blue-500 hover:text-blue-400 hover:underline transition-colors focus:outline-none"
+          className="text-xl font-medium text-(--color-accent) hover:brightness-110 hover:underline transition-colors focus:outline-none"
         >
           Close
         </button>

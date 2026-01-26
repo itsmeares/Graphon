@@ -62,7 +62,7 @@ const TextCell = memo(function TextCell({
         onChange={(e) => setLocalValue(e.target.value)}
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}
-        className="w-full px-2 py-1 bg-graphon-hover dark:bg-graphon-dark-hover border border-blue-500 rounded text-sm focus:outline-none text-graphon-text-main dark:text-graphon-dark-text-main"
+        className="w-full px-2 py-1 bg-graphon-hover dark:bg-graphon-dark-hover border border-(--color-accent) rounded text-sm focus:outline-none text-graphon-text-main dark:text-graphon-dark-text-main"
       />
     )
   }
@@ -70,7 +70,7 @@ const TextCell = memo(function TextCell({
   return (
     <div
       onClick={() => setEditing(true)}
-      className="px-2 py-1 cursor-text hover:bg-graphon-hover dark:hover:bg-graphon-dark-hover rounded text-sm truncate min-h-[28px] text-graphon-text-main dark:text-graphon-dark-text-main"
+      className="px-2 py-1 cursor-text hover:bg-graphon-hover dark:hover:bg-graphon-dark-hover rounded text-sm truncate min-h-7 text-graphon-text-main dark:text-graphon-dark-text-main"
     >
       {value || <span className="text-graphon-text-secondary/30">Empty</span>}
     </div>
@@ -101,7 +101,7 @@ const SelectCell = memo(function SelectCell({
 
   const colors: Record<string, string> = {
     'To Do': 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300',
-    'In Progress': 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
+    'In Progress': 'bg-(--color-accent)/10 text-(--color-accent) dark:bg-(--color-accent)/20',
     Done: 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300',
     Low: 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400',
     Medium: 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300',
@@ -112,7 +112,7 @@ const SelectCell = memo(function SelectCell({
     <div ref={ref} className="relative">
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className="px-2 py-1 cursor-pointer hover:bg-graphon-hover dark:hover:bg-graphon-dark-hover rounded min-h-[28px] flex items-center transition-colors"
+        className="px-2 py-1 cursor-pointer hover:bg-graphon-hover dark:hover:bg-graphon-dark-hover rounded min-h-7 flex items-center transition-colors"
       >
         {value ? (
           <span
@@ -162,7 +162,7 @@ const CheckboxCell = memo(function CheckboxCell({
         type="checkbox"
         checked={value}
         onChange={(e) => onChange(e.target.checked)}
-        className="w-4 h-4 rounded border-graphon-border dark:border-graphon-dark-border text-blue-600 focus:ring-blue-500 bg-white dark:bg-graphon-dark-sidebar"
+        className="w-4 h-4 rounded border-graphon-border dark:border-graphon-dark-border text-(--color-accent) focus:ring-(--color-accent) bg-white dark:bg-graphon-dark-sidebar"
       />
     </div>
   )
@@ -209,7 +209,7 @@ const TableRow = memo(function TableRow({
           return (
             <div
               onClick={() => onItemClick?.(item)}
-              className="px-2 py-1 cursor-pointer hover:bg-graphon-hover dark:hover:bg-graphon-dark-hover rounded text-sm font-semibold text-graphon-text-main dark:text-graphon-dark-text-main truncate min-h-[28px] flex items-center"
+              className="px-2 py-1 cursor-pointer hover:bg-graphon-hover dark:hover:bg-graphon-dark-hover rounded text-sm font-semibold text-graphon-text-main dark:text-graphon-dark-text-main truncate min-h-7 flex items-center"
             >
               {String(value || 'Untitled')}
             </div>
@@ -243,7 +243,7 @@ const TableRow = memo(function TableRow({
             type="date"
             value={value ? String(value) : ''}
             onChange={(e) => handleCellChange(column.id, e.target.value)}
-            className="px-2 py-1 bg-transparent text-sm border-none focus:ring-0 text-graphon-text-main dark:text-graphon-dark-text-main [color-scheme:light] dark:[color-scheme:dark]"
+            className="px-2 py-1 bg-transparent text-sm border-none focus:ring-0 text-graphon-text-main dark:text-graphon-dark-text-main scheme-light dark:scheme-dark"
           />
         )
       default:
@@ -377,8 +377,8 @@ export default function TableView({
                   onPointerMove={handleResizeMove}
                   onPointerUp={handleResizeEnd}
                   className={`
-                    absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 transition-colors
-                    ${resizing?.id === column.id ? 'bg-blue-500 w-0.5' : 'bg-transparent'}
+                    absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-(--color-accent) transition-colors
+                    ${resizing?.id === column.id ? 'bg-(--color-accent) w-0.5' : 'bg-transparent'}
                   `}
                 />
               </th>

@@ -64,7 +64,7 @@ const EventCard = memo(function EventCard({
   onClick: (e: React.MouseEvent) => void
   onResizeStart: (e: React.MouseEvent) => void
 }) {
-  const bgColor = event.color || 'bg-blue-500'
+  const bgColor = event.color || 'bg-(--color-accent)'
 
   // Format time range
   const formatTimeRange = () => {
@@ -81,7 +81,7 @@ const EventCard = memo(function EventCard({
                 absolute rounded-md px-2 py-1.5 cursor-pointer
                 border border-black/10 dark:border-white/10
                 ${bgColor} 
-                ${isSelected ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-[#191919] z-20' : 'z-10 hover:brightness-110'}
+                ${isSelected ? 'ring-2 ring-(--color-accent) ring-offset-2 dark:ring-offset-[#191919] z-20' : 'z-10 hover:brightness-110'}
                 ${isDragging ? 'opacity-50 cursor-grabbing' : 'opacity-100'}
                 transition-all duration-200
             `}
@@ -295,7 +295,7 @@ export default function CalendarView({
       day: startDate.getDay(),
       hour: startDate.getHours(),
       duration: 30,
-      color: 'bg-blue-500',
+      color: 'bg-(--color-accent)',
       values: {},
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -692,7 +692,7 @@ export default function CalendarView({
                       <button
                         key={month}
                         onClick={() => jumpToDate(currentDate.getFullYear(), idx)}
-                        className={`px-2 py-2 text-sm rounded-lg ${currentDate.getMonth() === idx ? 'bg-blue-500 text-white' : 'hover:bg-graphon-hover dark:hover:bg-graphon-dark-sidebar'}`}
+                        className={`px-2 py-2 text-sm rounded-lg ${currentDate.getMonth() === idx ? 'bg-(--color-accent) text-white' : 'hover:bg-graphon-hover dark:hover:bg-graphon-dark-sidebar'}`}
                       >
                         {month.slice(0, 3)}
                       </button>
@@ -779,7 +779,7 @@ export default function CalendarView({
             </div>
             <button
               onClick={() => handleCreateEvent(currentDate, 9)}
-              className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-lg flex items-center transition-all active:scale-95"
+              className="bg-(--color-accent) hover:brightness-110 text-white text-xs font-semibold px-4 py-2 rounded-lg flex items-center transition-all active:scale-95"
             >
               <PlusIcon className="w-4 h-4 mr-1.5" />
               New Event
@@ -816,9 +816,9 @@ export default function CalendarView({
                       <div
                         className={`
                         inline-flex items-center justify-center w-9 h-9 rounded-full text-xl font-bold
-                        ${dayIsToday ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-800 dark:text-gray-200'}
-                        ${isSelected && !dayIsToday ? 'ring-2 ring-blue-500' : ''}
-                        ${isSelected && dayIsToday ? 'ring-2 ring-white dark:ring-[#191919] ring-offset-2 ring-offset-blue-600' : ''} 
+                        ${dayIsToday ? 'bg-(--color-accent) text-white shadow-lg' : 'text-gray-800 dark:text-gray-200'}
+                        ${isSelected && !dayIsToday ? 'ring-2 ring-(--color-accent)' : ''}
+                        ${isSelected && dayIsToday ? 'ring-2 ring-white dark:ring-[#191919] ring-offset-2 ring-offset-(--color-accent)' : ''} 
                       `}
                       >
                         {day.getDate()}
@@ -848,7 +848,7 @@ export default function CalendarView({
                       key={day.toISOString()}
                       className={`
                         flex-1 relative border-r border-gray-100 dark:border-gray-800/50 last:border-r-0 h-360
-                        ${isSelected ? 'bg-blue-50/30 dark:bg-blue-900/10' : ''}
+                        ${isSelected ? 'bg-(--color-accent)/5 dark:bg-(--color-accent)/10' : ''}
                     `}
                     >
                       {/* Horizontal grid lines */}
@@ -904,7 +904,7 @@ export default function CalendarView({
                       {/* Drop target visual feedback (simple) */}
                       {draggedEvent && (
                         <div
-                          className="absolute inset-0 z-0 bg-blue-50/10"
+                          className="absolute inset-0 z-0 bg-(--color-accent)/5"
                           onDragOver={handleDragOver}
                           onDrop={(e) => {
                             const rect = e.currentTarget.getBoundingClientRect()
