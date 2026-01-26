@@ -50,6 +50,7 @@ dmg:
 
 # LINUX
 linux:
+  icon: build/icon.png
   target:
     - target: AppImage # Portable
       arch:

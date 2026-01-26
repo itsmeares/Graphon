@@ -21,20 +21,6 @@
     "build:mac": "npm run build && electron-builder --mac",
     "build:linux": "npm run build && electron-builder --linux"
   },
-  "build": {
-    "appId": "com.graphon.app",
-    "productName": "Graphon",
-    "directories": {
-      "output": "dist"
-    },
-    "publish": {
-      "provider": "github",
-      "releaseType": "release"
-    },
-    "win": {
-      "executableName": "Graphon"
-    }
-  },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
     "@electron-toolkit/utils": "^4.0.0",
