@@ -118,7 +118,7 @@ export default function SettingsView({
         notes: notesData ? JSON.parse(notesData) : [],
         events: eventsData ? JSON.parse(eventsData) : [],
         exportDate: new Date().toISOString(),
-        version: '0.1.1'
+        version: '0.1.2'
       }
 
       // Also include current note if present
@@ -779,7 +779,7 @@ export default function SettingsView({
               <div className="flex-1">
                 <h3 className="text-2xl font-bold mb-1">Graphon</h3>
                 <p className="text-sm text-graphon-text-secondary dark:text-graphon-dark-text-secondary mb-3">
-                  Version 0.1.1
+                  Version 0.1.2
                 </p>
                 <p className="text-sm leading-relaxed text-graphon-text-main dark:text-graphon-dark-text-main opacity-80">
                   A beautiful Productivity app combining powerful note-taking with an elegant

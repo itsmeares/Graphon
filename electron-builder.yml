@@ -14,19 +14,28 @@ asarUnpack:
 # WINDOWS
 win:
   executableName: Graphon
+  icon: build/icon.ico # Windows için uygulama ikonu
   target:
     - nsis
+
 nsis:
-  artifactName: ${name}-${version}-setup.${ext}
-  shortcutName: ${productName}
-  uninstallDisplayName: ${productName}
+  # 1. İSİMLENDİRME
+  artifactName: 'Graphon-Installer-${version}.${ext}'
+
+  # 2. GÖRSELLİK
+  installerIcon: 'build/icon.ico'
+  uninstallerIcon: 'build/icon.ico'
+  installerHeaderIcon: 'build/icon.ico'
+  installerSidebar: 'build/installerSidebar.bmp' # Soldaki büyük resim
+  installerHeader: 'build/installerHeader.bmp' # Üstteki küçük resim
+
+  # 3. DAVRANIŞ
+  oneClick: false # Next-Next diyerek kurulsun
+  allowToChangeInstallationDirectory: true # Klasör seçebilsin
+  perMachine: false # Admin şifresi istemesin
   createDesktopShortcut: always
-  createStartMenuShortcut: true
-  oneClick: false # Kurulum sihirbazı ile yer seçimi
-  allowToChangeInstallationDirectory: true # Klasör seçmeye izin ver
-  perMachine: false
   runAfterFinish: true
-  warningsAsErrors: false
+  deleteAppDataOnUninstall: true # Silerken temizlesin
 
 # MACOS
 mac:
