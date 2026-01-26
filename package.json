@@ -1,10 +1,10 @@
 {
   "name": "graphon",
-  "version": "0.1.0",
-  "description": "An Electron application with React",
+  "version": "0.1.1",
+  "description": "Graphon - A graph-based personal knowledge management and note-taking application",
   "main": "./out/main/index.js",
-  "author": "example.com",
-  "homepage": "https://electron-vite.org",
+  "author": "itsmeares",
+  "homepage": "https://github.com/itsmeares/Graphon",
   "repository": {
     "type": "git",
     "url": "https://github.com/itsmeares/Graphon"
