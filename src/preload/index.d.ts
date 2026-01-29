@@ -35,6 +35,9 @@ interface VaultAPI {
   // Vault Data API (for .graphon/*.json files)
   readData: <T>(key: string) => Promise<T | null>
   writeData: (key: string, data: any) => Promise<void>
+
+  // Database Search API
+  searchNotes: (query: string) => Promise<Array<{ title: string; content: string; path: string }>>
 }
 
 declare global {

@@ -459,7 +459,7 @@ function AppContent() {
                       Ctrl
                     </kbd>
                     <kbd className="px-2 py-0.5 min-w-5 h-6 inline-flex items-center justify-center rounded bg-neutral-200/50 dark:bg-neutral-800/50 border border-neutral-300/30 dark:border-neutral-700/30 text-[10px] font-sans font-medium text-neutral-500 dark:text-neutral-400">
-                      P
+                      K
                     </kbd>
                   </div>
                 </div>

@@ -39,7 +39,11 @@ const api = {
     ipcRenderer.invoke('vault:write-data', key, data),
 
   // Shell API
-  showItemInFolder: (filename: string) => ipcRenderer.send('shell:show-item-in-folder', filename)
+  showItemInFolder: (filename: string) => ipcRenderer.send('shell:show-item-in-folder', filename),
+
+  // Database Search API
+  searchNotes: (query: string): Promise<Array<{ title: string; content: string; path: string }>> =>
+    ipcRenderer.invoke('db:search', query)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to
