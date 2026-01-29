@@ -1,5 +1,5 @@
 /// <reference path="./env.d.ts" />
-import { app, shell, BrowserWindow, ipcMain, nativeTheme } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, nativeTheme, globalShortcut } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -16,6 +16,7 @@ import {
   handleReadData,
   handleWriteData
 } from './handlers'
+import { startIndexer, stopIndexer } from './services/IndexerService'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -63,7 +64,7 @@ function createWindow(): void {
       frame: false,
       titleBarStyle: 'hidden',
       backgroundColor: initialBgColor,
-      transparent: false,
+      transparent: true,
       vibrancy: 'sidebar',
       autoHideMenuBar: true,
       ...(process.platform === 'linux' ? { icon } : {}),
@@ -130,6 +131,15 @@ function createWindow(): void {
         mainWindow?.show()
       } catch (err) {
         console.error('Error in ready-to-show event:', err)
+      }
+    })
+
+    // Hide window on blur (when clicking outside)
+    mainWindow.on('blur', () => {
+      try {
+        mainWindow?.hide()
+      } catch (err) {
+        console.error('Error in blur event:', err)
       }
     })
 
@@ -268,7 +278,11 @@ app.whenReady().then(() => {
     // Vault IPC handlers
     ipcMain.handle('vault:select', async () => {
       try {
-        return await handleSelectVault()
+        const vaultPath = await handleSelectVault()
+        if (vaultPath) {
+          startIndexer(vaultPath)
+        }
+        return vaultPath
       } catch (err) {
         console.error('Error in vault:select handler:', err)
         throw err
@@ -277,7 +291,11 @@ app.whenReady().then(() => {
 
     ipcMain.handle('vault:get-path', async () => {
       try {
-        return await handleGetVaultPath()
+        const vaultPath = await handleGetVaultPath()
+        if (vaultPath) {
+          startIndexer(vaultPath)
+        }
+        return vaultPath
       } catch (err) {
         console.error('Error in vault:get-path handler:', err)
         return null
@@ -383,8 +401,72 @@ app.whenReady().then(() => {
       }
     })
 
+    // Database search handler (FTS)
+    ipcMain.handle('db:search', async (_, query: string) => {
+      try {
+        if (!query || query.trim().length === 0) {
+          return []
+        }
+
+        const { sqlite } = await import('./database/db')
+
+        // Sanitize query for FTS5 - escape special characters and add prefix matching
+        const sanitizedQuery = query
+          .replace(/[*":()]/g, ' ') // Remove FTS special chars
+          .trim()
+          .split(/\s+/)
+          .filter((word) => word.length > 0)
+          .map((word) => `"${word}"*`) // Prefix matching with quoted words
+          .join(' ')
+
+        if (!sanitizedQuery) {
+          return []
+        }
+
+        const results = sqlite
+          .prepare(
+            `
+          SELECT title, content, path 
+          FROM notes_fts 
+          WHERE notes_fts MATCH ? 
+          ORDER BY rank 
+          LIMIT 20
+        `
+          )
+          .all(sanitizedQuery)
+
+        return results
+      } catch (err) {
+        console.error('Error in db:search handler:', err)
+        return []
+      }
+    })
+
     createWindow()
     setupAutoUpdater()
+
+    // Register global shortcut to show/focus window
+    const GLOBAL_SHORTCUT = 'CommandOrControl+Shift+Space'
+    const registered = globalShortcut.register(GLOBAL_SHORTCUT, () => {
+      try {
+        if (mainWindow) {
+          if (mainWindow.isVisible()) {
+            mainWindow.hide()
+          } else {
+            mainWindow.show()
+            mainWindow.focus()
+          }
+        }
+      } catch (err) {
+        console.error('Error in global shortcut handler:', err)
+      }
+    })
+
+    if (!registered) {
+      console.error(`Failed to register global shortcut: ${GLOBAL_SHORTCUT}`)
+    } else {
+      console.log(`Global shortcut registered: ${GLOBAL_SHORTCUT}`)
+    }
 
     app.on('activate', function () {
       try {
@@ -419,6 +501,15 @@ app.on('window-all-closed', () => {
     }
   } catch (err) {
     console.error('Error in window-all-closed handler:', err)
+  }
+})
+
+// Unregister all shortcuts when quitting
+app.on('will-quit', () => {
+  try {
+    globalShortcut.unregisterAll()
+  } catch (err) {
+    console.error('Error unregistering shortcuts:', err)
   }
 })
 

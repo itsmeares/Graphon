@@ -8,6 +8,14 @@ import {
   useRef
 } from 'react'
 import type { CalendarEvent, FileNode, Tab } from '../types'
+import {
+  serializeNote,
+  parseNote,
+  createNoteTemplate,
+  type NoteMetadata,
+  type ParsedNote
+} from '../utils/serialization'
+import type { JSONContent } from '@tiptap/core'
 
 // Database types (simplified for storage)
 interface DatabaseIndex {
@@ -56,9 +64,19 @@ interface VaultContextType {
   refreshFiles: () => Promise<void>
   setVaultPath: (path: string | null) => void
 
-  // File I/O for notes
+  // File I/O for notes (legacy - returns raw content)
   readNoteContent: (filename: string) => Promise<string | null>
   writeNoteContent: (filename: string, content: string) => Promise<void>
+
+  // New serialization-based I/O
+  loadNote: (filename: string) => Promise<ParsedNote | null>
+  saveNote: (
+    filename: string,
+    jsonContent: JSONContent,
+    metadata: NoteMetadata,
+    newFilename?: string
+  ) => Promise<void>
+
   createNote: (filename?: string) => Promise<void>
   deleteNote: (filename: string) => Promise<void>
   renameNote: (oldName: string, newName: string) => Promise<void>
@@ -324,7 +342,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     [openFile]
   )
 
-  // Read note content
+  // Read note content (legacy - returns raw content)
   const readNoteContent = useCallback(async (filename: string): Promise<string | null> => {
     try {
       return await window.api.readFile(filename)
@@ -334,7 +352,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  // Write note content
+  // Write note content (legacy - writes raw content)
   const writeNoteContent = useCallback(async (filename: string, content: string): Promise<void> => {
     try {
       await window.api.writeFile(filename, content)
@@ -342,6 +360,79 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       console.error(`Failed to write note ${filename}:`, error)
     }
   }, [])
+
+  // Load note with serialization (parses Markdown + Frontmatter to JSON)
+  const loadNote = useCallback(async (filename: string): Promise<ParsedNote | null> => {
+    try {
+      const rawContent = await window.api.readFile(filename)
+      if (!rawContent) {
+        // Empty or new file - return empty document
+        return {
+          json: { type: 'doc', content: [{ type: 'paragraph' }] },
+          metadata: {
+            title: filename.replace(/\.md$/, ''),
+            created: new Date().toISOString(),
+            modified: new Date().toISOString()
+          }
+        }
+      }
+      return parseNote(rawContent)
+    } catch (error) {
+      console.error(`Failed to load note ${filename}:`, error)
+      return null
+    }
+  }, [])
+
+  // Save note with serialization (serializes JSON to Markdown + Frontmatter)
+  // If newFilename is provided and different from filename, performs rename
+  const saveNote = useCallback(
+    async (
+      filename: string,
+      jsonContent: JSONContent,
+      metadata: NoteMetadata,
+      newFilename?: string
+    ): Promise<void> => {
+      try {
+        // Update modified timestamp
+        const updatedMetadata: NoteMetadata = {
+          ...metadata,
+          modified: new Date().toISOString()
+        }
+
+        // Serialize to Markdown with frontmatter
+        const markdownContent = serializeNote(jsonContent, updatedMetadata)
+
+        // Handle rename if newFilename is different
+        const targetFilename = newFilename || filename
+        const shouldRename = newFilename && newFilename !== filename
+
+        if (shouldRename) {
+          // Write to new file first
+          await window.api.writeFile(targetFilename, markdownContent)
+          // Delete old file
+          await window.api.deleteFile(filename)
+          // Update tabs
+          setTabs((prev) =>
+            prev.map((t) => {
+              if (t.type === 'file' && t.path === filename) {
+                return { ...t, path: targetFilename, title: targetFilename, id: targetFilename }
+              }
+              return t
+            })
+          )
+          // Refresh file list
+          await loadFiles()
+        } else {
+          // Simple write
+          await window.api.writeFile(targetFilename, markdownContent)
+        }
+      } catch (error) {
+        console.error(`Failed to save note ${filename}:`, error)
+        throw error
+      }
+    },
+    [loadFiles]
+  )
 
   // Create a new note with smart naming
   const createNote = useCallback(
@@ -370,7 +461,9 @@ export function VaultProvider({ children }: { children: ReactNode }) {
         // Ensure .md extension
         const fn = finalName.endsWith('.md') ? finalName : `${finalName}.md`
 
-        await window.api.writeFile(fn, '')
+        // Create note with proper frontmatter using template
+        const noteContent = createNoteTemplate(finalName)
+        await window.api.writeFile(fn, noteContent)
         await loadFiles()
         await openFile(fn)
       } catch (error) {
@@ -460,6 +553,8 @@ export function VaultProvider({ children }: { children: ReactNode }) {
         setVaultPath,
         readNoteContent,
         writeNoteContent,
+        loadNote,
+        saveNote,
         createNote,
         deleteNote,
         renameNote,

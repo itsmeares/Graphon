@@ -1,6 +1,8 @@
 import { dialog, app, shell } from 'electron'
 import { promises as fs } from 'fs'
-import { join, basename, normalize } from 'path'
+import { join, basename, normalize, dirname } from 'path'
+import { db } from './database/db'
+import { files } from './database/schema'
 
 // Path to settings file in userData
 const SETTINGS_PATH = join(app.getPath('userData'), 'settings.json')
@@ -18,6 +20,10 @@ interface FileNode {
   path: string
   type: 'file' | 'folder'
   children?: FileNode[]
+  id?: string
+  checksum?: string | null
+  createdAt?: Date | null
+  updatedAt?: Date | null
 }
 
 interface VaultSettings {
@@ -156,60 +162,94 @@ export async function handleGetVaultPath(): Promise<string | null> {
 }
 
 /**
- * Recursive directory scanner
+ * Build a tree structure from flat file paths
  */
-async function scanDirectory(rootDir: string, relativeDir: string): Promise<FileNode[]> {
-  const currentPath = join(rootDir, relativeDir)
-  const entries = await fs.readdir(currentPath, { withFileTypes: true })
+function buildFileTree(fileRecords: (typeof files.$inferSelect)[]): FileNode[] {
+  const root: FileNode[] = []
+  const folderMap = new Map<string, FileNode>()
 
-  const nodes: FileNode[] = []
-
-  for (const entry of entries) {
-    // Ignore hidden files and .graphon
-    if (entry.name.startsWith('.') || entry.name === '.graphon' || entry.name === 'node_modules') {
-      continue
+  // Helper to get or create folder node
+  function getOrCreateFolder(folderPath: string): FileNode {
+    if (folderPath === '' || folderPath === '.') {
+      return { name: '', path: '', type: 'folder', children: root }
     }
 
-    const entryRelativePath = relativeDir ? join(relativeDir, entry.name) : entry.name
-
-    if (entry.isDirectory()) {
-      const children = await scanDirectory(rootDir, entryRelativePath)
-      nodes.push({
-        name: entry.name,
-        path: entryRelativePath,
+    let folder = folderMap.get(folderPath)
+    if (!folder) {
+      const name = basename(folderPath)
+      folder = {
+        name,
+        path: folderPath,
         type: 'folder',
-        children
-      })
-    } else if (entry.isFile()) {
-      // Only include specific file types
-      if (entry.name.endsWith('.md') || entry.name.endsWith('.txt')) {
-        nodes.push({
-          name: entry.name,
-          path: entryRelativePath,
-          type: 'file'
-        })
+        children: []
       }
+      folderMap.set(folderPath, folder)
+
+      // Add to parent folder
+      const parentPath = dirname(folderPath)
+      if (parentPath === '.' || parentPath === '') {
+        root.push(folder)
+      } else {
+        const parent = getOrCreateFolder(parentPath)
+        parent.children!.push(folder)
+      }
+    }
+    return folder
+  }
+
+  // Process all files
+  for (const file of fileRecords) {
+    const filePath = file.path
+    const fileName = basename(filePath)
+    const folderPath = dirname(filePath)
+
+    const fileNode: FileNode = {
+      name: fileName,
+      path: filePath,
+      type: 'file',
+      id: file.id,
+      checksum: file.checksum,
+      createdAt: file.createdAt,
+      updatedAt: file.updatedAt
+    }
+
+    if (folderPath === '.' || folderPath === '') {
+      root.push(fileNode)
+    } else {
+      const parent = getOrCreateFolder(folderPath)
+      parent.children!.push(fileNode)
     }
   }
 
-  // Sort: Folders first, then files, alphabetically
-  return nodes.sort((a, b) => {
-    if (a.type === b.type) {
-      return a.name.localeCompare(b.name)
-    }
-    return a.type === 'folder' ? -1 : 1
-  })
+  // Sort function: folders first, then alphabetically
+  function sortNodes(nodes: FileNode[]): FileNode[] {
+    return nodes
+      .sort((a, b) => {
+        if (a.type === b.type) {
+          return a.name.localeCompare(b.name)
+        }
+        return a.type === 'folder' ? -1 : 1
+      })
+      .map((node) => {
+        if (node.children) {
+          node.children = sortNodes(node.children)
+        }
+        return node
+      })
+  }
+
+  return sortNodes(root)
 }
 
 /**
- * List files in the vault directory (recursive)
+ * List files from SQLite database (fast indexed query)
  */
 export async function handleListFiles(): Promise<FileNode[]> {
   try {
-    const vaultPath = getVaultPathOrThrow()
-    return await scanDirectory(vaultPath, '')
+    const allFiles = await db.select().from(files)
+    return buildFileTree(allFiles)
   } catch (error) {
-    console.error('Error listing files:', error)
+    console.error('Error listing files from database:', error)
     throw error
   }
 }
