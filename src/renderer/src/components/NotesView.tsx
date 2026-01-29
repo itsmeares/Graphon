@@ -6,6 +6,8 @@ import Typography from '@tiptap/extension-typography'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
 import { SlashCommand } from './editor/slash-command'
+import type { JSONContent } from '@tiptap/core'
+import type { NoteMetadata } from '../utils/serialization'
 import {
   BoldIcon,
   ItalicIcon,
@@ -20,17 +22,33 @@ interface NotesViewProps {
   isSidebarVisible?: boolean
 }
 
-// Debounce helper
+// Debounce helper with flush capability
 function debounce<T extends (...args: any[]) => any>(fn: T, delay: number) {
   let timeoutId: ReturnType<typeof setTimeout>
+  let pendingArgs: Parameters<T> | null = null
+
   const debouncedFn = (...args: Parameters<T>) => {
+    pendingArgs = args
     clearTimeout(timeoutId)
-    timeoutId = setTimeout(() => fn(...args), delay)
+    timeoutId = setTimeout(() => {
+      pendingArgs = null
+      fn(...args)
+    }, delay)
   }
-  debouncedFn.cancel = () => clearTimeout(timeoutId)
+
+  debouncedFn.cancel = () => {
+    clearTimeout(timeoutId)
+    pendingArgs = null
+  }
+
   debouncedFn.flush = () => {
-    clearTimeout(timeoutId)
+    if (pendingArgs) {
+      clearTimeout(timeoutId)
+      fn(...pendingArgs)
+      pendingArgs = null
+    }
   }
+
   return debouncedFn
 }
 
@@ -40,24 +58,29 @@ export default function NotesView({ isSidebarVisible = true }: NotesViewProps) {
   const [isSaving, setIsSaving] = useState(false)
   const {
     activeFile,
-    readNoteContent,
-    writeNoteContent,
+    loadNote,
+    saveNote,
+    renameNote,
     registerPendingWrite,
     unregisterPendingWrite,
     isLoading: vaultLoading
   } = useVault()
 
-  // Track pending content to save
-  const pendingContentRef = useRef<string | null>(null)
-  const currentFileRef = useRef<string | null>(null)
+  const [localTitle, setLocalTitle] = useState('')
+  const [isRenaming, setIsRenaming] = useState(false)
 
-  // Save function
+  // Track pending content and metadata for saving
+  const pendingContentRef = useRef<JSONContent | null>(null)
+  const currentFileRef = useRef<string | null>(null)
+  const currentMetadataRef = useRef<NoteMetadata | null>(null)
+
+  // Save function using serialization-based saveNote
   const saveContent = useCallback(
-    async (content: string) => {
-      if (!currentFileRef.current) return
+    async (jsonContent: JSONContent) => {
+      if (!currentFileRef.current || !currentMetadataRef.current) return
       setIsSaving(true)
       try {
-        await writeNoteContent(currentFileRef.current, content)
+        await saveNote(currentFileRef.current, jsonContent, currentMetadataRef.current)
         pendingContentRef.current = null
       } catch (error) {
         console.error('Failed to save note:', error)
@@ -65,22 +88,26 @@ export default function NotesView({ isSidebarVisible = true }: NotesViewProps) {
         setIsSaving(false)
       }
     },
-    [writeNoteContent]
+    [saveNote]
   )
 
-  // Debounced save (500ms)
+  // Debounced save (1000ms) - non-blocking auto-save
   const debouncedSave = useMemo(
     () =>
-      debounce((content: string) => {
-        saveContent(content)
+      debounce((jsonContent: JSONContent) => {
+        saveContent(jsonContent)
       }, 1000),
     [saveContent]
   )
 
   // Flush pending writes (called before file switch)
   const flushPendingSave = useCallback(async () => {
-    debouncedSave.cancel()
-    if (pendingContentRef.current !== null && currentFileRef.current) {
+    debouncedSave.flush()
+    if (
+      pendingContentRef.current !== null &&
+      currentFileRef.current &&
+      currentMetadataRef.current
+    ) {
       await saveContent(pendingContentRef.current)
     }
   }, [debouncedSave, saveContent])
@@ -124,10 +151,10 @@ export default function NotesView({ isSidebarVisible = true }: NotesViewProps) {
       }
     },
     onUpdate: ({ editor }) => {
-      if (currentFileRef.current) {
-        const content = editor.getHTML()
-        pendingContentRef.current = content
-        debouncedSave(content)
+      if (currentFileRef.current && currentMetadataRef.current) {
+        const jsonContent = editor.getJSON()
+        pendingContentRef.current = jsonContent
+        debouncedSave(jsonContent)
       }
     },
     onSelectionUpdate: ({ editor }) => {
@@ -142,6 +169,7 @@ export default function NotesView({ isSidebarVisible = true }: NotesViewProps) {
     const loadFile = async () => {
       if (!activeFile) {
         currentFileRef.current = null
+        currentMetadataRef.current = null
         editor?.commands.setContent('')
         return
       }
@@ -155,21 +183,35 @@ export default function NotesView({ isSidebarVisible = true }: NotesViewProps) {
       currentFileRef.current = activeFile
       setIsLoading(true)
       try {
-        const content = await readNoteContent(activeFile)
+        const parsed = await loadNote(activeFile)
         if (editor && currentFileRef.current === activeFile) {
-          editor.commands.setContent(content || '')
+          if (parsed) {
+            editor.commands.setContent(parsed.json)
+            currentMetadataRef.current = parsed.metadata
+            setLocalTitle(parsed.metadata.title || activeFile.replace(/\.md$/, ''))
+          } else {
+            editor.commands.setContent('')
+            const initialTitle = activeFile.replace(/\.md$/, '')
+            currentMetadataRef.current = {
+              title: initialTitle,
+              created: new Date().toISOString(),
+              modified: new Date().toISOString()
+            }
+            setLocalTitle(initialTitle)
+          }
           pendingContentRef.current = null
         }
       } catch (error) {
         console.error('Failed to load note:', error)
         editor?.commands.setContent('')
+        currentMetadataRef.current = null
       } finally {
         setIsLoading(false)
       }
     }
 
     loadFile()
-  }, [activeFile, editor, readNoteContent, flushPendingSave])
+  }, [activeFile, editor, loadNote, flushPendingSave])
 
   // Global keyboard shortcuts for rich text formatting
   useEffect(() => {
@@ -201,6 +243,38 @@ export default function NotesView({ isSidebarVisible = true }: NotesViewProps) {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [editor, flushPendingSave])
+
+  const handleRename = useCallback(async () => {
+    if (!activeFile || !localTitle || isRenaming) return
+    const currentName = activeFile.replace(/\.md$/, '')
+    if (localTitle === currentName) return
+
+    setIsRenaming(true)
+    try {
+      // 1. Update the title in the local metadata object
+      if (currentMetadataRef.current) {
+        currentMetadataRef.current.title = localTitle
+      }
+
+      const newPath = activeFile.includes('/')
+        ? activeFile.substring(0, activeFile.lastIndexOf('/') + 1) + localTitle + '.md'
+        : localTitle + '.md'
+
+      // 2. Perform the rename via VaultContext
+      await renameNote(activeFile, newPath)
+
+      // 3. Immediately save the file to sync the updated metadata title inside the file content
+      if (editor) {
+        await saveNote(newPath, editor.getJSON(), currentMetadataRef.current!)
+      }
+    } catch (error) {
+      console.error('Failed to rename note:', error)
+      // Revert local title on error
+      setLocalTitle(currentName)
+    } finally {
+      setIsRenaming(false)
+    }
+  }, [activeFile, localTitle, renameNote, isRenaming])
 
   // Show loading skeleton
   if (vaultLoading || isLoading) {
@@ -259,9 +333,6 @@ export default function NotesView({ isSidebarVisible = true }: NotesViewProps) {
       {children}
     </button>
   )
-
-  // Get filename without extension for title
-  const fileName = activeFile.replace(/\.(md|txt)$/, '')
 
   return (
     <div className="flex-1 h-screen overflow-hidden bg-white dark:bg-graphon-dark-bg text-graphon-text-main dark:text-graphon-dark-text-main relative">
@@ -351,10 +422,21 @@ export default function NotesView({ isSidebarVisible = true }: NotesViewProps) {
       {/* Editor Container - Graphon Style Centered */}
       <div className={`h-full overflow-y-auto ${!isSidebarVisible ? 'pt-4 md:pt-0' : ''}`}>
         <div className="w-full max-w-3xl mx-auto px-8 md:px-16 py-12">
-          {/* Title - Read from filename */}
-          <h1 className="w-full text-4xl font-bold bg-transparent border-none outline-none placeholder-gray-300 dark:placeholder-gray-600 mb-8 text-graphon-text-main dark:text-graphon-dark-text-main">
-            {fileName}
-          </h1>
+          {/* Title - Editable input */}
+          <input
+            type="text"
+            className="w-full text-4xl font-bold bg-transparent border-none outline-none placeholder-gray-300 dark:placeholder-gray-600 mb-8 text-graphon-text-main dark:text-graphon-dark-text-main focus:ring-0 p-0"
+            value={localTitle}
+            onChange={(e) => setLocalTitle(e.target.value)}
+            onBlur={handleRename}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.currentTarget.blur()
+              }
+            }}
+            placeholder="Untitled Note"
+            spellCheck={false}
+          />
 
           {/* Editor */}
           <EditorContent editor={editor} className="graphon-editor" />

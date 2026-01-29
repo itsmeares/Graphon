@@ -3,11 +3,27 @@ import { createHash } from 'crypto'
 import { promises as fs } from 'fs'
 import { basename, relative } from 'path'
 import { db, sqlite } from '../database/db'
-import { files } from '../database/schema'
+import { files, links } from '../database/schema'
 import { eq } from 'drizzle-orm'
+import { EventEmitter } from 'events'
+
+export const indexerEvents = new EventEmitter()
+
+let updateTimeout: NodeJS.Timeout | null = null
+function notifyUpdate(): void {
+  if (updateTimeout) clearTimeout(updateTimeout)
+  updateTimeout = setTimeout(() => {
+    indexerEvents.emit('updated')
+  }, 100)
+}
 
 let watcher: FSWatcher | null = null
 let currentVaultPath: string | null = null
+
+/**
+ * Regex pattern to match Wikilinks: [[Link Name]] or [[Link Name|Display Text]]
+ */
+const WIKILINK_REGEX = /\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g
 
 /**
  * Calculate MD5 checksum of a file
@@ -92,15 +108,77 @@ function extractPlainText(content: string): string {
   return text
 }
 
-// FTS prepared statements
-const insertFts = sqlite.prepare(`
-  INSERT OR REPLACE INTO notes_fts (rowid, title, content, path)
-  SELECT rowid, ?, ?, ? FROM files WHERE id = ?
-`)
-
-const deleteFts = sqlite.prepare(`
+// FTS prepared statements - delete then insert for upsert behavior
+const deleteFtsByPath = sqlite.prepare(`
   DELETE FROM notes_fts WHERE path = ?
 `)
+
+const insertFts = sqlite.prepare(`
+  INSERT INTO notes_fts (title, content, path) VALUES (?, ?, ?)
+`)
+
+// deleteFtsByPath is used for both updates and deletes
+
+// Link prepared statements
+const deleteLinks = sqlite.prepare(`
+  DELETE FROM links WHERE source_id = ?
+`)
+
+const insertLink = sqlite.prepare(`
+  INSERT INTO links (source_id, target_id) VALUES (?, ?)
+`)
+
+/**
+ * Extract all wikilinks from content
+ * Returns an array of link target names (the text inside [[...]])
+ */
+function extractWikilinks(content: string): string[] {
+  const foundLinks: string[] = []
+  let match: RegExpExecArray | null
+
+  while ((match = WIKILINK_REGEX.exec(content)) !== null) {
+    const linkTarget = match[1].trim()
+    if (linkTarget) {
+      foundLinks.push(linkTarget)
+    }
+  }
+
+  // Remove duplicates
+  return Array.from(new Set(foundLinks))
+}
+
+/**
+ * Clear all data from indexer tables
+ */
+function clearDatabase(): void {
+  sqlite.exec('DELETE FROM files')
+  sqlite.exec('DELETE FROM links')
+  sqlite.exec('DELETE FROM notes_fts')
+  console.log('[Indexer] Database cleared')
+}
+
+/**
+ * Update links for a file (atomic operation)
+ * First deletes all existing links from this source, then inserts new ones
+ */
+function updateFileLinks(sourceId: string, wikilinks: string[]): void {
+  // Use a transaction for atomic update
+  const transaction = sqlite.transaction(() => {
+    // Delete all existing links from this source
+    deleteLinks.run(sourceId)
+
+    // Insert new links
+    // For now, we use the link target name as target_id
+    // Later we can resolve these to actual file IDs
+    for (const linkTarget of wikilinks) {
+      // Store the link target as-is for now
+      // We'll resolve to actual file IDs in a future enhancement
+      insertLink.run(sourceId, linkTarget)
+    }
+  })
+
+  transaction()
+}
 
 /**
  * Handle file add event
@@ -130,10 +208,21 @@ async function onFileAdd(absolutePath: string): Promise<void> {
       })
       .onConflictDoNothing()
 
-    // Index content in FTS table
-    insertFts.run(title, plainText, relativePath, fileId)
+    // Index content in FTS table (delete first to handle potential duplicates)
+    deleteFtsByPath.run(relativePath)
+    insertFts.run(title, plainText, relativePath)
+
+    // Extract and save wikilinks (async to not block main thread)
+    setImmediate(() => {
+      const wikilinks = extractWikilinks(rawContent)
+      updateFileLinks(fileId, wikilinks)
+      if (wikilinks.length > 0) {
+        console.log(`[Indexer] Found ${wikilinks.length} links in: ${relativePath}`)
+      }
+    })
 
     console.log(`[Indexer] Added: ${relativePath}`)
+    notifyUpdate()
   } catch (error) {
     console.error(`[Indexer] Error adding file ${absolutePath}:`, error)
   }
@@ -164,10 +253,21 @@ async function onFileChange(absolutePath: string): Promise<void> {
       })
       .where(eq(files.id, fileId))
 
-    // Update content in FTS table
-    insertFts.run(title, plainText, relativePath, fileId)
+    // Update content in FTS table (delete then insert for upsert)
+    deleteFtsByPath.run(relativePath)
+    insertFts.run(title, plainText, relativePath)
+
+    // Extract and save wikilinks (async to not block main thread)
+    setImmediate(() => {
+      const wikilinks = extractWikilinks(rawContent)
+      updateFileLinks(fileId, wikilinks)
+      if (wikilinks.length > 0) {
+        console.log(`[Indexer] Updated ${wikilinks.length} links in: ${relativePath}`)
+      }
+    })
 
     console.log(`[Indexer] Updated: ${relativePath}`)
+    notifyUpdate()
   } catch (error) {
     console.error(`[Indexer] Error updating file ${absolutePath}:`, error)
   }
@@ -184,11 +284,15 @@ async function onFileUnlink(absolutePath: string): Promise<void> {
     const fileId = generateFileId(relativePath)
 
     // Remove from FTS table first
-    deleteFts.run(relativePath)
+    deleteFtsByPath.run(relativePath)
+
+    // Remove links from this source
+    deleteLinks.run(fileId)
 
     await db.delete(files).where(eq(files.id, fileId))
 
     console.log(`[Indexer] Removed: ${relativePath}`)
+    notifyUpdate()
   } catch (error) {
     console.error(`[Indexer] Error removing file ${absolutePath}:`, error)
   }
@@ -200,6 +304,9 @@ async function onFileUnlink(absolutePath: string): Promise<void> {
 export function startIndexer(vaultPath: string): void {
   // Stop existing watcher if any
   stopIndexer()
+
+  // Clear database for the new vault
+  clearDatabase()
 
   currentVaultPath = vaultPath
 
@@ -241,6 +348,7 @@ export function startIndexer(vaultPath: string): void {
 
   watcher.on('ready', () => {
     console.log(`[Indexer] Watching vault: ${vaultPath}`)
+    notifyUpdate()
   })
 }
 

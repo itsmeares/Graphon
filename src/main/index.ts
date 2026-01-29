@@ -16,7 +16,7 @@ import {
   handleReadData,
   handleWriteData
 } from './handlers'
-import { startIndexer, stopIndexer } from './services/IndexerService'
+import { startIndexer, stopIndexer, indexerEvents } from './services/IndexerService'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -440,6 +440,11 @@ app.whenReady().then(() => {
         console.error('Error in db:search handler:', err)
         return []
       }
+    })
+
+    // Indexer events listener
+    indexerEvents.on('updated', () => {
+      mainWindow?.webContents.send('vault:index-updated')
     })
 
     createWindow()

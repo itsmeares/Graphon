@@ -18,6 +18,11 @@ const api = {
   // Vault Selection API
   selectVault: (): Promise<string | null> => ipcRenderer.invoke('vault:select'),
   getVaultPath: (): Promise<string | null> => ipcRenderer.invoke('vault:get-path'),
+  onVaultIndexUpdated: (callback: () => void) => {
+    const listener = () => callback()
+    ipcRenderer.on('vault:index-updated', listener)
+    return () => ipcRenderer.removeListener('vault:index-updated', listener)
+  },
 
   // Vault File System API (SECURITY: no path args - main process uses cached vault path)
   listFiles: (): Promise<string[]> => ipcRenderer.invoke('vault:list-files'),
