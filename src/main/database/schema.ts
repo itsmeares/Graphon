@@ -11,10 +11,8 @@ export const files = sqliteTable('files', {
 export const links = sqliteTable('links', {
   sourceId: text('source_id')
     .notNull()
-    .references(() => files.id),
-  targetId: text('target_id')
-    .notNull()
-    .references(() => files.id)
+    .references(() => files.id, { onDelete: 'cascade' }),
+  targetId: text('target_id').notNull()
 })
 
 // FTS5 virtual table type definition (managed via raw SQL, not Drizzle)

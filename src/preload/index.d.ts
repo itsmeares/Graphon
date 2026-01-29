@@ -20,6 +20,7 @@ interface VaultAPI {
   // Vault Selection API
   selectVault: () => Promise<string | null>
   getVaultPath: () => Promise<string | null>
+  onVaultIndexUpdated: (callback: () => void) => () => void
 
   // Vault File System API
   listFiles: () => Promise<FileNode[]>

@@ -8,6 +8,7 @@ const DB_PATH = join(app.getPath('userData'), 'graphon.db')
 
 const sqlite = new Database(DB_PATH)
 sqlite.pragma('journal_mode = WAL')
+sqlite.pragma('foreign_keys = ON')
 
 // Auto-create tables if they don't exist
 sqlite.exec(`
@@ -20,8 +21,8 @@ sqlite.exec(`
   );
   
   CREATE TABLE IF NOT EXISTS links (
-    source_id TEXT NOT NULL REFERENCES files(id),
-    target_id TEXT NOT NULL REFERENCES files(id)
+    source_id TEXT NOT NULL REFERENCES files(id) ON DELETE CASCADE,
+    target_id TEXT NOT NULL
   );
   
   CREATE INDEX IF NOT EXISTS idx_files_path ON files(path);
@@ -31,9 +32,7 @@ sqlite.exec(`
   CREATE VIRTUAL TABLE IF NOT EXISTS notes_fts USING fts5(
     title,
     content,
-    path,
-    content='files',
-    content_rowid='rowid'
+    path
   );
 `)
 

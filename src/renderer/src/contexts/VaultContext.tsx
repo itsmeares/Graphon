@@ -222,6 +222,17 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     }
   }, [loadFiles, loadCalendar, loadDatabaseIndex])
 
+  // Listen for vault index updates from main process
+  useEffect(() => {
+    if (window.api?.onVaultIndexUpdated) {
+      const removeListener = window.api.onVaultIndexUpdated(() => {
+        loadFiles()
+      })
+      return () => removeListener()
+    }
+    return undefined
+  }, [loadFiles])
+
   // Load saved vault on mount - DISABLED to always show Main Menu
   useEffect(() => {
     // We intentionally do NOT load the saved vault path on startup
