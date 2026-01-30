@@ -3,9 +3,10 @@ import { createHash, randomUUID } from 'crypto'
 import { promises as fs } from 'fs'
 import { basename, relative } from 'path'
 import { db, sqlite } from '../database/db'
-import { files, links } from '../database/schema'
+import { files, links, note_embeddings } from '../database/schema'
 import { eq } from 'drizzle-orm'
 import { EventEmitter } from 'events'
+import EmbeddingService from './EmbeddingService'
 
 export const indexerEvents = new EventEmitter()
 
@@ -85,17 +86,17 @@ function extractPlainText(content: string): string {
   // Remove links but keep text
   text = text.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
 
+  // Remove wikilinks [[Text]] -> Text
+  text = text.replace(/\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g, '$1')
+
   // Remove images
   text = text.replace(/!\[([^\]]*)\]\([^)]+\)/g, '')
 
   // Remove headers markers
   text = text.replace(/^#{1,6}\s+/gm, '')
 
-  // Remove bold/italic
-  text = text.replace(/\*\*([^*]+)\*\*/g, '$1')
-  text = text.replace(/\*([^*]+)\*/g, '$1')
-  text = text.replace(/__([^_]+)__/g, '$1')
-  text = text.replace(/_([^_]+)_/g, '$1')
+  // Remove bold/italic (handle ***, **, *, __, _)
+  text = text.replace(/(\*{1,3}|_{1,3})([^*_]+)\1/g, '$2')
 
   // Remove blockquotes
   text = text.replace(/^>\s+/gm, '')
@@ -104,11 +105,17 @@ function extractPlainText(content: string): string {
   text = text.replace(/^[-*+]\s+/gm, '')
   text = text.replace(/^\d+\.\s+/gm, '')
 
+  // Remove task boxes [x] or [ ]
+  text = text.replace(/^[-*+]\s*\[[ xX]\]\s+/gm, '')
+
   // Remove horizontal rules
   text = text.replace(/^[-*_]{3,}\s*$/gm, '')
 
+  // Remove HTML tags
+  text = text.replace(/<[^>]*>/g, '')
+
   // Normalize whitespace
-  text = text.replace(/\n{3,}/g, '\n\n').trim()
+  text = text.replace(/\s+/g, ' ').trim()
 
   return text
 }
@@ -140,6 +147,15 @@ const deleteTodosByFileId = sqlite.prepare(`
 
 const insertTodo = sqlite.prepare(`
   INSERT INTO todos (id, file_id, content, completed, created_at) VALUES (?, ?, ?, ?, ?)
+`)
+
+// Embedding prepared statements
+const deleteEmbedding = sqlite.prepare(`
+  DELETE FROM note_embeddings WHERE file_id = ?
+`)
+
+const insertEmbedding = sqlite.prepare(`
+  INSERT INTO note_embeddings (file_id, vector, updated_at) VALUES (?, ?, ?)
 `)
 
 // Query to find file ID by filename (without extension)
@@ -226,6 +242,7 @@ function resolveTargetId(linkTarget: string): string {
 function clearDatabase(): void {
   sqlite.exec('DELETE FROM todos')
   sqlite.exec('DELETE FROM links')
+  sqlite.exec('DELETE FROM note_embeddings')
   sqlite.exec('DELETE FROM notes_fts')
   sqlite.exec('DELETE FROM files')
   console.log('[Indexer] Database cleared')
@@ -241,7 +258,8 @@ function persistFileData(
   title: string,
   plainText: string,
   wikilinks: string[],
-  tasks: { completed: boolean; content: string }[]
+  tasks: { completed: boolean; content: string }[],
+  embedding: number[]
 ): void {
   const transaction = sqlite.transaction(() => {
     // 1. Update FTS table (delete old, insert new)
@@ -266,6 +284,11 @@ function persistFileData(
       const todoId = randomUUID()
       insertTodo.run(todoId, sourceId, task.content, task.completed ? 1 : 0, now)
     }
+
+    // 6. Update embedding
+    deleteEmbedding.run(sourceId)
+    // Store vector as JSON string because strict mode requires text for json
+    insertEmbedding.run(sourceId, JSON.stringify(embedding), now)
   })
 
   transaction()
@@ -275,6 +298,9 @@ function persistFileData(
   }
   if (tasks.length > 0) {
     console.log(`[Indexer] Persisted ${tasks.length} tasks for: ${relativePath}`)
+  }
+  if (embedding.length > 0) {
+    console.log(`[Indexer] Generated and persisted embedding for: ${relativePath}`)
   }
 }
 
@@ -301,6 +327,9 @@ async function onFileAdd(absolutePath: string): Promise<void> {
     // Extract tasks from content
     const tasks = extractTasks(rawContent)
 
+    // Generate embedding
+    const embedding = await EmbeddingService.generateEmbedding(plainText)
+
     // Insert file record
     await db
       .insert(files)
@@ -313,8 +342,8 @@ async function onFileAdd(absolutePath: string): Promise<void> {
       })
       .onConflictDoNothing()
 
-    // Persist FTS, links, and tasks in atomic transaction
-    persistFileData(fileId, relativePath, title, plainText, wikilinks, tasks)
+    // Persist FTS, links, tasks, and embedding in atomic transaction
+    persistFileData(fileId, relativePath, title, plainText, wikilinks, tasks, embedding)
 
     console.log(`[Indexer] Added: ${relativePath}`)
     notifyUpdate()
@@ -346,6 +375,9 @@ async function onFileChange(absolutePath: string): Promise<void> {
     // Extract tasks from content
     const tasks = extractTasks(rawContent)
 
+    // Generate embedding
+    const embedding = await EmbeddingService.generateEmbedding(plainText)
+
     // Update file record
     await db
       .update(files)
@@ -355,8 +387,8 @@ async function onFileChange(absolutePath: string): Promise<void> {
       })
       .where(eq(files.id, fileId))
 
-    // Persist FTS, links, and tasks in atomic transaction
-    persistFileData(fileId, relativePath, title, plainText, wikilinks, tasks)
+    // Persist FTS, links, tasks, and embedding in atomic transaction
+    persistFileData(fileId, relativePath, title, plainText, wikilinks, tasks, embedding)
 
     console.log(`[Indexer] Updated: ${relativePath}`)
     notifyUpdate()
@@ -383,6 +415,9 @@ async function onFileUnlink(absolutePath: string): Promise<void> {
 
     // Remove todos from this source (also handled by FK cascade, but explicit for clarity)
     deleteTodosByFileId.run(fileId)
+
+    // Remove embedding
+    deleteEmbedding.run(fileId)
 
     await db.delete(files).where(eq(files.id, fileId))
 

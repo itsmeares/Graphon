@@ -65,7 +65,19 @@ const api = {
   // Tasks API
   getAllTasks: (): Promise<
     Array<{ id: string; content: string; completed: boolean; filePath: string; fileTitle: string }>
-  > => ipcRenderer.invoke('db:get-all-tasks')
+  > => ipcRenderer.invoke('db:get-all-tasks'),
+
+  // Related Notes API
+  getRelatedNotes: (
+    filePath: string
+  ): Promise<Array<{ id: string; title: string; path: string; score: number }>> =>
+    ipcRenderer.invoke('db:get-related-notes', filePath),
+
+  // Semantic Search API
+  semanticSearch: (
+    query: string
+  ): Promise<Array<{ id: string; title: string; path: string; score: number }>> =>
+    ipcRenderer.invoke('db:semantic-search', query)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

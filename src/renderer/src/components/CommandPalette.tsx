@@ -1,6 +1,6 @@
 import { Command } from 'cmdk'
 import { useEffect, useState, useRef } from 'react'
-import { File, Search, Calendar, Plus, Sun, Moon, FileText } from 'lucide-react'
+import { File, Search, Calendar, Plus, Sun, Moon, FileText, Sparkles } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useVault } from '../contexts/VaultContext'
 import { ViewType } from '../types'
@@ -11,6 +11,13 @@ interface SearchResult {
   title: string
   path: string
   highlight: string
+}
+
+interface SemanticResult {
+  id: string
+  title: string
+  path: string
+  score: number
 }
 
 interface TemplateFile {
@@ -36,6 +43,7 @@ export function CommandPalette({
   const { createNote, setActiveFile } = useVault()
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
+  const [semanticResults, setSemanticResults] = useState<SemanticResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [templates, setTemplates] = useState<TemplateFile[]>([])
   const [showTemplates, setShowTemplates] = useState(false)
@@ -59,6 +67,7 @@ export function CommandPalette({
     if (!isOpen) {
       setSearchQuery('')
       setSearchResults([])
+      setSemanticResults([])
       setShowTemplates(false)
     }
   }, [isOpen])
@@ -96,15 +105,22 @@ export function CommandPalette({
 
     debounceRef.current = setTimeout(async () => {
       try {
-        const results = await window.api.searchNotes(searchQuery)
-        setSearchResults(results)
+        // Parallel execution of FTS and Semantic Search
+        const [ftsResults, vectorResults] = await Promise.all([
+          window.api.searchNotes(searchQuery),
+          window.api.semanticSearch(searchQuery)
+        ])
+
+        setSearchResults(ftsResults)
+        setSemanticResults(vectorResults)
       } catch (error) {
         console.error('Search error:', error)
         setSearchResults([])
+        setSemanticResults([])
       } finally {
         setIsSearching(false)
       }
-    }, 300)
+    }, 500) // Increased debounce slightly for semantic search
 
     return () => {
       if (debounceRef.current) {
@@ -232,7 +248,7 @@ export function CommandPalette({
 
             {/* Search results */}
             <AnimatePresence mode="popLayout">
-              {searchQuery.trim() && searchResults.length > 0 && (
+              {searchQuery.trim() && (searchResults.length > 0 || semanticResults.length > 0) && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -241,52 +257,83 @@ export function CommandPalette({
                 >
                   <Command.Separator className="h-px bg-black/5 dark:bg-white/5 my-1 mx-2" />
 
-                  <Command.Group
-                    heading="Search Results"
-                    className="text-xs text-gray-400 font-medium mb-1 px-2 mt-2"
-                  >
-                    <AnimatePresence mode="popLayout">
-                      {searchResults.map((result, index) => {
-                        const fileName = getFileNameFromPath(result.path)
-                        return (
-                          <motion.div
-                            key={result.path}
-                            layout
-                            initial={{ opacity: 0, y: -8, scale: 0.96 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                            transition={{
-                              duration: 0.2,
-                              delay: index * 0.03,
-                              ease: [0.25, 0.46, 0.45, 0.94]
-                            }}
-                          >
-                            <Command.Item
-                              value={result.path}
-                              onSelect={() =>
-                                runCommand(() => {
-                                  setActiveFile(fileName)
-                                  onViewChange('notes')
-                                })
-                              }
-                              className="flex flex-col items-start px-2 py-2 rounded-md text-sm text-graphon-text-main dark:text-graphon-dark-text-main aria-selected:bg-neutral-200/50 dark:aria-selected:bg-white/10 cursor-pointer transition-colors"
+                  {semanticResults.length > 0 && (
+                    <Command.Group
+                      heading="Semantic Matches"
+                      className="text-xs text-graphon-text-secondary/70 dark:text-graphon-dark-text-secondary/70 font-medium mb-1 px-2 mt-2"
+                    >
+                      {semanticResults.map((result) => (
+                        <Command.Item
+                          key={`semantic-${result.id}`}
+                          value={`semantic-${result.id}`}
+                          onSelect={() =>
+                            runCommand(() => {
+                              setActiveFile(getFileNameFromPath(result.path))
+                              onViewChange('notes')
+                            })
+                          }
+                          className="flex items-center px-2 py-2 rounded-md text-sm text-graphon-text-main dark:text-graphon-dark-text-main aria-selected:bg-neutral-200/50 dark:aria-selected:bg-white/10 cursor-pointer transition-colors"
+                        >
+                          <Sparkles className="w-4 h-4 mr-2 text-(--color-accent) opacity-80" />
+                          <div className="flex flex-col flex-1 min-w-0">
+                            <span className="font-medium truncate">{result.title}</span>
+                            <span className="text-[10px] opacity-50">
+                              {(result.score * 100).toFixed(0)}% relevant
+                            </span>
+                          </div>
+                        </Command.Item>
+                      ))}
+                    </Command.Group>
+                  )}
+
+                  {searchResults.length > 0 && (
+                    <Command.Group
+                      heading="Text Matches"
+                      className="text-xs text-graphon-text-secondary/70 dark:text-graphon-dark-text-secondary/70 font-medium mb-1 px-2 mt-2"
+                    >
+                      <AnimatePresence mode="popLayout">
+                        {searchResults.map((result, index) => {
+                          const fileName = getFileNameFromPath(result.path)
+                          return (
+                            <motion.div
+                              key={result.path}
+                              layout
+                              initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                              transition={{
+                                duration: 0.2,
+                                delay: index * 0.03,
+                                ease: [0.25, 0.46, 0.45, 0.94]
+                              }}
                             >
-                              <div className="flex items-center w-full">
-                                <File className="w-4 h-4 mr-2 opacity-50 shrink-0" />
-                                <span className="font-medium truncate">{result.title}</span>
-                              </div>
-                              {result.highlight && (
-                                <span
-                                  className="text-xs text-gray-500 dark:text-gray-400 ml-6 mt-0.5 line-clamp-1"
-                                  dangerouslySetInnerHTML={{ __html: result.highlight }}
-                                />
-                              )}
-                            </Command.Item>
-                          </motion.div>
-                        )
-                      })}
-                    </AnimatePresence>
-                  </Command.Group>
+                              <Command.Item
+                                value={result.path}
+                                onSelect={() =>
+                                  runCommand(() => {
+                                    setActiveFile(fileName)
+                                    onViewChange('notes')
+                                  })
+                                }
+                                className="flex flex-col items-start px-2 py-2 rounded-md text-sm text-graphon-text-main dark:text-graphon-dark-text-main aria-selected:bg-neutral-200/50 dark:aria-selected:bg-white/10 cursor-pointer transition-colors"
+                              >
+                                <div className="flex items-center w-full">
+                                  <File className="w-4 h-4 mr-2 opacity-50 shrink-0" />
+                                  <span className="font-medium truncate">{result.title}</span>
+                                </div>
+                                {result.highlight && (
+                                  <span
+                                    className="text-xs text-gray-500 dark:text-gray-400 ml-6 mt-0.5 line-clamp-1"
+                                    dangerouslySetInnerHTML={{ __html: result.highlight }}
+                                  />
+                                )}
+                              </Command.Item>
+                            </motion.div>
+                          )
+                        })}
+                      </AnimatePresence>
+                    </Command.Group>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>

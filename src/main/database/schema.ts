@@ -31,3 +31,11 @@ export interface NotesFts {
   content: string
   path: string
 }
+
+export const note_embeddings = sqliteTable('note_embeddings', {
+  fileId: text('file_id')
+    .primaryKey()
+    .references(() => files.id, { onDelete: 'cascade' }),
+  vector: text('vector', { mode: 'json' }).$type<number[]>().notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).$defaultFn(() => new Date())
+})

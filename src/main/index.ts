@@ -17,7 +17,9 @@ import {
   handleWriteData,
   handleGetGraphData,
   handleGetTemplates,
-  handleGetAllTasks
+  handleGetAllTasks,
+  handleGetRelatedNotes,
+  handleSemanticSearch
 } from './handlers'
 import { startIndexer, stopIndexer, indexerEvents } from './services/IndexerService'
 
@@ -471,6 +473,26 @@ app.whenReady().then(() => {
         return handleGetAllTasks()
       } catch (err) {
         console.error('Error in db:get-all-tasks handler:', err)
+        return []
+      }
+    })
+
+    // Related notes handler
+    ipcMain.handle('db:get-related-notes', async (_, filePath: string) => {
+      try {
+        return await handleGetRelatedNotes(filePath)
+      } catch (err) {
+        console.error('Error in db:get-related-notes handler:', err)
+        return []
+      }
+    })
+
+    // Semantic search handler
+    ipcMain.handle('db:semantic-search', async (_, query: string) => {
+      try {
+        return await handleSemanticSearch(query)
+      } catch (err) {
+        console.error('Error in db:semantic-search handler:', err)
         return []
       }
     })

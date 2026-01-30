@@ -18,6 +18,7 @@ import CalendarSidebar from './CalendarSidebar'
 import { useVault } from '../contexts/VaultContext'
 import { FileContextMenu } from './FileContextMenu'
 import { SidebarSkeleton } from './SkeletonLoader'
+import RelatedNotes from './RelatedNotes'
 
 interface SidebarProps {
   currentView: ViewType
@@ -264,6 +265,10 @@ export default function Sidebar({
                     </button>
                   </div>
                 </div>
+                {/* Related Notes Section */}
+                {activeFile && (
+                  <RelatedNotes currentFilePath={activeFile} onNoteClick={handleFileClick} />
+                )}
               </div>
             </div>
           )}

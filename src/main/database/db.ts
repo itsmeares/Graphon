@@ -38,6 +38,14 @@ sqlite.exec(`
   CREATE INDEX IF NOT EXISTS idx_links_target ON links(target_id);
   CREATE INDEX IF NOT EXISTS idx_todos_file ON todos(file_id);
   CREATE INDEX IF NOT EXISTS idx_todos_completed ON todos(completed);
+
+  CREATE TABLE IF NOT EXISTS note_embeddings (
+    file_id TEXT PRIMARY KEY REFERENCES files(id) ON DELETE CASCADE,
+    vector TEXT NOT NULL,
+    updated_at INTEGER
+  );
+  
+  CREATE INDEX IF NOT EXISTS idx_note_embeddings_file ON note_embeddings(file_id);
 `)
 
 // FTS5 table migration: check if old schema (without 'id' column) exists and recreate
