@@ -1,13 +1,4 @@
-import {
-  startOfWeek,
-  startOfMonth,
-  endOfMonth,
-  endOfWeek,
-  eachDayOfInterval,
-  addDays,
-  format,
-  isSameDay
-} from 'date-fns'
+import { startOfWeek, startOfMonth, addDays, format, isSameDay } from 'date-fns'
 
 // WEEK STARTS ON MONDAY (1)
 export const WEEK_STARTS_ON = 1
@@ -34,7 +25,6 @@ export function isSameDate(d1: Date | null, d2: Date | null): boolean {
 export function getMonthGrid(year: number, month: number): Date[][] {
   const viewDate = new Date(year, month, 1)
   const monthStart = startOfMonth(viewDate)
-  const monthEnd = endOfMonth(viewDate)
 
   const startDate = startOfWeek(monthStart, { weekStartsOn: WEEK_STARTS_ON })
   // We want to ensure we cover at least the full month and often a full 6 weeks for consistent height

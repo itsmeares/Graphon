@@ -43,6 +43,7 @@ mac:
     - target: default
       arch:
         - universal # Hem M1/M2 hem Intel Mac'lerde çalışır
+  icon: build/icon.png
   entitlementsInherit: build/entitlements.mac.plist
   notarize: false # Apple Developer hesabı olmadan build almak için
 dmg:

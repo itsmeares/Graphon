@@ -1,4 +1,4 @@
-import { X, Settings, Calendar, Database, FileText, Plus } from 'lucide-react'
+import { X, Settings, Calendar, Database, FileText, Plus, Share2 } from 'lucide-react'
 import { useVault } from '../../contexts/VaultContext'
 import { TabType } from '../../types'
 
@@ -10,6 +10,8 @@ const getTabIcon = (type: TabType) => {
       return <Calendar className="w-4 h-4 text-neutral-500" />
     case 'database':
       return <Database className="w-4 h-4 text-neutral-500" />
+    case 'graph':
+      return <Share2 className="w-4 h-4 text-neutral-500" />
     default:
       return <FileText className="w-4 h-4 text-neutral-500" />
   }

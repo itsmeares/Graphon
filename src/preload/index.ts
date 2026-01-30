@@ -47,8 +47,25 @@ const api = {
   showItemInFolder: (filename: string) => ipcRenderer.send('shell:show-item-in-folder', filename),
 
   // Database Search API
-  searchNotes: (query: string): Promise<Array<{ title: string; content: string; path: string }>> =>
-    ipcRenderer.invoke('db:search', query)
+  searchNotes: (
+    query: string
+  ): Promise<Array<{ id: string; title: string; path: string; highlight: string }>> =>
+    ipcRenderer.invoke('db:search', query),
+
+  // Graph Data API
+  getGraphData: (): Promise<{
+    nodes: Array<{ id: string; title: string; group: string }>
+    links: Array<{ source: string; target: string }>
+  }> => ipcRenderer.invoke('db:get-graph-data'),
+
+  // Templates API
+  getTemplates: (): Promise<Array<{ name: string; content: string }>> =>
+    ipcRenderer.invoke('db:get-templates'),
+
+  // Tasks API
+  getAllTasks: (): Promise<
+    Array<{ id: string; content: string; completed: boolean; filePath: string; fileTitle: string }>
+  > => ipcRenderer.invoke('db:get-all-tasks')
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

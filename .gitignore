@@ -32,3 +32,5 @@ Thumbs.db
 # IDEs
 .vscode/
 .idea/
+AGENT_RULES.md
+AGENT_GUIDELINES.md

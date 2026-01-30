@@ -38,7 +38,29 @@ interface VaultAPI {
   writeData: (key: string, data: any) => Promise<void>
 
   // Database Search API
-  searchNotes: (query: string) => Promise<Array<{ title: string; content: string; path: string }>>
+  searchNotes: (
+    query: string
+  ) => Promise<Array<{ id: string; title: string; path: string; highlight: string }>>
+
+  // Graph Data API
+  getGraphData: () => Promise<{
+    nodes: Array<{ id: string; title: string; group: string }>
+    links: Array<{ source: string; target: string }>
+  }>
+
+  // Templates API
+  getTemplates: () => Promise<Array<{ name: string; content: string }>>
+
+  // Tasks API
+  getAllTasks: () => Promise<
+    Array<{
+      id: string
+      content: string
+      completed: boolean
+      filePath: string
+      fileTitle: string
+    }>
+  >
 }
 
 declare global {

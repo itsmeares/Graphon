@@ -142,6 +142,27 @@ export function serializeNote(jsonContent: JSONContent, metadata: NoteMetadata):
 function htmlToMarkdown(html: string): string {
   let md = html
 
+  /**
+   * CUSTOM LOGIC: Preserve Callout blocks
+   *
+   * Since htmlToMarkdown cleaner strips unknown tags, we need to protect our callouts.
+   * We'll temporarily replace them with placeholders, run the cleaner,
+   * then restore the HTML.
+   */
+  const calloutMap = new Map<string, string>()
+  let calloutCounter = 0
+
+  // Regex to match callout divs: <div data-type="callout" ... > ... </div>
+  // Note: maximizing content match until the closing div.
+  // IMPORTANT: This is a simple regex assumption that callouts don't nest callouts.
+  md = md.replace(/<div\s+data-type="callout"[^>]*>[\s\S]*?<\/div>/gi, (match) => {
+    const key = `__CALLOUT_PRESERVE_${calloutCounter++}__`
+    calloutMap.set(key, match)
+    return key
+  })
+
+  // --- Original Cleaning Logic ---
+
   // Handle headings
   md = md.replace(/<h1[^>]*>(.*?)<\/h1>/gi, '# $1\n\n')
   md = md.replace(/<h2[^>]*>(.*?)<\/h2>/gi, '## $1\n\n')
@@ -169,7 +190,22 @@ function htmlToMarkdown(html: string): string {
     return lines.join('\n') + '\n\n'
   })
 
-  // Handle unordered lists
+  // Handle task lists FIRST (before generic list handling)
+  // Match the entire task list and convert it
+  md = md.replace(/<ul[^>]*data-type="taskList"[^>]*>([\s\S]*?)<\/ul>/gi, (_, content) => {
+    // Convert checked items
+    let result = content.replace(
+      /<li[^>]*data-checked="true"[^>]*>([\s\S]*?)<\/li>/gi,
+      '- [x] $1\n'
+    )
+    // Convert unchecked items
+    result = result.replace(/<li[^>]*data-checked="false"[^>]*>([\s\S]*?)<\/li>/gi, '- [ ] $1\n')
+    // Clean up any remaining HTML tags inside list items
+    result = result.replace(/<\/?p[^>]*>/gi, '')
+    return result + '\n'
+  })
+
+  // Handle unordered lists (non-task lists)
   md = md.replace(/<ul[^>]*>([\s\S]*?)<\/ul>/gi, (_, content) => {
     return (
       content.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, '- $1\n').replace(/<\/?[^>]+(>|$)/g, '') + '\n'
@@ -187,10 +223,6 @@ function htmlToMarkdown(html: string): string {
       }) + '\n'
     )
   })
-
-  // Handle task lists
-  md = md.replace(/<li[^>]*data-checked="true"[^>]*>(.*?)<\/li>/gi, '- [x] $1\n')
-  md = md.replace(/<li[^>]*data-checked="false"[^>]*>(.*?)<\/li>/gi, '- [ ] $1\n')
 
   // Handle links
   md = md.replace(/<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/gi, '[$2]($1)')
@@ -219,6 +251,14 @@ function htmlToMarkdown(html: string): string {
   // Clean up extra whitespace
   md = md.replace(/\n{3,}/g, '\n\n')
   md = md.trim()
+
+  // --- Restore Callouts ---
+  if (calloutMap.size > 0) {
+    calloutMap.forEach((html, key) => {
+      // The markdown cleaner might have messed up whitespace around keys, so use replace
+      md = md.replace(key, '\n\n' + html + '\n\n')
+    })
+  }
 
   return md
 }

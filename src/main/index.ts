@@ -1,5 +1,5 @@
 /// <reference path="./env.d.ts" />
-import { app, shell, BrowserWindow, ipcMain, nativeTheme, globalShortcut } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, nativeTheme } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -14,7 +14,10 @@ import {
   handleWriteFile,
   handleDeleteFile,
   handleReadData,
-  handleWriteData
+  handleWriteData,
+  handleGetGraphData,
+  handleGetTemplates,
+  handleGetAllTasks
 } from './handlers'
 import { startIndexer, stopIndexer, indexerEvents } from './services/IndexerService'
 
@@ -52,7 +55,10 @@ function createWindow(): void {
     // Determine initial background color based on theme
     const isDark =
       savedTheme === 'dark' || (savedTheme === 'system' && nativeTheme.shouldUseDarkColors)
-    const initialBgColor = isDark ? '#1C1C1A' : '#FFFCF8'
+    // On macOS, we want transparent background to allow vibrancy to show through
+    // On Windows/Linux, we start with an opaque background to prevent visual artifacts
+    const initialBgColor =
+      process.platform === 'darwin' ? '#00000000' : isDark ? '#1C1C1A' : '#FFFCF8'
 
     // Create the browser window with premium Graphon aesthetics
     mainWindow = new BrowserWindow({
@@ -77,7 +83,11 @@ function createWindow(): void {
     // Theme synchronization for background color (real-time)
     ipcMain.on('update-theme-color', (_, color) => {
       try {
-        if (typeof color === 'string' && (color.startsWith('#') || color.startsWith('rgb'))) {
+        if (
+          process.platform !== 'darwin' &&
+          typeof color === 'string' &&
+          (color.startsWith('#') || color.startsWith('rgb'))
+        ) {
           mainWindow?.setBackgroundColor(color)
         }
       } catch (err) {
@@ -131,15 +141,6 @@ function createWindow(): void {
         mainWindow?.show()
       } catch (err) {
         console.error('Error in ready-to-show event:', err)
-      }
-    })
-
-    // Hide window on blur (when clicking outside)
-    mainWindow.on('blur', () => {
-      try {
-        mainWindow?.hide()
-      } catch (err) {
-        console.error('Error in blur event:', err)
       }
     })
 
@@ -401,7 +402,7 @@ app.whenReady().then(() => {
       }
     })
 
-    // Database search handler (FTS)
+    // Database search handler (FTS5)
     ipcMain.handle('db:search', async (_, query: string) => {
       try {
         if (!query || query.trim().length === 0) {
@@ -416,17 +417,19 @@ app.whenReady().then(() => {
           .trim()
           .split(/\s+/)
           .filter((word) => word.length > 0)
-          .map((word) => `"${word}"*`) // Prefix matching with quoted words
+          .map((word) => `"${word}"*`) // Prefix matching with quoted words (e.g., "pro"* matches "proje")
           .join(' ')
 
         if (!sanitizedQuery) {
           return []
         }
 
+        // Use snippet() to highlight matching text in content (column 3 = content)
+        // snippet(table, column_index, open_marker, close_marker, ellipsis, max_tokens)
         const results = sqlite
           .prepare(
             `
-          SELECT title, content, path 
+          SELECT id, title, path, snippet(notes_fts, 3, '<b>', '</b>', '...', 10) as highlight
           FROM notes_fts 
           WHERE notes_fts MATCH ? 
           ORDER BY rank 
@@ -442,6 +445,36 @@ app.whenReady().then(() => {
       }
     })
 
+    // Graph data handler
+    ipcMain.handle('db:get-graph-data', async () => {
+      try {
+        return await handleGetGraphData()
+      } catch (err) {
+        console.error('Error in db:get-graph-data handler:', err)
+        return { nodes: [], links: [] }
+      }
+    })
+
+    // Templates handler
+    ipcMain.handle('db:get-templates', async () => {
+      try {
+        return await handleGetTemplates()
+      } catch (err) {
+        console.error('Error in db:get-templates handler:', err)
+        return []
+      }
+    })
+
+    // Tasks handler
+    ipcMain.handle('db:get-all-tasks', () => {
+      try {
+        return handleGetAllTasks()
+      } catch (err) {
+        console.error('Error in db:get-all-tasks handler:', err)
+        return []
+      }
+    })
+
     // Indexer events listener
     indexerEvents.on('updated', () => {
       mainWindow?.webContents.send('vault:index-updated')
@@ -449,29 +482,6 @@ app.whenReady().then(() => {
 
     createWindow()
     setupAutoUpdater()
-
-    // Register global shortcut to show/focus window
-    const GLOBAL_SHORTCUT = 'CommandOrControl+Shift+Space'
-    const registered = globalShortcut.register(GLOBAL_SHORTCUT, () => {
-      try {
-        if (mainWindow) {
-          if (mainWindow.isVisible()) {
-            mainWindow.hide()
-          } else {
-            mainWindow.show()
-            mainWindow.focus()
-          }
-        }
-      } catch (err) {
-        console.error('Error in global shortcut handler:', err)
-      }
-    })
-
-    if (!registered) {
-      console.error(`Failed to register global shortcut: ${GLOBAL_SHORTCUT}`)
-    } else {
-      console.log(`Global shortcut registered: ${GLOBAL_SHORTCUT}`)
-    }
 
     app.on('activate', function () {
       try {
@@ -506,15 +516,6 @@ app.on('window-all-closed', () => {
     }
   } catch (err) {
     console.error('Error in window-all-closed handler:', err)
-  }
-})
-
-// Unregister all shortcuts when quitting
-app.on('will-quit', () => {
-  try {
-    globalShortcut.unregisterAll()
-  } catch (err) {
-    console.error('Error unregistering shortcuts:', err)
   }
 })
 

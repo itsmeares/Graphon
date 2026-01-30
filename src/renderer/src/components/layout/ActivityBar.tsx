@@ -1,10 +1,21 @@
-import { Folder, Calendar, Database, Search, Settings, Home } from 'lucide-react'
+import {
+  Folder,
+  Calendar,
+  Database,
+  Search,
+  Settings,
+  Home,
+  Share2,
+  CheckSquare
+} from 'lucide-react'
 
 export type ActivityId =
   | 'files'
   | 'search'
   | 'calendar'
   | 'database'
+  | 'graph'
+  | 'tasks'
   | 'settings'
   | 'home'
   | 'notes'
@@ -53,6 +64,20 @@ export default function ActivityBar({ activeId, onSelect }: ActivityBarProps) {
           onClick={() => onSelect('database')}
           icon={<Database className="w-6 h-6" />}
           label="Database"
+        />
+        <ActivityButton
+          id="graph"
+          active={activeId === 'graph'}
+          onClick={() => onSelect('graph')}
+          icon={<Share2 className="w-6 h-6" />}
+          label="Graph"
+        />
+        <ActivityButton
+          id="tasks"
+          active={activeId === 'tasks'}
+          onClick={() => onSelect('tasks')}
+          icon={<CheckSquare className="w-6 h-6" />}
+          label="Tasks"
         />
       </div>
 
