@@ -24,15 +24,42 @@ sqlite.exec(`
     source_id TEXT NOT NULL REFERENCES files(id) ON DELETE CASCADE,
     target_id TEXT NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS todos (
+    id TEXT PRIMARY KEY,
+    file_id TEXT NOT NULL REFERENCES files(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    completed INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER
+  );
   
   CREATE INDEX IF NOT EXISTS idx_files_path ON files(path);
   CREATE INDEX IF NOT EXISTS idx_links_source ON links(source_id);
   CREATE INDEX IF NOT EXISTS idx_links_target ON links(target_id);
-  
+  CREATE INDEX IF NOT EXISTS idx_todos_file ON todos(file_id);
+  CREATE INDEX IF NOT EXISTS idx_todos_completed ON todos(completed);
+`)
+
+// FTS5 table migration: check if old schema (without 'id' column) exists and recreate
+try {
+  const ftsInfo = sqlite.prepare('PRAGMA table_info(notes_fts)').all() as Array<{ name: string }>
+  const hasIdColumn = ftsInfo.some((col) => col.name === 'id')
+
+  if (ftsInfo.length > 0 && !hasIdColumn) {
+    // Old schema detected, drop and recreate
+    console.log('[DB] Migrating notes_fts table to new schema with id column')
+    sqlite.exec('DROP TABLE IF EXISTS notes_fts')
+  }
+} catch {
+  // Table doesn't exist, will be created below
+}
+
+sqlite.exec(`
   CREATE VIRTUAL TABLE IF NOT EXISTS notes_fts USING fts5(
+    id UNINDEXED,
+    path,
     title,
-    content,
-    path
+    content
   );
 `)
 

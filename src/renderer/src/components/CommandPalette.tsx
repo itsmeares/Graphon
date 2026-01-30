@@ -1,14 +1,21 @@
 import { Command } from 'cmdk'
 import { useEffect, useState, useRef } from 'react'
-import { File, Search, Calendar, Plus, Sun, Moon } from 'lucide-react'
+import { File, Search, Calendar, Plus, Sun, Moon, FileText } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useVault } from '../contexts/VaultContext'
 import { ViewType } from '../types'
+import { processTemplate } from '../utils/templateUtils'
 
 interface SearchResult {
+  id: string
   title: string
-  content: string
   path: string
+  highlight: string
+}
+
+interface TemplateFile {
+  name: string
+  content: string
 }
 
 interface CommandPaletteProps {
@@ -30,6 +37,8 @@ export function CommandPalette({
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
+  const [templates, setTemplates] = useState<TemplateFile[]>([])
+  const [showTemplates, setShowTemplates] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Toggle with Ctrl+K / Cmd+K
@@ -50,8 +59,26 @@ export function CommandPalette({
     if (!isOpen) {
       setSearchQuery('')
       setSearchResults([])
+      setShowTemplates(false)
     }
   }, [isOpen])
+
+  // Fetch templates when user types "/" or opens template mode
+  useEffect(() => {
+    if (searchQuery === '/' || showTemplates) {
+      window.api.getTemplates().then(setTemplates).catch(console.error)
+    }
+  }, [searchQuery, showTemplates])
+
+  // Insert template content into editor via Custom Event
+  const insertTemplateContent = async (template: TemplateFile) => {
+    try {
+      const processed = await processTemplate(template.content)
+      window.dispatchEvent(new CustomEvent('insert-template-content', { detail: processed }))
+    } catch (error) {
+      console.error('Failed to process template:', error)
+    }
+  }
 
   // Debounced search via IPC
   useEffect(() => {
@@ -77,7 +104,7 @@ export function CommandPalette({
       } finally {
         setIsSearching(false)
       }
-    }, 100)
+    }, 300)
 
     return () => {
       if (debounceRef.current) {
@@ -172,8 +199,35 @@ export function CommandPalette({
                     )}
                     <span>{darkMode ? 'Light Mode' : 'Dark Mode'}</span>
                   </Command.Item>
+                  <Command.Item
+                    onSelect={() => setShowTemplates(true)}
+                    className="flex items-center px-2 py-2 rounded-md text-sm text-graphon-text-main dark:text-graphon-dark-text-main aria-selected:bg-neutral-200/50 dark:aria-selected:bg-white/10 cursor-pointer transition-colors"
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    <span>Insert Template</span>
+                  </Command.Item>
                 </Command.Group>
               </>
+            )}
+
+            {/* Templates list */}
+            {(showTemplates || searchQuery === '/') && templates.length > 0 && (
+              <Command.Group
+                heading="Templates"
+                className="text-xs text-gray-400 font-medium mb-1 px-2"
+              >
+                {templates.map((template) => (
+                  <Command.Item
+                    key={template.name}
+                    value={template.name}
+                    onSelect={() => runCommand(() => insertTemplateContent(template))}
+                    className="flex items-center px-2 py-2 rounded-md text-sm text-graphon-text-main dark:text-graphon-dark-text-main aria-selected:bg-neutral-200/50 dark:aria-selected:bg-white/10 cursor-pointer transition-colors"
+                  >
+                    <FileText className="w-4 h-4 mr-2 opacity-50" />
+                    <span>{template.name}</span>
+                  </Command.Item>
+                ))}
+              </Command.Group>
             )}
 
             {/* Search results */}
@@ -221,11 +275,11 @@ export function CommandPalette({
                                 <File className="w-4 h-4 mr-2 opacity-50 shrink-0" />
                                 <span className="font-medium truncate">{result.title}</span>
                               </div>
-                              {result.content && (
-                                <span className="text-xs text-gray-500 dark:text-gray-400 ml-6 mt-0.5 line-clamp-1">
-                                  {result.content.slice(0, 100)}
-                                  {result.content.length > 100 ? '...' : ''}
-                                </span>
+                              {result.highlight && (
+                                <span
+                                  className="text-xs text-gray-500 dark:text-gray-400 ml-6 mt-0.5 line-clamp-1"
+                                  dangerouslySetInnerHTML={{ __html: result.highlight }}
+                                />
                               )}
                             </Command.Item>
                           </motion.div>

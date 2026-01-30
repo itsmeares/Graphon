@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { toDateOnly, getMonthGrid, getWeekDays, WEEK_STARTS_ON } from './calendarUtils'
-import { startOfWeek, addDays, format, getDay } from 'date-fns'
+import { getDay } from 'date-fns'
 
 describe('calendarUtils', () => {
   describe('WEEK_STARTS_ON', () => {

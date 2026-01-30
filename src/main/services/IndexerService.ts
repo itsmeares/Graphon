@@ -1,5 +1,5 @@
 import chokidar, { FSWatcher } from 'chokidar'
-import { createHash } from 'crypto'
+import { createHash, randomUUID } from 'crypto'
 import { promises as fs } from 'fs'
 import { basename, relative } from 'path'
 import { db, sqlite } from '../database/db'
@@ -24,6 +24,11 @@ let currentVaultPath: string | null = null
  * Regex pattern to match Wikilinks: [[Link Name]] or [[Link Name|Display Text]]
  */
 const WIKILINK_REGEX = /\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g
+
+/**
+ * Regex pattern to match Markdown tasks: - [ ] or - [x] or - [X]
+ */
+const TASK_REGEX = /^\s*-\s*\[([ xX])\]\s*(.+)$/gm
 
 /**
  * Calculate MD5 checksum of a file
@@ -114,7 +119,7 @@ const deleteFtsByPath = sqlite.prepare(`
 `)
 
 const insertFts = sqlite.prepare(`
-  INSERT INTO notes_fts (title, content, path) VALUES (?, ?, ?)
+  INSERT INTO notes_fts (id, path, title, content) VALUES (?, ?, ?, ?)
 `)
 
 // deleteFtsByPath is used for both updates and deletes
@@ -128,56 +133,149 @@ const insertLink = sqlite.prepare(`
   INSERT INTO links (source_id, target_id) VALUES (?, ?)
 `)
 
+// Todos prepared statements
+const deleteTodosByFileId = sqlite.prepare(`
+  DELETE FROM todos WHERE file_id = ?
+`)
+
+const insertTodo = sqlite.prepare(`
+  INSERT INTO todos (id, file_id, content, completed, created_at) VALUES (?, ?, ?, ?, ?)
+`)
+
+// Query to find file ID by filename (without extension)
+const findFileByName = sqlite.prepare(`
+  SELECT id, path FROM files WHERE path LIKE ? OR path LIKE ?
+`)
+
 /**
  * Extract all wikilinks from content
- * Returns an array of link target names (the text inside [[...]])
+ * Returns an array of unique link target names (the text inside [[...]])
  */
 function extractWikilinks(content: string): string[] {
-  const foundLinks: string[] = []
+  const linkSet = new Set<string>()
   let match: RegExpExecArray | null
+
+  // Reset regex lastIndex to ensure fresh start
+  WIKILINK_REGEX.lastIndex = 0
 
   while ((match = WIKILINK_REGEX.exec(content)) !== null) {
     const linkTarget = match[1].trim()
     if (linkTarget) {
-      foundLinks.push(linkTarget)
+      linkSet.add(linkTarget)
     }
   }
 
-  // Remove duplicates
-  return Array.from(new Set(foundLinks))
+  return Array.from(linkSet)
+}
+
+/**
+ * Extract all tasks from content
+ * Returns an array of tasks with their completion status and content
+ */
+function extractTasks(content: string): { completed: boolean; content: string }[] {
+  const tasks: { completed: boolean; content: string }[] = []
+
+  // Reset regex lastIndex to ensure fresh start
+  TASK_REGEX.lastIndex = 0
+
+  let match: RegExpExecArray | null
+  while ((match = TASK_REGEX.exec(content)) !== null) {
+    const checkMark = match[1]
+    const taskContent = match[2].trim()
+    if (taskContent) {
+      tasks.push({
+        completed: checkMark.toLowerCase() === 'x',
+        content: taskContent
+      })
+    }
+  }
+
+  return tasks
+}
+
+/**
+ * Resolve a wikilink target to an actual file ID
+ * Returns the file ID if found, otherwise returns the original link name (ghost link)
+ */
+function resolveTargetId(linkTarget: string): string {
+  // Try to find the file by name (with or without .md extension)
+  const searchPatterns = [
+    `%/${linkTarget}.md`, // subfolder/linkTarget.md
+    `${linkTarget}.md` // root level linkTarget.md
+  ]
+
+  try {
+    const result = findFileByName.get(searchPatterns[0], searchPatterns[1]) as
+      | { id: string; path: string }
+      | undefined
+
+    if (result) {
+      return result.id // Return actual file ID
+    }
+  } catch {
+    // Ignore errors, return ghost link
+  }
+
+  // Ghost link: target file not found, return link name as-is
+  return `ghost:${linkTarget}`
 }
 
 /**
  * Clear all data from indexer tables
  */
 function clearDatabase(): void {
-  sqlite.exec('DELETE FROM files')
+  sqlite.exec('DELETE FROM todos')
   sqlite.exec('DELETE FROM links')
   sqlite.exec('DELETE FROM notes_fts')
+  sqlite.exec('DELETE FROM files')
   console.log('[Indexer] Database cleared')
 }
 
 /**
- * Update links for a file (atomic operation)
- * First deletes all existing links from this source, then inserts new ones
+ * Persist file data to database (atomic transaction)
+ * Handles: files table upsert, FTS index update, links update
  */
-function updateFileLinks(sourceId: string, wikilinks: string[]): void {
-  // Use a transaction for atomic update
+function persistFileData(
+  sourceId: string,
+  relativePath: string,
+  title: string,
+  plainText: string,
+  wikilinks: string[],
+  tasks: { completed: boolean; content: string }[]
+): void {
   const transaction = sqlite.transaction(() => {
-    // Delete all existing links from this source
+    // 1. Update FTS table (delete old, insert new)
+    deleteFtsByPath.run(relativePath)
+    insertFts.run(sourceId, relativePath, title, plainText)
+
+    // 2. Delete all existing links from this source
     deleteLinks.run(sourceId)
 
-    // Insert new links
-    // For now, we use the link target name as target_id
-    // Later we can resolve these to actual file IDs
+    // 3. Insert new links with resolved target IDs
     for (const linkTarget of wikilinks) {
-      // Store the link target as-is for now
-      // We'll resolve to actual file IDs in a future enhancement
-      insertLink.run(sourceId, linkTarget)
+      const targetId = resolveTargetId(linkTarget)
+      insertLink.run(sourceId, targetId)
+    }
+
+    // 4. Delete all existing todos from this source
+    deleteTodosByFileId.run(sourceId)
+
+    // 5. Insert new todos
+    const now = Date.now()
+    for (const task of tasks) {
+      const todoId = randomUUID()
+      insertTodo.run(todoId, sourceId, task.content, task.completed ? 1 : 0, now)
     }
   })
 
   transaction()
+
+  if (wikilinks.length > 0) {
+    console.log(`[Indexer] Persisted ${wikilinks.length} links for: ${relativePath}`)
+  }
+  if (tasks.length > 0) {
+    console.log(`[Indexer] Persisted ${tasks.length} tasks for: ${relativePath}`)
+  }
 }
 
 /**
@@ -197,6 +295,13 @@ async function onFileAdd(absolutePath: string): Promise<void> {
     const title = extractTitle(rawContent, absolutePath)
     const plainText = extractPlainText(rawContent)
 
+    // Extract wikilinks from content
+    const wikilinks = extractWikilinks(rawContent)
+
+    // Extract tasks from content
+    const tasks = extractTasks(rawContent)
+
+    // Insert file record
     await db
       .insert(files)
       .values({
@@ -208,18 +313,8 @@ async function onFileAdd(absolutePath: string): Promise<void> {
       })
       .onConflictDoNothing()
 
-    // Index content in FTS table (delete first to handle potential duplicates)
-    deleteFtsByPath.run(relativePath)
-    insertFts.run(title, plainText, relativePath)
-
-    // Extract and save wikilinks (async to not block main thread)
-    setImmediate(() => {
-      const wikilinks = extractWikilinks(rawContent)
-      updateFileLinks(fileId, wikilinks)
-      if (wikilinks.length > 0) {
-        console.log(`[Indexer] Found ${wikilinks.length} links in: ${relativePath}`)
-      }
-    })
+    // Persist FTS, links, and tasks in atomic transaction
+    persistFileData(fileId, relativePath, title, plainText, wikilinks, tasks)
 
     console.log(`[Indexer] Added: ${relativePath}`)
     notifyUpdate()
@@ -245,6 +340,13 @@ async function onFileChange(absolutePath: string): Promise<void> {
     const title = extractTitle(rawContent, absolutePath)
     const plainText = extractPlainText(rawContent)
 
+    // Extract wikilinks from content
+    const wikilinks = extractWikilinks(rawContent)
+
+    // Extract tasks from content
+    const tasks = extractTasks(rawContent)
+
+    // Update file record
     await db
       .update(files)
       .set({
@@ -253,18 +355,8 @@ async function onFileChange(absolutePath: string): Promise<void> {
       })
       .where(eq(files.id, fileId))
 
-    // Update content in FTS table (delete then insert for upsert)
-    deleteFtsByPath.run(relativePath)
-    insertFts.run(title, plainText, relativePath)
-
-    // Extract and save wikilinks (async to not block main thread)
-    setImmediate(() => {
-      const wikilinks = extractWikilinks(rawContent)
-      updateFileLinks(fileId, wikilinks)
-      if (wikilinks.length > 0) {
-        console.log(`[Indexer] Updated ${wikilinks.length} links in: ${relativePath}`)
-      }
-    })
+    // Persist FTS, links, and tasks in atomic transaction
+    persistFileData(fileId, relativePath, title, plainText, wikilinks, tasks)
 
     console.log(`[Indexer] Updated: ${relativePath}`)
     notifyUpdate()
@@ -288,6 +380,9 @@ async function onFileUnlink(absolutePath: string): Promise<void> {
 
     // Remove links from this source
     deleteLinks.run(fileId)
+
+    // Remove todos from this source (also handled by FK cascade, but explicit for clarity)
+    deleteTodosByFileId.run(fileId)
 
     await db.delete(files).where(eq(files.id, fileId))
 

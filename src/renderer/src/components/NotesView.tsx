@@ -244,6 +244,19 @@ export default function NotesView({ isSidebarVisible = true }: NotesViewProps) {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [editor, flushPendingSave])
 
+  // Listen for template content insertion from CommandPalette (Event Bus pattern)
+  useEffect(() => {
+    const handleInsertContent = (e: CustomEvent<string>) => {
+      if (editor) {
+        editor.commands.insertContent(e.detail)
+        editor.commands.focus()
+      }
+    }
+    window.addEventListener('insert-template-content', handleInsertContent as EventListener)
+    return () =>
+      window.removeEventListener('insert-template-content', handleInsertContent as EventListener)
+  }, [editor])
+
   const handleRename = useCallback(async () => {
     if (!activeFile || !localTitle || isRenaming) return
     const currentName = activeFile.replace(/\.md$/, '')

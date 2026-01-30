@@ -14,11 +14,17 @@ This project is still in development; any feedbacks, suggestions and contributio
 - 🎨 **Modern Design Language**: SystemGray and SystemBackground color palettes.
 - 🌓 **Dark/Light Mode**: Automatic synchronization with your system theme.
 - ✍️ **Rich Text Editor**: Notion-style editor powered by Tiptap.
+- 🕸️ **Interactive Graph View**: Visualize connections between your notes.
+- 🔍 **Full-Text Search**: Instant search across all your content with FTS5.
+- ✅ **Task Engine**: Integrated task management system.
+- 📋 **Smart Templates**: Reusable templates with dynamic variables.
+- 💡 **Callout Blocks**: Highlight important information with styled blocks.
+- ⚡ **Slash Commands**: Quick access to editor features via `/`.
 - 📝 **Floating Toolbar**: Dynamic toolbar that appears upon text selection.
 - 📅 **Calendar**: Weekly/Monthly, hour-based calendar view.
 - ✨ **Enhanced Glassmorphism**: High-quality blur effects for a premium feel.
 - 🎭 **Compact Sidebar**: Compact menu that expands on hover.
-- 💾 **Auto-Save**: Automatic data persistence using LocalStorage.
+- 💾 **Auto-Save**: Automatic data persistence using LocalStorage & SQLite.
 - 🚀 **Smooth Animations**: Smooth modern transitions.
 - 📐 **Notes Layout**: Centered content with the ability to edit.
 - 🔷 **TypeScript**: Enhanced code quality with full type safety.
@@ -128,6 +134,8 @@ Graphon/
 - **Framework**: Electron.js v33
 - **UI Library**: React v19
 - **Language**: TypeScript v5
+- **Database**: SQLite (via better-sqlite3) & FTS5
+- **ORM**: Drizzle ORM
 - **Build Tool**: Electron Vite
 
 ### Styling
@@ -140,7 +148,7 @@ Graphon/
 ### Editor
 
 - **Rich Text Editor**: Tiptap v2
-- **Extensions**: StarterKit, Placeholder, Typography, TaskList, Image
+- **Extensions**: StarterKit, Placeholder, Typography, TaskList, Image, Callout
 
 ## 🎨 Design System
 
@@ -174,4 +182,4 @@ This project is licensed under the MIT License.
 
 ---
 
-**Graphon v0.1.4** - Modern, Minimalist, Masterful. 🚀
+**Graphon v0.1.5** - Modern, Minimalist, Masterful. 🚀

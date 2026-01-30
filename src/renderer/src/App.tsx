@@ -6,6 +6,8 @@ import CalendarView from './components/CalendarView'
 import SettingsView from './components/SettingsView'
 import DatabaseView from './components/database/DatabaseView'
 import DatabaseList from './components/database/DatabaseList'
+import GraphView from './components/database/GraphView'
+import TasksView from './components/TasksView'
 import LoadingScreen from './components/LoadingScreen'
 import WelcomeView from './components/WelcomeView'
 import NewPageView from './components/NewPageView'
@@ -167,6 +169,10 @@ function AppContent() {
       // If we have a current DB, open it? For now just generic DB view?
       // Maybe open "Databases" list tab
       openTab({ id: 'database-list', type: 'database', title: 'Databases' })
+    } else if (id === 'graph') {
+      openTab({ id: 'graph', type: 'graph', title: 'Graph View' })
+    } else if (id === 'tasks') {
+      openTab({ id: 'tasks', type: 'tasks', title: 'Tasks' })
     } else if (id === 'home') {
       openTab({
         id: `new-page-${Date.now()}`,
@@ -564,6 +570,24 @@ function AppContent() {
               }}
             />
           ))}
+
+        {activeTab?.type === 'graph' && (
+          <GraphView
+            isDarkMode={isDarkMode}
+            onSelectNode={(nodeId) => {
+              // Find the file path by nodeId and open it
+              openFile(nodeId)
+            }}
+          />
+        )}
+
+        {activeTab?.type === 'tasks' && (
+          <TasksView
+            onOpenFile={(path) => {
+              openFile(path)
+            }}
+          />
+        )}
       </MainLayout>
       <CommandPalette
         isOpen={isCommandPaletteOpen}

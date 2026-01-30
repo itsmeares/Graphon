@@ -1,8 +1,8 @@
 import { dialog, app, shell } from 'electron'
 import { promises as fs } from 'fs'
 import { join, basename, normalize, dirname } from 'path'
-import { db } from './database/db'
-import { files } from './database/schema'
+import { db, sqlite } from './database/db'
+import { files, links } from './database/schema'
 
 // Path to settings file in userData
 const SETTINGS_PATH = join(app.getPath('userData'), 'settings.json')
@@ -421,5 +421,159 @@ export async function handleWriteData(key: string, data: any): Promise<void> {
   } catch (error) {
     console.error(`Error writing data key "${key}":`, error)
     throw error
+  }
+}
+
+// =============================================================================
+// GRAPH DATA
+// =============================================================================
+
+export interface GraphNode {
+  id: string
+  title: string
+  group: string
+}
+
+export interface GraphLink {
+  source: string
+  target: string
+}
+
+export interface GraphData {
+  nodes: GraphNode[]
+  links: GraphLink[]
+}
+
+/**
+ * Get graph data for visualization - nodes (files) and links (connections)
+ */
+export async function handleGetGraphData(): Promise<GraphData> {
+  try {
+    // Get all files as nodes
+    const allFiles = await db.select().from(files)
+    const nodes: GraphNode[] = allFiles.map((file) => {
+      // Extract folder from path for grouping
+      const pathParts = file.path.split('/')
+      const group = pathParts.length > 1 ? pathParts[0] : 'root'
+      // Extract title from filename (remove .md extension)
+      const fileName = basename(file.path)
+      const title = fileName.replace(/\.md$/i, '')
+
+      return {
+        id: file.id,
+        title,
+        group
+      }
+    })
+
+    // Get all links
+    const allLinks = await db.select().from(links)
+    const graphLinks: GraphLink[] = allLinks.map((link) => ({
+      source: link.sourceId,
+      target: link.targetId
+    }))
+
+    return { nodes, links: graphLinks }
+  } catch (error) {
+    console.error('Error getting graph data:', error)
+    return { nodes: [], links: [] }
+  }
+}
+
+// =============================================================================
+// SMART TEMPLATES
+// =============================================================================
+
+export interface TemplateFile {
+  name: string
+  content: string
+}
+
+/**
+ * Get all templates from .graphon/templates directory
+ * Creates the templates folder if it doesn't exist
+ */
+export async function handleGetTemplates(): Promise<TemplateFile[]> {
+  try {
+    const vaultPath = getVaultPathOrThrow()
+    const graphonPath = await ensureGraphonFolder(vaultPath)
+    const templatesPath = join(graphonPath, 'templates')
+
+    // Ensure templates directory exists
+    try {
+      await fs.mkdir(templatesPath, { recursive: true })
+    } catch (error: any) {
+      if (error.code !== 'EEXIST') {
+        throw error
+      }
+    }
+
+    // Read all .md files from templates directory
+    const entries = await fs.readdir(templatesPath, { withFileTypes: true })
+    const templates: TemplateFile[] = []
+
+    for (const entry of entries) {
+      if (entry.isFile() && entry.name.endsWith('.md')) {
+        const filePath = join(templatesPath, entry.name)
+        const content = await fs.readFile(filePath, 'utf-8')
+        templates.push({
+          name: entry.name.replace(/\.md$/i, ''),
+          content
+        })
+      }
+    }
+
+    return templates
+  } catch (error) {
+    console.error('Error getting templates:', error)
+    return []
+  }
+}
+
+// =============================================================================
+// TASKS API
+// =============================================================================
+
+export interface TaskItem {
+  id: string
+  content: string
+  completed: boolean
+  filePath: string
+  fileTitle: string
+}
+
+/**
+ * Get all tasks from all indexed files
+ * JOINs todos with files to include source file information
+ */
+export function handleGetAllTasks(): TaskItem[] {
+  try {
+    const result = sqlite
+      .prepare(
+        `
+      SELECT t.id, t.content, t.completed, f.path as file_path
+      FROM todos t
+      JOIN files f ON t.file_id = f.id
+      ORDER BY t.completed ASC, t.created_at DESC
+    `
+      )
+      .all() as Array<{ id: string; content: string; completed: number; file_path: string }>
+
+    return result.map((row) => {
+      // Extract title from path (filename without .md)
+      const fileName = basename(row.file_path)
+      const fileTitle = fileName.replace(/\.md$/i, '')
+
+      return {
+        id: row.id,
+        content: row.content,
+        completed: row.completed === 1,
+        filePath: row.file_path,
+        fileTitle
+      }
+    })
+  } catch (error) {
+    console.error('Error getting all tasks:', error)
+    return []
   }
 }

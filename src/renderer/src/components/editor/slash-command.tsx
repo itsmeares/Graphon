@@ -169,6 +169,57 @@ const CommandItems = [
         .setImage({ src: 'https://source.unsplash.com/random/800x600' })
         .run()
     }
+  },
+  {
+    title: 'Callout',
+    shortcut: '/callout',
+    icon: <div className="text-base">💡</div>,
+    command: ({ editor, range }: CommandProps) => {
+      ;(editor.chain().focus().deleteRange(range) as any)
+        .insertContent({
+          type: 'callout',
+          attrs: {
+            type: 'info',
+            emoji: '💡'
+          },
+          content: [{ type: 'paragraph' }]
+        })
+        .run()
+    }
+  },
+  {
+    title: 'Warning',
+    shortcut: '/warning',
+    icon: <div className="text-base">⚠️</div>,
+    command: ({ editor, range }: CommandProps) => {
+      ;(editor.chain().focus().deleteRange(range) as any)
+        .insertContent({
+          type: 'callout',
+          attrs: {
+            type: 'warning',
+            emoji: '⚠️'
+          },
+          content: [{ type: 'paragraph' }]
+        })
+        .run()
+    }
+  },
+  {
+    title: 'Danger',
+    shortcut: '/danger',
+    icon: <div className="text-base">🚨</div>,
+    command: ({ editor, range }: CommandProps) => {
+      ;(editor.chain().focus().deleteRange(range) as any)
+        .insertContent({
+          type: 'callout',
+          attrs: {
+            type: 'danger',
+            emoji: '🚨'
+          },
+          content: [{ type: 'paragraph' }]
+        })
+        .run()
+    }
   }
 ]
 

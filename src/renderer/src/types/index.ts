@@ -216,7 +216,7 @@ export interface FileNode {
 // TAB SYSTEM TYPES
 // ============================================
 
-export type TabType = 'file' | 'settings' | 'calendar' | 'database' | 'new-page'
+export type TabType = 'file' | 'settings' | 'calendar' | 'database' | 'new-page' | 'graph' | 'tasks'
 
 export interface Tab {
   id: string
