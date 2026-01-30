@@ -81,13 +81,24 @@ export interface ExportData {
 }
 
 // View configuration
+export interface SortConfig {
+  columnId: string
+  direction: 'asc' | 'desc'
+}
+
+export interface FilterConfig {
+  columnId: string
+  operator: 'contains' | 'equals' | 'isEmpty'
+  value: string
+}
+
 export interface ViewConfig {
   id: string
   type: ViewType
   name: string
-  sortBy?: string
-  sortOrder?: 'asc' | 'desc'
-  groupBy?: string
+  sort?: SortConfig | null
+  filter?: FilterConfig[]
+  groupBy?: string | null
 }
 
 // ============================================
@@ -141,10 +152,17 @@ export function createDefaultDatabase(name: string): Database {
 // Create default views for a database
 export function createDefaultViews(groupByColumnId?: string): ViewConfig[] {
   return [
-    { id: generateViewId(), type: 'table', name: 'Table' },
-    { id: generateViewId(), type: 'board', name: 'Board', groupBy: groupByColumnId },
-    { id: generateViewId(), type: 'gallery', name: 'Gallery' },
-    { id: generateViewId(), type: 'calendar', name: 'Calendar' }
+    { id: generateViewId(), type: 'table', name: 'Table', sort: null, filter: [] },
+    {
+      id: generateViewId(),
+      type: 'board',
+      name: 'Board',
+      groupBy: groupByColumnId,
+      sort: null,
+      filter: []
+    },
+    { id: generateViewId(), type: 'gallery', name: 'Gallery', sort: null, filter: [] },
+    { id: generateViewId(), type: 'calendar', name: 'Calendar', sort: null, filter: [] }
   ]
 }
 

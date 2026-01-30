@@ -52,6 +52,8 @@ interface VaultContextType {
   // Calendar data
   calendarEvents: CalendarEvent[]
   saveCalendar: (events: CalendarEvent[]) => Promise<void>
+  updateCalendarEvent: (id: string, updates: Partial<CalendarEvent>) => Promise<void>
+  addCalendarEvent: (event: CalendarEvent) => Promise<void>
 
   // Database data
   databaseIndex: DatabaseMeta[]
@@ -166,6 +168,27 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Failed to save calendar:', error)
     }
+  }, [])
+
+  const updateCalendarEvent = useCallback(async (id: string, updates: Partial<CalendarEvent>) => {
+    setCalendarEvents((prev) => {
+      const updatedEvents = prev.map((e) => (e.id === id ? { ...e, ...updates } : e))
+      // Optimistic update
+      window.api
+        .writeData('calendar', { events: updatedEvents })
+        .catch((err) => console.error('Failed to update event', err))
+      return updatedEvents
+    })
+  }, [])
+
+  const addCalendarEvent = useCallback(async (event: CalendarEvent) => {
+    setCalendarEvents((prev) => {
+      const newEvents = [...prev, event]
+      window.api
+        .writeData('calendar', { events: newEvents })
+        .catch((err) => console.error('Failed to add event', err))
+      return newEvents
+    })
   }, [])
 
   // Load database index from .graphon/database-index.json
@@ -555,6 +578,8 @@ export function VaultProvider({ children }: { children: ReactNode }) {
 
         calendarEvents,
         saveCalendar,
+        updateCalendarEvent,
+        addCalendarEvent,
         databaseIndex,
         saveDatabaseIndex,
         readDatabase,

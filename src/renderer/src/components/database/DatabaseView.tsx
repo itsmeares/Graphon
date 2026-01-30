@@ -1,11 +1,4 @@
 import { useState, useCallback, useMemo, useEffect } from 'react'
-import {
-  MagnifyingGlassIcon,
-  FunnelIcon,
-  ArrowsUpDownIcon,
-  EllipsisHorizontalIcon,
-  ChevronDownIcon
-} from '@heroicons/react/24/outline'
 import type { Database, Item, ViewConfig, ViewType, Column, CalendarEvent } from '../../types'
 import {
   createDefaultDatabase,
@@ -13,12 +6,13 @@ import {
   generateItemId,
   generateColumnId
 } from '../../types'
-import ViewSwitcher from './ViewSwitcher'
 import TableView from './TableView'
 import BoardView from './BoardView'
 import GalleryView from './GalleryView'
 import CalendarView from '../CalendarView'
 import NewItemEditor from './NewItemEditor'
+import Toolbar from './Toolbar'
+import { useDatabaseFilter } from '../../hooks/useDatabaseFilter'
 
 interface DatabaseViewProps {
   initialDatabase?: Database
@@ -182,7 +176,9 @@ export default function DatabaseView({
       const newView: ViewConfig = {
         id: `view_${Date.now()}`,
         type,
-        name: type.charAt(0).toUpperCase() + type.slice(1)
+        name: type.charAt(0).toUpperCase() + type.slice(1),
+        sort: null,
+        filter: []
       }
       setDatabase((prev) => {
         const updated = { ...prev, views: [...prev.views, newView] }
@@ -219,13 +215,26 @@ export default function DatabaseView({
     [saveDatabase]
   )
 
-  // Yardımcı fonksiyonlar ve render
+  const handleViewConfigChange = useCallback(
+    (newConfig: ViewConfig) => {
+      setDatabase((prev) => {
+        const updatedViews = prev.views.map((v) => (v.id === newConfig.id ? newConfig : v))
+        const updated = { ...prev, views: updatedViews }
+        saveDatabase(updated)
+        return updated
+      })
+    },
+    [saveDatabase]
+  )
+
+  // Helpers and Render
   const currentView = useMemo(
     () => database.views.find((v) => v.id === currentViewId) || database.views[0],
     [database.views, currentViewId]
   )
 
-  const filteredItems = database.items
+  // Apply Filter and Sort Logic using the hook
+  const filteredItems = useDatabaseFilter(database.items, currentView, database.columns)
 
   const renderView = () => {
     const viewProps = {
@@ -254,11 +263,6 @@ export default function DatabaseView({
       case 'calendar':
         // Map Items to CalendarEvents
         const calendarEvents: CalendarEvent[] = filteredItems.map((item) => {
-          // Try to find a date column
-          // This is a naive implementation; a robust one would look for type 'date' columns
-          // For now, allow items to be mapped if they have minimal calendar fields
-          // or default to "today" if missing, to show *something*
-
           return {
             ...item,
             title: (item.values.title as string) || 'Untitled',
@@ -271,7 +275,6 @@ export default function DatabaseView({
                   (item.values.startDate ? new Date(item.values.startDate).getTime() : Date.now()) +
                     3600000
                 )
-            // Add other required fields if missing in basic Item
           } as CalendarEvent
         })
 
@@ -313,7 +316,7 @@ export default function DatabaseView({
         className={`flex-1 flex flex-col transition-all duration-500 ease-apple ${selectedItem ? 'blur-[3px] scale-[0.985] brightness-[0.9] pointer-events-none' : ''}`}
       >
         {/* Database Header */}
-        <div className="flex-shrink-0 px-8 pt-10 pb-4">
+        <div className="shrink-0 px-8 pt-10 pb-4">
           <div className="flex items-center gap-3">
             <span className="text-3xl">{database.icon}</span>
             <h1 className="text-3xl font-bold text-graphon-text-main dark:text-[#dfdfdf] tracking-tight">
@@ -323,43 +326,16 @@ export default function DatabaseView({
         </div>
 
         {/* View Toolbar */}
-        <div className="flex-shrink-0 flex items-center justify-between px-8 py-2 border-b border-black/5 dark:border-white/5">
-          <div className="flex items-center flex-1 min-w-0">
-            <ViewSwitcher
-              views={database.views}
-              currentViewId={currentViewId}
-              onViewChange={(id) => setCurrentViewId(id)}
-              onAddView={handleAddView}
-            />
-          </div>
+        <Toolbar
+          database={database}
+          views={database.views}
+          viewConfig={currentView}
+          onViewConfigChange={handleViewConfigChange}
+          onAddView={handleAddView}
+          onCurrentViewChange={setCurrentViewId}
+          onAddItem={() => handleAddItem()}
+        />
 
-          <div className="flex items-center gap-1 ml-4">
-            <button className="p-1.5 text-graphon-text-secondary dark:text-graphon-dark-text-secondary hover:bg-black/5 dark:hover:bg-white/5 rounded-md transition-colors">
-              <FunnelIcon className="w-4 h-4" />
-            </button>
-            <button className="p-1.5 text-graphon-text-secondary dark:text-graphon-dark-text-secondary hover:bg-black/5 dark:hover:bg-white/5 rounded-md transition-colors">
-              <ArrowsUpDownIcon className="w-4 h-4" />
-            </button>
-            <button className="p-1.5 text-graphon-text-secondary dark:text-graphon-dark-text-secondary hover:bg-black/5 dark:hover:bg-white/5 rounded-md transition-colors">
-              <MagnifyingGlassIcon className="w-4 h-4" />
-            </button>
-            <button className="p-1.5 text-graphon-text-secondary dark:text-graphon-dark-text-secondary hover:bg-black/5 dark:hover:bg-white/5 rounded-md transition-colors mr-2">
-              <EllipsisHorizontalIcon className="w-4 h-4" />
-            </button>
-
-            <div className="flex items-center">
-              <button
-                onClick={() => handleAddItem()}
-                className="flex items-center gap-1 px-2.5 py-1.5 bg-[#2383e2] hover:bg-[#0070e0] text-white text-[13px] font-semibold rounded-l-md transition-colors"
-              >
-                New
-              </button>
-              <button className="px-1 py-1.5 bg-[#2383e2] hover:bg-[#0070e0] text-white rounded-r-md border-l border-white/20 transition-colors">
-                <ChevronDownIcon className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
         <div className="flex-1 overflow-hidden">{renderView()}</div>
       </div>
 

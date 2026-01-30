@@ -58,9 +58,8 @@ function createWindow(): void {
     const isDark =
       savedTheme === 'dark' || (savedTheme === 'system' && nativeTheme.shouldUseDarkColors)
     // On macOS, we want transparent background to allow vibrancy to show through
-    // On Windows/Linux, we start with an opaque background to prevent visual artifacts
-    const initialBgColor =
-      process.platform === 'darwin' ? '#00000000' : isDark ? '#1C1C1A' : '#FFFCF8'
+    // Start with transparent background to allow glass effects
+    const initialBgColor = '#00000000'
 
     // Create the browser window with premium Graphon aesthetics
     mainWindow = new BrowserWindow({
@@ -75,6 +74,7 @@ function createWindow(): void {
       transparent: true,
       vibrancy: 'sidebar',
       autoHideMenuBar: true,
+      resizable: true,
       ...(process.platform === 'linux' ? { icon } : {}),
       webPreferences: {
         preload: join(__dirname, '../preload/index.js'),
@@ -90,7 +90,8 @@ function createWindow(): void {
           typeof color === 'string' &&
           (color.startsWith('#') || color.startsWith('rgb'))
         ) {
-          mainWindow?.setBackgroundColor(color)
+          // Keep background transparent for glassmorphism
+          // mainWindow?.setBackgroundColor(color)
         }
       } catch (err) {
         console.error('Error in update-theme-color IPC:', err)

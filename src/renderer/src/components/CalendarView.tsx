@@ -25,6 +25,8 @@ import { useKeybindings } from '../contexts/KeybindingContext'
 import { WEEK_STARTS_ON, toDateOnly } from '../utils/calendarUtils'
 import MonthView from './MonthView'
 import { useVault } from '../contexts/VaultContext'
+import { useDndMonitor, useDroppable, useDraggable, DragEndEvent } from '@dnd-kit/core'
+import { CSS } from '@dnd-kit/utilities'
 
 // Constants for calendar layout
 const HOUR_HEIGHT = 60 // Each hour slot is 60px tall
@@ -51,19 +53,23 @@ const EventCard = memo(function EventCard({
   event,
   style,
   isSelected,
-  isDragging,
-  onDragStart,
   onClick,
   onResizeStart
 }: {
   event: PositionedEvent
   style: { top: number; height: number; width: string; left: string }
   isSelected: boolean
-  isDragging: boolean
-  onDragStart: (e: React.DragEvent) => void
   onClick: (e: React.MouseEvent) => void
   onResizeStart: (e: React.MouseEvent) => void
 }) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: event.id,
+    data: {
+      type: 'event',
+      event
+    }
+  })
+
   const bgColor = event.color || 'bg-(--color-accent)'
 
   // Format time range
@@ -75,25 +81,33 @@ const EventCard = memo(function EventCard({
     return `${startStr} - ${endStr}`
   }
 
+  const finalStyle = {
+    ...style,
+    top: `${style.top}px`,
+    height: `${style.height}px`,
+    // If dragging, we might want to disable left/width constraints or keep them?
+    // dnd-kit transform handles movement.
+    // However, if we move it, transform applies translation.
+    transform: transform ? CSS.Translate.toString(transform) : undefined,
+    minHeight: '24px',
+    cursor: isDragging ? 'grabbing' : 'pointer',
+    zIndex: isDragging ? 50 : isSelected ? 20 : 10,
+    opacity: isDragging ? 0.6 : 1
+  }
+
   return (
     <div
+      ref={setNodeRef}
       className={`
-                absolute rounded-md px-2 py-1.5 cursor-pointer
+                absolute rounded-md px-2 py-1.5
                 border border-black/10 dark:border-white/10
                 ${bgColor} 
-                ${isSelected ? 'ring-2 ring-(--color-accent) ring-offset-2 dark:ring-offset-[#191919] z-20' : 'z-10 hover:brightness-110'}
-                ${isDragging ? 'opacity-50 cursor-grabbing' : 'opacity-100'}
+                ${isSelected ? 'ring-2 ring-(--color-accent) ring-offset-2 dark:ring-offset-[#191919]' : 'hover:brightness-110'}
                 transition-all duration-200
             `}
-      style={{
-        top: `${style.top}px`,
-        height: `${style.height}px`,
-        width: style.width,
-        left: style.left,
-        minHeight: '24px'
-      }}
-      draggable
-      onDragStart={onDragStart}
+      style={finalStyle}
+      {...attributes}
+      {...listeners}
       onClick={onClick}
     >
       <div className="flex flex-col h-full overflow-hidden text-white">
@@ -109,9 +123,14 @@ const EventCard = memo(function EventCard({
       </div>
 
       {/* Resize Handle */}
+      {/* Stop propagation of drag on resize handle? */}
       <div
         className="absolute bottom-0 left-0 right-0 h-2 cursor-s-resize z-30"
-        onMouseDown={onResizeStart}
+        onMouseDown={(e) => {
+          e.stopPropagation() // Prevent dnd-kit drag start?
+          onResizeStart(e)
+        }}
+        onPointerDown={(e) => e.stopPropagation()} // Important for dnd-kit
       />
     </div>
   )
@@ -149,9 +168,6 @@ export default function CalendarView({
   // Selection state (Event selection)
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
 
-  // Interaction State
-  const [draggedEvent, setDraggedEvent] = useState<CalendarEvent | null>(null)
-
   // Resize State
   const [resizingEvent, setResizingEvent] = useState<CalendarEvent | null>(null)
   const [resizeStartY, setResizeStartY] = useState<number>(0)
@@ -163,6 +179,8 @@ export default function CalendarView({
   const {
     calendarEvents: vaultEvents,
     saveCalendar,
+    updateCalendarEvent,
+    addCalendarEvent,
     currentVaultPath,
     isLoading: vaultLoading
   } = useVault()
@@ -189,7 +207,7 @@ export default function CalendarView({
     }, 500)
     return () => clearTimeout(timeout)
   }, [internalEvents, isControlled, isLoaded, saveCalendar, currentVaultPath])
-  // Derived Events (Merge confirmed events with resizing shadow/preview)
+  // Derived Events
   const displayEvents = useMemo(() => {
     const baseEvents = isControlled ? externalEvents! : internalEvents
 
@@ -198,6 +216,70 @@ export default function CalendarView({
     }
     return baseEvents
   }, [isControlled, externalEvents, internalEvents, resizingEvent])
+
+  // Drag and Drop Monitor
+  useDndMonitor({
+    onDragEnd: (event: DragEndEvent) => {
+      const { active, over } = event
+      if (!over) return
+
+      const activeType = active.data.current?.type
+      const overId = over.id as string
+
+      const dropDate = new Date(overId)
+      if (isNaN(dropDate.getTime())) return
+
+      const overRect = over.rect
+      const activeRect = active.rect.current.translated
+
+      if (!overRect || !activeRect) return
+
+      const relativeY = activeRect.top - overRect.top
+      const clampedY = Math.max(0, relativeY)
+
+      const hours = clampedY / HOUR_HEIGHT
+      const minutes = hours * 60
+      const snappedMinutes = Math.round(minutes / SNAP_MINUTES) * SNAP_MINUTES
+
+      const finalStartDate = new Date(dropDate)
+      finalStartDate.setHours(0, snappedMinutes, 0, 0)
+
+      let duration = 60
+      if (activeType === 'event') {
+        const event = active.data.current?.event as CalendarEvent
+        duration =
+          (new Date(event.endDate).getTime() - new Date(event.startDate).getTime()) / (1000 * 60)
+      }
+
+      const finalEndDate = new Date(finalStartDate.getTime() + duration * 60000)
+
+      if (activeType === 'task') {
+        const task = active.data.current?.task
+        addCalendarEvent({
+          id: crypto.randomUUID(),
+          title: task.content,
+          startDate: finalStartDate,
+          endDate: finalEndDate,
+          color: 'bg-(--color-accent)',
+          description: `From task: ${task.fileTitle}`,
+          values: {},
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        })
+        showToast('Event created from task', 'success')
+      } else if (activeType === 'event') {
+        const event = active.data.current?.event as CalendarEvent
+        updateCalendarEvent(event.id, {
+          startDate: finalStartDate,
+          endDate: finalEndDate
+        })
+      }
+    }
+  })
+
+  // Position events logic (Reuse existing helper or keep inside Render?)
+  // The existing render loop called getPositionedEventsForDay(day)
+  // We need to keep that logic.
 
   // --- Helpers ---
   const generateWeekDays = useCallback((): Date[] => {
@@ -444,45 +526,6 @@ export default function CalendarView({
     checkMatch,
     selectedEventId
   ])
-
-  // --- Drag & Drop ---
-  const handleDragStart = (e: React.DragEvent, event: CalendarEvent) => {
-    setDraggedEvent(event)
-    e.dataTransfer.effectAllowed = 'move'
-    e.dataTransfer.setData('text/plain', event.id)
-  }
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.dataTransfer.dropEffect = 'move'
-  }
-
-  const handleDrop = (e: React.DragEvent, targetDay: Date, targetHour: number) => {
-    e.preventDefault()
-    if (!draggedEvent) return
-
-    const rect = e.currentTarget.getBoundingClientRect()
-    const yInCell = e.clientY - rect.top
-    const minuteWithinHourRaw = ((yInCell % HOUR_HEIGHT) / HOUR_HEIGHT) * 60
-    const minuteSnapped = Math.round(minuteWithinHourRaw / SNAP_MINUTES) * SNAP_MINUTES
-
-    const newStartDate = new Date(targetDay)
-    newStartDate.setHours(targetHour, minuteSnapped, 0, 0)
-
-    const durationMs = draggedEvent.endDate.getTime() - draggedEvent.startDate.getTime()
-    const newEndDate = new Date(newStartDate.getTime() + durationMs)
-
-    const updatedEvent: CalendarEvent = {
-      ...draggedEvent,
-      startDate: newStartDate,
-      endDate: newEndDate,
-      day: newStartDate.getDay(),
-      hour: newStartDate.getHours()
-    }
-
-    handleUpdateEvent(updatedEvent)
-    setDraggedEvent(null)
-  }
 
   // --- Resizing ---
   useEffect(() => {
@@ -840,81 +883,31 @@ export default function CalendarView({
                 </div>
                 {weekDays.map((day) => {
                   const positionedEvents = getPositionedEventsForDay(day)
-                  // Highlight selection column slightly?
                   const isSelected = selectedDate ? isSameDay(day, selectedDate) : false
+                  const timePos = isToday(day) ? getCurrentTimePosition() : null
 
                   return (
-                    <div
+                    <DayColumn
                       key={day.toISOString()}
-                      className={`
-                        flex-1 relative border-r border-gray-100 dark:border-gray-800/50 last:border-r-0 h-360
-                        ${isSelected ? 'bg-(--color-accent)/5 dark:bg-(--color-accent)/10' : ''}
-                    `}
-                    >
-                      {/* Horizontal grid lines */}
-                      {hours.map((h) => (
-                        <div
-                          key={h}
-                          className="absolute w-full border-b border-gray-50 dark:border-gray-800/30"
-                          style={{ top: `${h * 60}px` }}
-                        />
-                      ))}
-
-                      {/* Current Time Indicator */}
-                      {isToday(day) && (
-                        <div
-                          className="current-time-line"
-                          style={{ top: `${getCurrentTimePosition()}px` }}
-                        >
-                          <div className="current-time-dot" />
-                        </div>
-                      )}
-
-                      {positionedEvents.map((event) => {
-                        const style = calculateEventStyle(event)
-                        const isSelected = selectedEventId === event.id
-                        return (
-                          <EventCard
-                            key={event.id}
-                            event={event}
-                            style={style}
-                            isSelected={isSelected}
-                            isDragging={!!draggedEvent && draggedEvent.id === event.id}
-                            onDragStart={(e) => handleDragStart(e, event)}
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setSelectedEventId(event.id)
-                            }}
-                            onResizeStart={(e) => {
-                              e.preventDefault()
-                              e.stopPropagation()
-                              setResizingEvent(event)
-                              setResizeStartY(e.clientY)
-                              const initialDuration =
-                                event.duration ||
-                                (new Date(event.endDate).getTime() -
-                                  new Date(event.startDate).getTime()) /
-                                  60000
-                              setResizeOriginalDuration(initialDuration)
-                            }}
-                          />
-                        )
-                      })}
-
-                      {/* Drop target visual feedback (simple) */}
-                      {draggedEvent && (
-                        <div
-                          className="absolute inset-0 z-0 bg-(--color-accent)/5"
-                          onDragOver={handleDragOver}
-                          onDrop={(e) => {
-                            const rect = e.currentTarget.getBoundingClientRect()
-                            const yInCell = e.clientY - rect.top
-                            const hour = Math.floor(yInCell / HOUR_HEIGHT)
-                            handleDrop(e, day, hour)
-                          }}
-                        />
-                      )}
-                    </div>
+                      day={day}
+                      hours={hours}
+                      events={positionedEvents}
+                      isSelected={isSelected}
+                      selectedEventId={selectedEventId}
+                      currentTimePosition={timePos}
+                      onEventClick={(e, event) => setSelectedEventId(event.id)}
+                      onResizeStart={(e, event) => {
+                        setResizingEvent(event)
+                        setResizeStartY(e.clientY)
+                        const initialDuration =
+                          event.duration ||
+                          (new Date(event.endDate).getTime() -
+                            new Date(event.startDate).getTime()) /
+                            60000
+                        setResizeOriginalDuration(initialDuration)
+                      }}
+                      calculateStyle={calculateEventStyle}
+                    />
                   )
                 })}
               </div>
@@ -966,6 +959,88 @@ export default function CalendarView({
         }}
         onCancel={() => setDeleteConfirmation({ isOpen: false, eventId: null })}
       />
+    </div>
+  )
+}
+
+interface DayColumnProps {
+  day: Date
+  hours: number[]
+  events: PositionedEvent[]
+  isSelected: boolean
+  selectedEventId: string | null
+  currentTimePosition: number | null
+  onEventClick: (e: React.MouseEvent, event: CalendarEvent) => void
+  onResizeStart: (e: React.MouseEvent, event: CalendarEvent) => void
+  calculateStyle: (event: PositionedEvent) => {
+    top: number
+    height: number
+    width: string
+    left: string
+  }
+}
+
+function DayColumn({
+  day,
+  hours,
+  events,
+  isSelected,
+  selectedEventId,
+  currentTimePosition,
+  onEventClick,
+  onResizeStart,
+  calculateStyle
+}: DayColumnProps) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: day.toISOString()
+  })
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`
+                flex-1 relative border-r border-gray-100 dark:border-gray-800/50 last:border-r-0 h-360
+                ${isSelected ? 'bg-(--color-accent)/5 dark:bg-(--color-accent)/10' : ''}
+                ${isOver ? 'bg-(--color-accent)/20 dark:bg-(--color-accent)/20' : ''}
+            `}
+    >
+      {/* Horizontal grid lines */}
+      {hours.map((h) => (
+        <div
+          key={h}
+          className="absolute w-full border-b border-gray-50 dark:border-gray-800/30"
+          style={{ top: `${h * 60}px` }}
+        />
+      ))}
+
+      {/* Current Time Indicator */}
+      {currentTimePosition !== null && (
+        <div className="current-time-line" style={{ top: `${currentTimePosition}px` }}>
+          <div className="current-time-dot" />
+        </div>
+      )}
+
+      {events.map((event) => {
+        const style = calculateStyle(event)
+        const isSelectedEvent = selectedEventId === event.id
+        return (
+          <EventCard
+            key={event.id}
+            event={event}
+            style={style}
+            isSelected={isSelectedEvent}
+            onClick={(e) => {
+              e.stopPropagation()
+              onEventClick(e, event)
+            }}
+            onResizeStart={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              onResizeStart(e, event)
+            }}
+          />
+        )
+      })}
     </div>
   )
 }

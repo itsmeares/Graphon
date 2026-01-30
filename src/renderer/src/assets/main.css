@@ -78,7 +78,7 @@
 @layer base {
   body {
     @apply font-sans antialiased;
-    @apply bg-graphon-bg dark:bg-graphon-dark-bg;
+    @apply bg-transparent;
     @apply text-graphon-text-main dark:text-graphon-dark-text-main;
     margin: 0;
     padding: 0;
@@ -100,12 +100,17 @@
 /* Utilities */
 /* Glassmorphism utilities */
 @utility glass {
-  @apply backdrop-blur-xl bg-white/70 dark:bg-[#202022]/40;
-  @apply border border-graphon-border dark:border-graphon-dark-border;
+  @apply bg-white/70 backdrop-blur-xl border-white/20;
+  @apply dark:bg-[#1e1e1e]/70 dark:backdrop-blur-xl dark:border-white/10;
 }
 
 .glass-sidebar {
-  @apply backdrop-blur-3xl bg-graphon-sidebar/70 dark:bg-graphon-dark-sidebar/70;
+  @apply backdrop-blur-3xl bg-graphon-sidebar/95 dark:bg-graphon-dark-sidebar/90;
+  @apply border-r border-graphon-border dark:border-graphon-dark-border;
+}
+
+.glass-activity-bar {
+  @apply backdrop-blur-3xl bg-graphon-sidebar/90 dark:bg-graphon-dark-sidebar/80;
   @apply border-r border-graphon-border dark:border-graphon-dark-border;
 }
 
