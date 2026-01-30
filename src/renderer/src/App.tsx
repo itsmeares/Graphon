@@ -325,7 +325,7 @@ function AppContent() {
         <div className="w-full h-full overflow-hidden bg-graphon-bg dark:bg-graphon-dark-bg border border-graphon-border/40 dark:border-graphon-dark-border/20 rounded-xl shadow-2xl transition-colors duration-300 flex flex-col relative">
           {/* Custom Titlebar for Welcome Screen */}
           <div
-            className="h-10 w-full flex items-center px-4 shrink-0 select-none drag glass-header border-b border-graphon-border/10 dark:border-graphon-dark-border/5"
+            className="h-10 w-full flex items-center px-4 shrink-0 select-none drag glass-sidebar border-b border-graphon-border/10 dark:border-graphon-dark-border/5"
             style={{ WebkitAppRegion: 'drag' } as any}
           >
             <div

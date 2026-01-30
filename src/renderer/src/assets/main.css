@@ -70,15 +70,10 @@
   --scale-97: 0.97;
 }
 
-/* Helper for class-based dark mode if needed (v4 usually auto-detects 'dark' class if configured, 
-   but strictly speaking we might need to rely on the default 'media' logic or override.
-   For now, assuming standard class usage.) 
-*/
-
 @layer base {
   body {
     @apply font-sans antialiased;
-    @apply bg-transparent;
+    background: transparent !important;
     @apply text-graphon-text-main dark:text-graphon-dark-text-main;
     margin: 0;
     padding: 0;
@@ -97,26 +92,48 @@
   }
 }
 
-/* Utilities */
-/* Glassmorphism utilities */
-@utility glass {
-  @apply bg-white/70 backdrop-blur-xl border-white/20;
-  @apply dark:bg-[#1e1e1e]/70 dark:backdrop-blur-xl dark:border-white/10;
+/* Prismatic System - Realistic Glass Physics */
+@utility glass-base {
+  @apply backdrop-blur-2xl backdrop-saturate-150;
 }
 
-.glass-sidebar {
-  @apply backdrop-blur-3xl bg-graphon-sidebar/95 dark:bg-graphon-dark-sidebar/90;
-  @apply border-r border-graphon-border dark:border-graphon-dark-border;
+@utility glass-sidebar {
+  @apply glass-base;
+  background: rgba(240, 240, 245, 0.2);
+  border-right: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+
+  &:where(.dark, .dark *) {
+    background: rgba(20, 20, 20, 0.2);
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+  }
 }
 
-.glass-activity-bar {
-  @apply backdrop-blur-3xl bg-graphon-sidebar/90 dark:bg-graphon-dark-sidebar/80;
-  @apply border-r border-graphon-border dark:border-graphon-dark-border;
+@utility glass-editor {
+  @apply glass-base;
+  background: rgba(255, 255, 255, 0.65);
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+
+  &:where(.dark, .dark *) {
+    background: rgba(30, 30, 30, 0.6);
+    border-left: 1px solid rgba(255, 255, 255, 0.05);
+  }
 }
 
-.glass-header {
-  @apply sticky top-0 z-40 backdrop-blur-2xl bg-graphon-bg/80 dark:bg-graphon-dark-bg/80;
-  @apply border-b border-graphon-border dark:border-graphon-dark-border;
+@utility glass-modal {
+  @apply backdrop-blur-3xl shadow-2xl;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+
+  &:where(.dark, .dark *) {
+    background: rgba(30, 30, 30, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}
+
+.ambient-bg {
+  /* Atmosphere is handled by AmbientBackground component now */
+  @apply bg-transparent;
 }
 
 /* Smooth transitions */
@@ -164,7 +181,7 @@
 }
 
 .modal-content {
-  @apply glass rounded-2xl shadow-2xl;
+  @apply glass-modal;
   @apply transition-smooth;
   z-index: 1001;
 }

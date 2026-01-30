@@ -294,7 +294,7 @@ export default function Sidebar({
         {/* Calendar integrated view */}
         {currentView === 'calendar' && (
           <div className="animate-in fade-in slide-in-from-bottom-2 duration-400 px-3">
-            <div className="rounded-xl overflow-hidden glass border border-graphon-border dark:border-graphon-dark-border mb-4">
+            <div className="rounded-xl overflow-hidden glass-modal border border-graphon-border dark:border-graphon-dark-border mb-4">
               <CalendarSidebar selectedDate={selectedDate} onSelectDate={onSelectDate} />
             </div>
           </div>

@@ -20,49 +20,11 @@ export default function Titlebar({ style, isSidebarVisible, onToggleSidebar }: T
 
   return (
     <div
-      className="h-9 w-full flex items-center bg-neutral-100 dark:bg-[#121212] border-b border-neutral-200 dark:border-neutral-800 select-none shrink-0"
+      className="h-9 w-full flex items-center bg-transparent select-none shrink-0"
       style={{ WebkitAppRegion: 'drag' } as any}
     >
-      {style === 'macos' && (
-        <div
-          className="px-4 flex items-center space-x-2"
-          style={{ WebkitAppRegion: 'no-drag' } as any}
-        >
-          <button
-            onClick={handleClose}
-            className="w-3 h-3 rounded-full bg-[#FF5F57] hover:bg-[#FF5F57]/80 flex items-center justify-center group outline-none"
-          >
-            <svg
-              className="w-2 h-2 opacity-0 group-hover:opacity-100 text-black/50"
-              viewBox="0 0 10 10"
-            >
-              <path d="M2,2 L8,8 M8,2 L2,8" stroke="currentColor" strokeWidth="1.5" />
-            </svg>
-          </button>
-          <button
-            onClick={handleMin}
-            className="w-3 h-3 rounded-full bg-[#FEBC2E] hover:bg-[#FEBC2E]/80 flex items-center justify-center group outline-none"
-          >
-            <svg
-              className="w-2 h-2 opacity-0 group-hover:opacity-100 text-black/50"
-              viewBox="0 0 10 10"
-            >
-              <path d="M2,5 L8,5" stroke="currentColor" strokeWidth="1.5" />
-            </svg>
-          </button>
-          <button
-            onClick={handleMax}
-            className="w-3 h-3 rounded-full bg-[#28C840] hover:bg-[#28C840]/80 flex items-center justify-center group outline-none"
-          >
-            <svg
-              className="w-2 h-2 opacity-0 group-hover:opacity-100 text-black/50"
-              viewBox="0 0 10 10"
-            >
-              <path d="M2,5 L8,5 M5,2 L5,8" stroke="currentColor" strokeWidth="1.5" />
-            </svg>
-          </button>
-        </div>
-      )}
+      {/* Native Traffic Lights are handled by Electron on macOS */}
+      {style === 'macos' && <div className="w-20 shrink-0" />}
 
       <div
         className={`flex-1 flex items-center h-full overflow-hidden ${style === 'windows' ? 'pl-2' : 'px-2'}`}
@@ -122,9 +84,6 @@ export default function Titlebar({ style, isSidebarVisible, onToggleSidebar }: T
           </button>
         </div>
       )}
-
-      {/* Spacer for macOS style to balance center title */}
-      {style === 'macos' && <div className="w-20" />}
     </div>
   )
 }

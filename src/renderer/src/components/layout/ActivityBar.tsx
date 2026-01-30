@@ -27,7 +27,7 @@ interface ActivityBarProps {
 
 export default function ActivityBar({ activeId, onSelect }: ActivityBarProps) {
   return (
-    <div className="w-12.5 h-full flex flex-col items-center py-4 glass-activity-bar shrink-0 z-20">
+    <div className="w-12.5 h-full flex flex-col items-center py-4 glass-sidebar shrink-0 z-20 pt-9">
       {/* Top Activities */}
       <div className="flex flex-col space-y-4">
         <ActivityButton

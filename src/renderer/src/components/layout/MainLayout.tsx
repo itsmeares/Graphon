@@ -4,6 +4,7 @@ import FileExplorer from './FileExplorer'
 import Titlebar from './Titlebar'
 import { useVault } from '../../contexts/VaultContext'
 import CalendarSidebar from '../CalendarSidebar'
+import AmbientBackground from './AmbientBackground'
 import {
   DndContext,
   useSensor,
@@ -84,33 +85,36 @@ export default function MainLayout({
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="flex flex-col h-screen w-screen overflow-hidden bg-transparent text-neutral-900 dark:text-neutral-100 font-sans border border-neutral-200 dark:border-neutral-800/50 rounded-lg">
-        <Titlebar
-          style={titlebarStyle}
-          isSidebarVisible={isSidebarVisible}
-          onToggleSidebar={onToggleSidebar}
-        />
+      <div className="relative flex flex-col h-screen w-screen overflow-hidden text-neutral-900 dark:text-neutral-100 font-sans border-none bg-transparent">
+        <AmbientBackground />
+        <div className="absolute top-0 left-0 w-full z-50">
+          <Titlebar
+            style={titlebarStyle}
+            isSidebarVisible={isSidebarVisible}
+            onToggleSidebar={onToggleSidebar}
+          />
+        </div>
 
-        <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex overflow-hidden z-10">
           {/* 1. Activity Bar */}
           <ActivityBar activeId={activeActivity} onSelect={onActivityChange} />
 
           {/* 2. Side Panel */}
           <div
-            className="flex flex-col glass-sidebar"
+            className="flex flex-col glass-sidebar pt-9"
             style={{
               width: !isSidebarVisible || activeActivity === 'settings' ? 0 : SIDE_PANEL_WIDTH,
               display: !isSidebarVisible || activeActivity === 'settings' ? 'none' : 'flex'
             }}
           >
-            <div className="h-10 border-b border-neutral-200 dark:border-neutral-800 flex items-center px-4 font-bold text-xs uppercase tracking-wider text-neutral-500">
+            <div className="h-10 border-b border-black/5 dark:border-white/5 flex items-center px-4 font-bold text-xs uppercase tracking-wider text-neutral-500">
               {activeActivity.toUpperCase()}
             </div>
             {renderSidePanelContent()}
           </div>
 
           {/* 3. Main Content Area */}
-          <div className="flex-1 flex flex-col overflow-hidden bg-white dark:bg-[#1C1C1A]">
+          <div className="flex-1 flex flex-col overflow-hidden glass-editor pt-9">
             {/* Editor / View Content */}
             <div className="flex-1 overflow-hidden relative">{children}</div>
           </div>
