@@ -3,13 +3,14 @@ import { ChevronRight, File as FileIcon, Folder, Plus, RefreshCw } from 'lucide-
 import { FileNode } from '../../types'
 import { useVault } from '../../contexts/VaultContext'
 import { FileContextMenu } from '../FileContextMenu'
+import RelatedNotes from '../RelatedNotes'
 
 interface FileExplorerProps {
   nodes: FileNode[]
 }
 
 export default function FileExplorer({ nodes }: FileExplorerProps) {
-  const { createNote, refreshFiles, renameNote, deleteNote } = useVault()
+  const { createNote, refreshFiles, renameNote, deleteNote, activeFile, openFile } = useVault()
 
   const handleCreateNote = async () => {
     await createNote()
@@ -87,6 +88,8 @@ export default function FileExplorer({ nodes }: FileExplorerProps) {
           <div className="text-xs text-neutral-500 px-4 py-2">No files found</div>
         )}
       </div>
+
+      {activeFile && <RelatedNotes currentFilePath={activeFile} onNoteClick={openFile} />}
     </div>
   )
 }

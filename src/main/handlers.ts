@@ -2,7 +2,10 @@ import { dialog, app, shell } from 'electron'
 import { promises as fs } from 'fs'
 import { join, basename, normalize, dirname } from 'path'
 import { db, sqlite } from './database/db'
-import { files, links } from './database/schema'
+import { files, links, note_embeddings } from './database/schema'
+import { cosineSimilarity } from './utils/math'
+import { eq, ne, and } from 'drizzle-orm'
+import EmbeddingService from './services/EmbeddingService'
 
 // Path to settings file in userData
 const SETTINGS_PATH = join(app.getPath('userData'), 'settings.json')
@@ -574,6 +577,167 @@ export function handleGetAllTasks(): TaskItem[] {
     })
   } catch (error) {
     console.error('Error getting all tasks:', error)
+    return []
+  }
+}
+
+// =============================================================================
+// RELATED NOTES (SEMANTIC SEARCH)
+// =============================================================================
+
+export interface RelatedNote {
+  id: string
+  title: string
+  path: string
+  score: number
+}
+
+/**
+ * Get related notes based on semantic similarity
+ */
+export async function handleGetRelatedNotes(filePath: string): Promise<RelatedNote[]> {
+  try {
+    // 1. Get the current file's ID and vector
+    // We normalize path separators to ensure matching
+    const normalizedPath = filePath.replace(/\\/g, '/')
+
+    // Try finding by exact path first (DB might have backslashes on Windows)
+    let currentFile = await db
+      .select({
+        id: files.id,
+        path: files.path,
+        vector: note_embeddings.vector
+      })
+      .from(files)
+      .innerJoin(note_embeddings, eq(files.id, note_embeddings.fileId))
+      .where(eq(files.path, filePath))
+      .get()
+
+    if (!currentFile) {
+      currentFile = await db
+        .select({
+          id: files.id,
+          path: files.path,
+          vector: note_embeddings.vector
+        })
+        .from(files)
+        .innerJoin(note_embeddings, eq(files.id, note_embeddings.fileId))
+        .where(eq(files.path, normalizedPath))
+        .get()
+    }
+
+    if (!currentFile || !currentFile.vector) {
+      return []
+    }
+
+    const targetVector = currentFile.vector
+
+    // 2. Get all other notes' vectors
+    const otherNotes = await db
+      .select({
+        id: files.id,
+        path: files.path,
+        vector: note_embeddings.vector
+      })
+      .from(files)
+      .innerJoin(note_embeddings, eq(files.id, note_embeddings.fileId))
+      .where(ne(files.id, currentFile.id))
+      .all()
+
+    // 3. Calculate similarity scores
+    const scores: RelatedNote[] = []
+
+    for (const note of otherNotes) {
+      if (note.vector) {
+        const score = cosineSimilarity(targetVector, note.vector)
+        // Extract title from filename
+        const fileName = basename(note.path)
+        const title = fileName.replace(/\.md$/i, '')
+
+        if (score > 0) {
+          scores.push({
+            id: note.id,
+            title,
+            path: note.path,
+            score
+          })
+        }
+      }
+    }
+
+    // 4. Sort by score (descending) and take top 5
+    return scores.sort((a, b) => b.score - a.score).slice(0, 5)
+  } catch (error) {
+    console.error('Error getting related notes:', error)
+    return []
+  }
+}
+
+// =============================================================================
+// SEMANTIC SEARCH
+// =============================================================================
+
+export interface SemanticResult {
+  id: string
+  title: string
+  path: string
+  score: number
+}
+
+/**
+ * Perform semantic search using vector embeddings
+ */
+export async function handleSemanticSearch(query: string): Promise<SemanticResult[]> {
+  try {
+    if (!query || query.trim().length === 0) {
+      return []
+    }
+
+    // 1. Generate embedding for query
+    const queryVector = await EmbeddingService.generateEmbedding(query)
+
+    if (!queryVector || queryVector.length === 0) {
+      return []
+    }
+
+    // 2. Fetch all note embeddings
+    const notes = await db
+      .select({
+        id: files.id,
+        path: files.path,
+        vector: note_embeddings.vector
+      })
+      .from(files)
+      .innerJoin(note_embeddings, eq(files.id, note_embeddings.fileId))
+      .all()
+
+    // 3. Calculate similarity scores
+    const scores: SemanticResult[] = []
+
+    for (const note of notes) {
+      if (note.vector) {
+        const score = cosineSimilarity(queryVector, note.vector)
+
+        // Filter out irrelevant scores
+        if (score >= 0.25) {
+          // Extract title from filename
+          const fileName = basename(note.path)
+          const title = fileName.replace(/\.md$/i, '')
+
+          scores.push({
+            id: note.id,
+            title,
+            path: note.path,
+            score
+          })
+        }
+      }
+    }
+
+    // 4. Sort by score (descending) and take top 5
+    return scores.sort((a, b) => b.score - a.score).slice(0, 5)
+  } catch (error) {
+    console.error('Error executing semantic search:', error)
     return []
   }
 }

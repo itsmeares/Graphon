@@ -61,6 +61,15 @@ interface VaultAPI {
       fileTitle: string
     }>
   >
+
+  // Related Notes API
+  getRelatedNotes: (
+    filePath: string
+  ) => Promise<Array<{ id: string; title: string; path: string; score: number }>>
+
+  semanticSearch: (
+    query: string
+  ) => Promise<{ id: string; title: string; path: string; score: number }[]>
 }
 
 declare global {
