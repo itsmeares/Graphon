@@ -57,9 +57,14 @@ function createWindow(): void {
     // Determine initial background color based on theme
     const isDark =
       savedTheme === 'dark' || (savedTheme === 'system' && nativeTheme.shouldUseDarkColors)
-    // On macOS, we want transparent background to allow vibrancy to show through
-    // Start with transparent background to allow glass effects
-    const initialBgColor = '#00000000'
+
+    // Platform-specific window configuration
+    const isMac = process.platform === 'darwin'
+    const isWin = process.platform === 'win32'
+
+    // On macOS: use transparency + vibrancy for native glass effects
+    // On Windows: use solid background to preserve resize functionality
+    const windowBgColor = isMac ? '#00000000' : isDark ? '#1C1C1A' : '#FFFCF8'
 
     // Create the browser window with premium Graphon aesthetics
     mainWindow = new BrowserWindow({
@@ -70,13 +75,16 @@ function createWindow(): void {
       show: false,
       frame: false,
       titleBarStyle: 'hidden',
-      trafficLightPosition: { x: 16, y: 16 },
-      backgroundColor: '#00000000',
-      transparent: true,
-      vibrancy: 'under-window',
-      visualEffectState: 'followWindow',
+      trafficLightPosition: { x: 19, y: 18 },
+      backgroundColor: '#00000000', // Fully transparent for vibrancy/mica
+      transparent: isMac, // Only macOS gets transparency (vibrancy requires it)
+      vibrancy: isMac ? 'under-window' : undefined,
+      backgroundMaterial: isWin ? 'mica' : undefined, // Native Windows 11 Mica effect
+      visualEffectState: isMac ? 'followWindow' : undefined,
       autoHideMenuBar: true,
       resizable: true,
+      // Windows 11 uses rounded corners natively when frame:false
+      // For older Windows, we accept square corners for resizability
       ...(process.platform === 'linux' ? { icon } : {}),
       webPreferences: {
         preload: join(__dirname, '../preload/index.js'),

@@ -77,7 +77,10 @@ const api = {
   semanticSearch: (
     query: string
   ): Promise<Array<{ id: string; title: string; path: string; score: number }>> =>
-    ipcRenderer.invoke('db:semantic-search', query)
+    ipcRenderer.invoke('db:semantic-search', query),
+
+  // Platform info
+  platform: process.platform
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

@@ -129,7 +129,7 @@ export default function Sidebar({
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
-      className="w-72 h-full flex flex-col glass-sidebar transition-colors duration-300 overflow-hidden"
+      className="w-72 h-full flex flex-col transition-colors duration-300 overflow-hidden"
     >
       {/* Header */}
       <div className="h-16 flex items-center justify-between px-5 shrink-0">

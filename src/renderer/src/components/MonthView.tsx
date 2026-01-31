@@ -44,7 +44,7 @@ export default function MonthView({
   }
 
   return (
-    <div className="flex flex-col h-full bg-graphon-bg dark:bg-graphon-dark-bg overflow-hidden transition-colors duration-300">
+    <div className="flex flex-col h-full overflow-hidden transition-colors duration-300">
       <div className="flex-1 flex flex-col p-4">
         {/* Weekday Headers */}
         <div className="grid grid-cols-7 border-b border-graphon-border dark:border-graphon-dark-border mb-2">

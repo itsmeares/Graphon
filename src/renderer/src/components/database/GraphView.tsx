@@ -158,7 +158,7 @@ export default function GraphView({ onSelectNode, isDarkMode = false }: GraphVie
 
   if (loading) {
     return (
-      <div className="flex-1 h-full flex items-center justify-center bg-graphon-bg dark:bg-graphon-dark-bg">
+      <div className="flex-1 h-full flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="w-10 h-10 border-2 border-(--color-accent) border-t-transparent rounded-full animate-spin" />
           <p className="text-neutral-500 dark:text-neutral-400 text-sm">Loading graph...</p>
@@ -169,7 +169,7 @@ export default function GraphView({ onSelectNode, isDarkMode = false }: GraphVie
 
   if (graphData.nodes.length === 0) {
     return (
-      <div className="flex-1 h-full flex items-center justify-center bg-graphon-bg dark:bg-graphon-dark-bg">
+      <div className="flex-1 h-full flex items-center justify-center">
         <div className="flex flex-col items-center gap-4 max-w-md text-center px-8">
           <div className="w-16 h-16 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
             <svg
@@ -198,10 +198,7 @@ export default function GraphView({ onSelectNode, isDarkMode = false }: GraphVie
   }
 
   return (
-    <div
-      ref={containerRef}
-      className="flex-1 h-full bg-graphon-bg dark:bg-graphon-dark-bg overflow-hidden"
-    >
+    <div ref={containerRef} className="flex-1 h-full overflow-hidden">
       <ForceGraph2D
         ref={graphRef as any}
         graphData={graphData}
@@ -227,7 +224,7 @@ export default function GraphView({ onSelectNode, isDarkMode = false }: GraphVie
         linkDirectionalParticleColor={() =>
           isDarkMode ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.3)'
         }
-        backgroundColor={isDarkMode ? '#1C1C1A' : '#FFFCF8'}
+        backgroundColor="transparent"
         cooldownTicks={100}
         onEngineStop={() => graphRef.current?.zoomToFit(400, 50)}
       />

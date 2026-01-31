@@ -95,13 +95,13 @@ export default function MainLayout({
           />
         </div>
 
-        <div className="flex-1 flex overflow-hidden z-10">
+        <div className="flex-1 flex gap-3 p-3 pt-12 overflow-hidden z-10">
           {/* 1. Activity Bar */}
           <ActivityBar activeId={activeActivity} onSelect={onActivityChange} />
 
-          {/* 2. Side Panel */}
+          {/* 2. Side Panel - Ghost (transparent) */}
           <div
-            className="flex flex-col glass-sidebar pt-9"
+            className="flex flex-col glass-ghost"
             style={{
               width: !isSidebarVisible || activeActivity === 'settings' ? 0 : SIDE_PANEL_WIDTH,
               display: !isSidebarVisible || activeActivity === 'settings' ? 'none' : 'flex'
@@ -113,11 +113,11 @@ export default function MainLayout({
             {renderSidePanelContent()}
           </div>
 
-          {/* 3. Main Content Area */}
-          <div className="flex-1 flex flex-col overflow-hidden glass-editor pt-9">
+          {/* 3. Main Content Area - Floating Island */}
+          <main className="flex-1 glass-card overflow-hidden flex flex-col relative">
             {/* Editor / View Content */}
             <div className="flex-1 overflow-hidden relative">{children}</div>
-          </div>
+          </main>
         </div>
       </div>
 

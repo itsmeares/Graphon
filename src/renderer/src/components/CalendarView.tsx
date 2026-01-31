@@ -681,8 +681,8 @@ export default function CalendarView({
   const currentMonthYear = format(currentDate, 'MMMM yyyy')
 
   return (
-    <div className="flex flex-1 h-full bg-graphon-bg dark:bg-graphon-dark-bg overflow-hidden text-graphon-text-main dark:text-graphon-dark-text-main font-sans">
-      <div className="flex-1 flex flex-col min-w-0 bg-graphon-bg dark:bg-graphon-dark-bg">
+    <div className="flex flex-1 h-full overflow-hidden text-graphon-text-main dark:text-graphon-dark-text-main font-sans">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Header Toolbar */}
         <div
           className={`
@@ -831,7 +831,7 @@ export default function CalendarView({
         </div>
 
         {/* Calendar Grid */}
-        <div className="flex-1 overflow-y-auto relative bg-graphon-bg dark:bg-graphon-dark-bg scrollbar-thin">
+        <div className="flex-1 overflow-y-auto relative scrollbar-thin">
           {viewType === 'month' ? (
             <MonthView
               selectedDate={selectedDate || currentDate}

@@ -14,6 +14,7 @@ import NewPageView from './components/NewPageView'
 import HomeView from './components/HomeView'
 import { Theme } from './types'
 import { CommandPalette } from './components/CommandPalette'
+import AmbientBackground from './components/layout/AmbientBackground'
 
 // Accent colors
 export const ACCENT_COLORS = [
@@ -321,58 +322,63 @@ function AppContent() {
   // Show welcome screen if no vault is selected
   if (!vaultLoading && !currentVaultPath) {
     return (
-      <div className="w-screen h-screen p-[0.5px] bg-transparent overflow-hidden">
-        <div className="w-full h-full overflow-hidden bg-graphon-bg dark:bg-graphon-dark-bg border border-graphon-border/40 dark:border-graphon-dark-border/20 rounded-xl shadow-2xl transition-colors duration-300 flex flex-col relative">
+      <div className="w-screen h-screen p-[0.5px] bg-transparent overflow-hidden relative">
+        <AmbientBackground />
+        <div className="w-full h-full overflow-hidden bg-white/10 dark:bg-black/10 border border-graphon-border/40 dark:border-graphon-dark-border/20 rounded-xl shadow-2xl transition-colors duration-300 flex flex-col relative z-10">
           {/* Custom Titlebar for Welcome Screen */}
           <div
             className="h-10 w-full flex items-center px-4 shrink-0 select-none drag glass-sidebar border-b border-graphon-border/10 dark:border-graphon-dark-border/5"
             style={{ WebkitAppRegion: 'drag' } as any}
           >
-            <div
-              className="flex space-x-2 mr-4 group"
-              style={{ WebkitAppRegion: 'no-drag' } as any}
-            >
-              <button
-                onClick={handleClose}
-                className="w-3 h-3 rounded-full bg-[#FF5F57] hover:bg-[#FF5F57] flex items-center justify-center group/btn relative overflow-hidden transition-all duration-200"
+            {(window as any).api?.platform !== 'darwin' ? (
+              <div
+                className="flex space-x-2 mr-4 group"
+                style={{ WebkitAppRegion: 'no-drag' } as any}
               >
-                <svg
-                  className="w-2 h-2 opacity-0 group-hover:opacity-100 transition-opacity text-black/50"
-                  viewBox="0 0 10 10"
+                <button
+                  onClick={handleClose}
+                  className="w-3 h-3 rounded-full bg-[#FF5F57] hover:bg-[#FF5F57] flex items-center justify-center group/btn relative overflow-hidden transition-all duration-200"
                 >
-                  <line x1="2" y1="2" x2="8" y2="8" stroke="currentColor" strokeWidth="1.2" />
-                  <line x1="8" y1="2" x2="2" y2="8" stroke="currentColor" strokeWidth="1.2" />
-                </svg>
-              </button>
-              <button
-                onClick={handleMinimize}
-                className="w-3 h-3 rounded-full bg-[#FEBC2E] hover:bg-[#FEBC2E] flex items-center justify-center group/btn relative overflow-hidden transition-all duration-200"
-              >
-                <svg
-                  className="w-2 h-2 opacity-0 group-hover:opacity-100 transition-opacity text-black/50"
-                  viewBox="0 0 10 10"
+                  <svg
+                    className="w-2 h-2 opacity-0 group-hover:opacity-100 transition-opacity text-black/50"
+                    viewBox="0 0 10 10"
+                  >
+                    <line x1="2" y1="2" x2="8" y2="8" stroke="currentColor" strokeWidth="1.2" />
+                    <line x1="8" y1="2" x2="2" y2="8" stroke="currentColor" strokeWidth="1.2" />
+                  </svg>
+                </button>
+                <button
+                  onClick={handleMinimize}
+                  className="w-3 h-3 rounded-full bg-[#FEBC2E] hover:bg-[#FEBC2E] flex items-center justify-center group/btn relative overflow-hidden transition-all duration-200"
                 >
-                  <rect x="1" y="4.5" width="8" height="1" fill="currentColor" />
-                </svg>
-              </button>
-              <button
-                onClick={handleMaximize}
-                className="w-3 h-3 rounded-full bg-[#28C840] hover:bg-[#28C840] flex items-center justify-center group/btn relative overflow-hidden transition-all duration-200"
-              >
-                <svg
-                  className="w-1.5 h-1.5 opacity-0 group-hover:opacity-100 transition-opacity text-black/50"
-                  viewBox="0 0 10 10"
+                  <svg
+                    className="w-2 h-2 opacity-0 group-hover:opacity-100 transition-opacity text-black/50"
+                    viewBox="0 0 10 10"
+                  >
+                    <rect x="1" y="4.5" width="8" height="1" fill="currentColor" />
+                  </svg>
+                </button>
+                <button
+                  onClick={handleMaximize}
+                  className="w-3 h-3 rounded-full bg-[#28C840] hover:bg-[#28C840] flex items-center justify-center group/btn relative overflow-hidden transition-all duration-200"
                 >
-                  <path
-                    d="M1 1.5L8.5 1.5V9H1V1.5Z"
-                    stroke="currentColor"
-                    strokeWidth="1.2"
-                    fill="none"
-                  />
-                  <path d="M1 9L8.5 1.5" stroke="currentColor" strokeWidth="1.2" />
-                </svg>
-              </button>
-            </div>
+                  <svg
+                    className="w-1.5 h-1.5 opacity-0 group-hover:opacity-100 transition-opacity text-black/50"
+                    viewBox="0 0 10 10"
+                  >
+                    <path
+                      d="M1 1.5L8.5 1.5V9H1V1.5Z"
+                      stroke="currentColor"
+                      strokeWidth="1.2"
+                      fill="none"
+                    />
+                    <path d="M1 9L8.5 1.5" stroke="currentColor" strokeWidth="1.2" />
+                  </svg>
+                </button>
+              </div>
+            ) : (
+              <div className="w-20" />
+            )}
             <div className="flex-1 text-center">
               <span className="text-[10px] font-bold text-graphon-text-secondary/30 dark:text-graphon-dark-text-secondary/40 uppercase tracking-[0.35em]">
                 Graphon
@@ -389,222 +395,225 @@ function AppContent() {
 
   return (
     <div className="w-screen h-screen p-[0.5px] bg-transparent overflow-hidden">
-      <MainLayout
-        selectedDate={selectedDate}
-        onSelectDate={handleDateSelect}
-        activeActivity={activeActivity}
-        onActivityChange={handleActivityChange}
-        titlebarStyle={titlebarStyle}
-        isSidebarVisible={isSidebarVisible}
-        onToggleSidebar={handleToggleSidebar}
-      >
-        {/* Render Content based on Active Tab */}
-        {!activeTab && (
-          <div className="flex-1 h-full flex flex-col items-center justify-center select-none bg-graphon-bg dark:bg-graphon-dark-bg transition-colors duration-300">
-            <div className="flex flex-col items-center max-w-lg mx-auto p-12">
-              {/* App Icon / Logo Placeholder */}
-              <div className="w-24 h-24 mb-8 rounded-4xl bg-linear-to-b from-neutral-100 to-white dark:from-[#2C2C2A] dark:to-[#1C1C1A] shadow-xl dark:shadow-2xl dark:shadow-black/20 flex items-center justify-center ring-1 ring-black/5 dark:ring-white/5">
-                <svg
-                  className="w-10 h-10 text-neutral-400 dark:text-neutral-500 drop-shadow-sm"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M12 16V12"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M12 8H12.01"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
+      {/* Window outer border decorator for rounded appearance */}
+      <div className="w-full h-full overflow-hidden bg-transparent border border-graphon-border/20 dark:border-graphon-dark-border/10 rounded-xl">
+        <MainLayout
+          selectedDate={selectedDate}
+          onSelectDate={handleDateSelect}
+          activeActivity={activeActivity}
+          onActivityChange={handleActivityChange}
+          titlebarStyle={titlebarStyle}
+          isSidebarVisible={isSidebarVisible}
+          onToggleSidebar={handleToggleSidebar}
+        >
+          {/* Render Content based on Active Tab */}
+          {!activeTab && (
+            <div className="flex-1 h-full flex flex-col items-center justify-center select-none transition-colors duration-300">
+              <div className="flex flex-col items-center max-w-lg mx-auto p-12">
+                {/* App Icon / Logo Placeholder */}
+                <div className="w-24 h-24 mb-8 rounded-4xl bg-linear-to-b from-neutral-100 to-white dark:from-[#2C2C2A] dark:to-[#1C1C1A] shadow-xl dark:shadow-2xl dark:shadow-black/20 flex items-center justify-center ring-1 ring-black/5 dark:ring-white/5">
+                  <svg
+                    className="w-10 h-10 text-neutral-400 dark:text-neutral-500 drop-shadow-sm"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M12 16V12"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M12 8H12.01"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
 
-              <h2 className="text-2xl font-semibold text-neutral-800 dark:text-neutral-200 mb-3 tracking-tight">
-                Graphon
-              </h2>
-              <p className="text-neutral-500 dark:text-neutral-400 text-center text-sm mb-10 max-w-sm leading-relaxed">
-                Your personal knowledge base. <br /> Open a file or create a new page to begin.
-              </p>
+                <h2 className="text-2xl font-semibold text-neutral-800 dark:text-neutral-200 mb-3 tracking-tight">
+                  Graphon
+                </h2>
+                <p className="text-neutral-500 dark:text-neutral-400 text-center text-sm mb-10 max-w-sm leading-relaxed">
+                  Your personal knowledge base. <br /> Open a file or create a new page to begin.
+                </p>
 
-              {/* Shortcuts */}
-              <div className="grid grid-cols-2 gap-x-12 gap-y-4 text-sm w-full">
-                <div className="flex items-center justify-between group">
-                  <span className="text-neutral-500 dark:text-neutral-500 group-hover:text-neutral-700 dark:group-hover:text-neutral-300 transition-colors">
-                    New Page
-                  </span>
-                  <div className="flex gap-1">
-                    <kbd className="px-2 py-0.5 min-w-5 h-6 inline-flex items-center justify-center rounded bg-neutral-200/50 dark:bg-neutral-800/50 border border-neutral-300/30 dark:border-neutral-700/30 text-[10px] font-sans font-medium text-neutral-500 dark:text-neutral-400">
-                      Ctrl
-                    </kbd>
-                    <kbd className="px-2 py-0.5 min-w-5 h-6 inline-flex items-center justify-center rounded bg-neutral-200/50 dark:bg-neutral-800/50 border border-neutral-300/30 dark:border-neutral-700/30 text-[10px] font-sans font-medium text-neutral-500 dark:text-neutral-400">
-                      N
-                    </kbd>
+                {/* Shortcuts */}
+                <div className="grid grid-cols-2 gap-x-12 gap-y-4 text-sm w-full">
+                  <div className="flex items-center justify-between group">
+                    <span className="text-neutral-500 dark:text-neutral-500 group-hover:text-neutral-700 dark:group-hover:text-neutral-300 transition-colors">
+                      New Page
+                    </span>
+                    <div className="flex gap-1">
+                      <kbd className="px-2 py-0.5 min-w-5 h-6 inline-flex items-center justify-center rounded bg-neutral-200/50 dark:bg-neutral-800/50 border border-neutral-300/30 dark:border-neutral-700/30 text-[10px] font-sans font-medium text-neutral-500 dark:text-neutral-400">
+                        Ctrl
+                      </kbd>
+                      <kbd className="px-2 py-0.5 min-w-5 h-6 inline-flex items-center justify-center rounded bg-neutral-200/50 dark:bg-neutral-800/50 border border-neutral-300/30 dark:border-neutral-700/30 text-[10px] font-sans font-medium text-neutral-500 dark:text-neutral-400">
+                        N
+                      </kbd>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center justify-between group">
-                  <span className="text-neutral-500 dark:text-neutral-500 group-hover:text-neutral-700 dark:group-hover:text-neutral-300 transition-colors">
-                    Command Palette
-                  </span>
-                  <div className="flex gap-1">
-                    <kbd className="px-2 py-0.5 min-w-5 h-6 inline-flex items-center justify-center rounded bg-neutral-200/50 dark:bg-neutral-800/50 border border-neutral-300/30 dark:border-neutral-700/30 text-[10px] font-sans font-medium text-neutral-500 dark:text-neutral-400">
-                      Ctrl
-                    </kbd>
-                    <kbd className="px-2 py-0.5 min-w-5 h-6 inline-flex items-center justify-center rounded bg-neutral-200/50 dark:bg-neutral-800/50 border border-neutral-300/30 dark:border-neutral-700/30 text-[10px] font-sans font-medium text-neutral-500 dark:text-neutral-400">
-                      K
-                    </kbd>
+                  <div className="flex items-center justify-between group">
+                    <span className="text-neutral-500 dark:text-neutral-500 group-hover:text-neutral-700 dark:group-hover:text-neutral-300 transition-colors">
+                      Command Palette
+                    </span>
+                    <div className="flex gap-1">
+                      <kbd className="px-2 py-0.5 min-w-5 h-6 inline-flex items-center justify-center rounded bg-neutral-200/50 dark:bg-neutral-800/50 border border-neutral-300/30 dark:border-neutral-700/30 text-[10px] font-sans font-medium text-neutral-500 dark:text-neutral-400">
+                        Ctrl
+                      </kbd>
+                      <kbd className="px-2 py-0.5 min-w-5 h-6 inline-flex items-center justify-center rounded bg-neutral-200/50 dark:bg-neutral-800/50 border border-neutral-300/30 dark:border-neutral-700/30 text-[10px] font-sans font-medium text-neutral-500 dark:text-neutral-400">
+                        K
+                      </kbd>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center justify-between group">
-                  <span className="text-neutral-500 dark:text-neutral-500 group-hover:text-neutral-700 dark:group-hover:text-neutral-300 transition-colors">
-                    New Tab
-                  </span>
-                  <div className="flex gap-1">
-                    <kbd className="px-2 py-0.5 min-w-5 h-6 inline-flex items-center justify-center rounded bg-neutral-200/50 dark:bg-neutral-800/50 border border-neutral-300/30 dark:border-neutral-700/30 text-[10px] font-sans font-medium text-neutral-500 dark:text-neutral-400">
-                      Ctrl
-                    </kbd>
-                    <kbd className="px-2 py-0.5 min-w-5 h-6 inline-flex items-center justify-center rounded bg-neutral-200/50 dark:bg-neutral-800/50 border border-neutral-300/30 dark:border-neutral-700/30 text-[10px] font-sans font-medium text-neutral-500 dark:text-neutral-400">
-                      T
-                    </kbd>
+                  <div className="flex items-center justify-between group">
+                    <span className="text-neutral-500 dark:text-neutral-500 group-hover:text-neutral-700 dark:group-hover:text-neutral-300 transition-colors">
+                      New Tab
+                    </span>
+                    <div className="flex gap-1">
+                      <kbd className="px-2 py-0.5 min-w-5 h-6 inline-flex items-center justify-center rounded bg-neutral-200/50 dark:bg-neutral-800/50 border border-neutral-300/30 dark:border-neutral-700/30 text-[10px] font-sans font-medium text-neutral-500 dark:text-neutral-400">
+                        Ctrl
+                      </kbd>
+                      <kbd className="px-2 py-0.5 min-w-5 h-6 inline-flex items-center justify-center rounded bg-neutral-200/50 dark:bg-neutral-800/50 border border-neutral-300/30 dark:border-neutral-700/30 text-[10px] font-sans font-medium text-neutral-500 dark:text-neutral-400">
+                        T
+                      </kbd>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center justify-between group">
-                  <span className="text-neutral-500 dark:text-neutral-500 group-hover:text-neutral-700 dark:group-hover:text-neutral-300 transition-colors">
-                    Close Tab
-                  </span>
-                  <div className="flex gap-1">
-                    <kbd className="px-2 py-0.5 min-w-5 h-6 inline-flex items-center justify-center rounded bg-neutral-200/50 dark:bg-neutral-800/50 border border-neutral-300/30 dark:border-neutral-700/30 text-[10px] font-sans font-medium text-neutral-500 dark:text-neutral-400">
-                      Ctrl
-                    </kbd>
-                    <kbd className="px-2 py-0.5 min-w-5 h-6 inline-flex items-center justify-center rounded bg-neutral-200/50 dark:bg-neutral-800/50 border border-neutral-300/30 dark:border-neutral-700/30 text-[10px] font-sans font-medium text-neutral-500 dark:text-neutral-400">
-                      W
-                    </kbd>
+                  <div className="flex items-center justify-between group">
+                    <span className="text-neutral-500 dark:text-neutral-500 group-hover:text-neutral-700 dark:group-hover:text-neutral-300 transition-colors">
+                      Close Tab
+                    </span>
+                    <div className="flex gap-1">
+                      <kbd className="px-2 py-0.5 min-w-5 h-6 inline-flex items-center justify-center rounded bg-neutral-200/50 dark:bg-neutral-800/50 border border-neutral-300/30 dark:border-neutral-700/30 text-[10px] font-sans font-medium text-neutral-500 dark:text-neutral-400">
+                        Ctrl
+                      </kbd>
+                      <kbd className="px-2 py-0.5 min-w-5 h-6 inline-flex items-center justify-center rounded bg-neutral-200/50 dark:bg-neutral-800/50 border border-neutral-300/30 dark:border-neutral-700/30 text-[10px] font-sans font-medium text-neutral-500 dark:text-neutral-400">
+                        W
+                      </kbd>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {activeTab?.type === 'new-page' && (
-          <HomeView
-            notes={[]} // Passing empty for now as VaultContext doesn't provide Note objects
-            onSelectNote={(id) => openFile(id)}
-            onCreateNote={() => createNote()}
-            onViewChange={(view) => {
-              if (view === 'calendar') {
-                openTab({ id: 'calendar', type: 'calendar', title: 'Calendar' })
-              } else if (view === 'database') {
-                openTab({ id: 'database-list', type: 'database', title: 'Databases' })
-              }
-            }}
-          />
-        )}
+          {activeTab?.type === 'new-page' && (
+            <HomeView
+              notes={[]} // Passing empty for now as VaultContext doesn't provide Note objects
+              onSelectNote={(id) => openFile(id)}
+              onCreateNote={() => createNote()}
+              onViewChange={(view) => {
+                if (view === 'calendar') {
+                  openTab({ id: 'calendar', type: 'calendar', title: 'Calendar' })
+                } else if (view === 'database') {
+                  openTab({ id: 'database-list', type: 'database', title: 'Databases' })
+                }
+              }}
+            />
+          )}
 
-        {activeTab?.type === 'new-page' && <NewPageView />}
+          {activeTab?.type === 'new-page' && <NewPageView />}
 
-        {activeTab?.type === 'file' && <NotesView isSidebarVisible={isSidebarVisible} />}
+          {activeTab?.type === 'file' && <NotesView isSidebarVisible={isSidebarVisible} />}
 
-        {activeTab?.type === 'calendar' && (
-          <CalendarView
-            isSidebarIntegrated={false}
-            onToggleSidebar={() => {}}
-            selectedDate={selectedDate}
-            onSelectDate={handleDateSelect}
-          />
-        )}
+          {activeTab?.type === 'calendar' && (
+            <CalendarView
+              isSidebarIntegrated={false}
+              onToggleSidebar={() => {}}
+              selectedDate={selectedDate}
+              onSelectDate={handleDateSelect}
+            />
+          )}
 
-        {activeTab?.type === 'settings' && (
-          <SettingsView
-            theme={theme}
-            onSetTheme={handleSetTheme}
-            isSidebarVisible={isSidebarVisible}
-            moduleVisibility={moduleVisibility}
-            onToggleModule={handleToggleModule}
-            titlebarStyle={titlebarStyle}
-            onSetTitlebarStyle={handleSetTitlebarStyle}
-            accentColor={accentColor}
-            onSetAccentColor={handleSetAccentColor}
-            accentColors={ACCENT_COLORS}
-          />
-        )}
-
-        {activeTab?.type === 'database' &&
-          // Simplification: if activeTab.path exists, it's a specific DB, else List
-          (activeTab.path ? (
-            <DatabaseView
-              databaseId={activeTab.path}
+          {activeTab?.type === 'settings' && (
+            <SettingsView
+              theme={theme}
+              onSetTheme={handleSetTheme}
               isSidebarVisible={isSidebarVisible}
-              preselectedItemId={preselectedItemId}
-              preselectedItemMode={preselectedItemMode}
-              onClearPreselectedItem={() => {
-                setPreselectedItemId(null)
-                setPreselectedItemMode(undefined)
-              }}
-              favorites={favorites}
-              onToggleFavorite={handleToggleFavorite}
-              onItemDeleted={handleDeleteItemWithFavoriteSync}
+              moduleVisibility={moduleVisibility}
+              onToggleModule={handleToggleModule}
+              titlebarStyle={titlebarStyle}
+              onSetTitlebarStyle={handleSetTitlebarStyle}
+              accentColor={accentColor}
+              onSetAccentColor={handleSetAccentColor}
+              accentColors={ACCENT_COLORS}
             />
-          ) : (
-            <DatabaseList
-              onSelectDatabase={(id) => {
-                // When selecting a DB from list, update the current tab or open new one?
-                // Let's replace current tab
-                // Update tab implementation needed in VaultContext, or close/open
-                // For now, simpler: Open new tab
-                openTab({ id: `db-${id}`, type: 'database', title: 'Database', path: id })
+          )}
+
+          {activeTab?.type === 'database' &&
+            // Simplification: if activeTab.path exists, it's a specific DB, else List
+            (activeTab.path ? (
+              <DatabaseView
+                databaseId={activeTab.path}
+                isSidebarVisible={isSidebarVisible}
+                preselectedItemId={preselectedItemId}
+                preselectedItemMode={preselectedItemMode}
+                onClearPreselectedItem={() => {
+                  setPreselectedItemId(null)
+                  setPreselectedItemMode(undefined)
+                }}
+                favorites={favorites}
+                onToggleFavorite={handleToggleFavorite}
+                onItemDeleted={handleDeleteItemWithFavoriteSync}
+              />
+            ) : (
+              <DatabaseList
+                onSelectDatabase={(id) => {
+                  // When selecting a DB from list, update the current tab or open new one?
+                  // Let's replace current tab
+                  // Update tab implementation needed in VaultContext, or close/open
+                  // For now, simpler: Open new tab
+                  openTab({ id: `db-${id}`, type: 'database', title: 'Database', path: id })
+                }}
+              />
+            ))}
+
+          {activeTab?.type === 'graph' && (
+            <GraphView
+              isDarkMode={isDarkMode}
+              onSelectNode={(nodeId) => {
+                // Find the file path by nodeId and open it
+                openFile(nodeId)
               }}
             />
-          ))}
+          )}
 
-        {activeTab?.type === 'graph' && (
-          <GraphView
-            isDarkMode={isDarkMode}
-            onSelectNode={(nodeId) => {
-              // Find the file path by nodeId and open it
-              openFile(nodeId)
-            }}
-          />
-        )}
-
-        {activeTab?.type === 'tasks' && (
-          <TasksView
-            onOpenFile={(path) => {
-              openFile(path)
-            }}
-          />
-        )}
-      </MainLayout>
-      <CommandPalette
-        isOpen={isCommandPaletteOpen}
-        setIsOpen={setIsCommandPaletteOpen}
-        onViewChange={(view) => {
-          // Handle view changes from Palette
-          if (view === 'notes') {
-            setActiveActivity('files')
-          } else if (view === 'calendar') {
-            openTab({ id: 'calendar', type: 'calendar', title: 'Calendar' })
-          } else if (view === 'database') {
-            openTab({ id: 'database-list', type: 'database', title: 'Databases' })
-          }
-        }}
-        darkMode={isDarkMode}
-        onToggleDarkMode={() => handleSetTheme(isDarkMode ? 'light' : 'dark')}
-      />
+          {activeTab?.type === 'tasks' && (
+            <TasksView
+              onOpenFile={(path) => {
+                openFile(path)
+              }}
+            />
+          )}
+        </MainLayout>
+        <CommandPalette
+          isOpen={isCommandPaletteOpen}
+          setIsOpen={setIsCommandPaletteOpen}
+          onViewChange={(view) => {
+            // Handle view changes from Palette
+            if (view === 'notes') {
+              setActiveActivity('files')
+            } else if (view === 'calendar') {
+              openTab({ id: 'calendar', type: 'calendar', title: 'Calendar' })
+            } else if (view === 'database') {
+              openTab({ id: 'database-list', type: 'database', title: 'Databases' })
+            }
+          }}
+          darkMode={isDarkMode}
+          onToggleDarkMode={() => handleSetTheme(isDarkMode ? 'light' : 'dark')}
+        />
+      </div>
     </div>
   )
 }

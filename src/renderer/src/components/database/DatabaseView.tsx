@@ -310,7 +310,7 @@ export default function DatabaseView({
   }
 
   return (
-    <div className="flex-1 h-screen flex flex-col bg-graphon-bg dark:bg-[#191919] overflow-hidden text-graphon-text-main dark:text-[#dfdfdf] font-sans relative">
+    <div className="flex-1 h-screen flex flex-col overflow-hidden text-graphon-text-main dark:text-[#dfdfdf] font-sans relative">
       {/* Main Content Wrapper with Blur/Scale Effect */}
       <div
         className={`flex-1 flex flex-col transition-all duration-500 ease-apple ${selectedItem ? 'blur-[3px] scale-[0.985] brightness-[0.9] pointer-events-none' : ''}`}

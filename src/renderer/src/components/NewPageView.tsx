@@ -23,7 +23,7 @@ const NewPageView: React.FC = () => {
   }
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center bg-graphon-bg dark:bg-graphon-dark-bg text-center select-none">
+    <div className="flex-1 flex flex-col items-center justify-center text-center select-none">
       <div className="flex flex-col space-y-6">
         <button
           onClick={handleCreateNote}
