@@ -124,7 +124,7 @@ export default function MainLayout({
       <DragOverlay>
         {activeDragItem ? (
           activeDragItem.type === 'task' ? (
-            <div className="p-2 bg-white dark:bg-[#252525] rounded-md shadow-xl border border-graphon-border dark:border-graphon-dark-border text-xs w-48 opacity-90 cursor-grabbing">
+            <div className="p-2 bg-white dark:bg-graphon-dark-sidebar rounded-md shadow-xl border border-graphon-border dark:border-graphon-dark-border text-xs w-48 opacity-90 cursor-grabbing">
               <div className="font-medium text-graphon-text-main dark:text-graphon-dark-text-main truncate">
                 {activeDragItem.task.content}
               </div>

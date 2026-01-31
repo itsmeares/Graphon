@@ -192,7 +192,7 @@ function DraggableTask({ task }: { task: any }) {
       style={style}
       {...listeners}
       {...attributes}
-      className="p-2 bg-white dark:bg-[#252525] rounded-md shadow-sm border border-graphon-border dark:border-graphon-dark-border text-xs cursor-move hover:border-(--color-accent) transition-colors select-none"
+      className="p-2 bg-white dark:bg-graphon-dark-sidebar rounded-md shadow-sm border border-graphon-border dark:border-graphon-dark-border text-xs cursor-move hover:border-(--color-accent) transition-colors select-none"
     >
       <div className="font-medium text-graphon-text-main dark:text-graphon-dark-text-main truncate">
         {task.content}
