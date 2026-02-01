@@ -14,7 +14,6 @@ import NewPageView from './components/NewPageView'
 import HomeView from './components/HomeView'
 import { Theme } from './types'
 import { CommandPalette } from './components/CommandPalette'
-import AmbientBackground from './components/layout/AmbientBackground'
 
 // Accent colors
 export const ACCENT_COLORS = [
@@ -323,11 +322,10 @@ function AppContent() {
   if (!vaultLoading && !currentVaultPath) {
     return (
       <div className="w-screen h-screen p-[0.5px] bg-transparent overflow-hidden relative">
-        <AmbientBackground />
         <div className="w-full h-full overflow-hidden bg-white/10 dark:bg-black/10 border border-graphon-border/40 dark:border-graphon-dark-border/20 rounded-xl shadow-2xl transition-colors duration-300 flex flex-col relative z-10">
           {/* Custom Titlebar for Welcome Screen */}
           <div
-            className="h-10 w-full flex items-center px-4 shrink-0 select-none drag glass-sidebar border-b border-graphon-border/10 dark:border-graphon-dark-border/5"
+            className="h-10 w-full flex items-center px-4 shrink-0 select-none drag scrim-high border-b border-graphon-border/10 dark:border-graphon-dark-border/5"
             style={{ WebkitAppRegion: 'drag' } as any}
           >
             {(window as any).api?.platform !== 'darwin' ? (

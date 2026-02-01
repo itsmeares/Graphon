@@ -4,7 +4,6 @@ import FileExplorer from './FileExplorer'
 import Titlebar from './Titlebar'
 import { useVault } from '../../contexts/VaultContext'
 import CalendarSidebar from '../CalendarSidebar'
-import AmbientBackground from './AmbientBackground'
 import {
   DndContext,
   useSensor,
@@ -86,7 +85,6 @@ export default function MainLayout({
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="relative flex flex-col h-screen w-screen overflow-hidden text-neutral-900 dark:text-neutral-100 font-sans border-none bg-transparent">
-        <AmbientBackground />
         <div className="absolute top-0 left-0 w-full z-50">
           <Titlebar
             style={titlebarStyle}
@@ -101,7 +99,7 @@ export default function MainLayout({
 
           {/* 2. Side Panel - Ghost (transparent) */}
           <div
-            className="flex flex-col glass-ghost"
+            className="flex flex-col scrim-high"
             style={{
               width: !isSidebarVisible || activeActivity === 'settings' ? 0 : SIDE_PANEL_WIDTH,
               display: !isSidebarVisible || activeActivity === 'settings' ? 'none' : 'flex'
@@ -114,7 +112,7 @@ export default function MainLayout({
           </div>
 
           {/* 3. Main Content Area - Floating Island */}
-          <main className="flex-1 glass-card overflow-hidden flex flex-col relative">
+          <main className="flex-1 scrim-low overflow-hidden flex flex-col relative">
             {/* Editor / View Content */}
             <div className="flex-1 overflow-hidden relative">{children}</div>
           </main>
