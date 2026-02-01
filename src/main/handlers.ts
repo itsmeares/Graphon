@@ -434,7 +434,9 @@ export async function handleWriteData(key: string, data: any): Promise<void> {
 export interface GraphNode {
   id: string
   title: string
+  path: string // File path for existing files, empty for ghost nodes
   group: string
+  exists: boolean // false = unresolved wikilink (ghost node)
 }
 
 export interface GraphLink {
@@ -449,12 +451,30 @@ export interface GraphData {
 
 /**
  * Get graph data for visualization - nodes (files) and links (connections)
+ * Only shows files that are TARGETS of wikilinks (mentioned by other files)
+ * Includes ghost nodes for unresolved wikilinks
  */
 export async function handleGetGraphData(): Promise<GraphData> {
   try {
-    // Get all files as nodes
+    // Get all links first to determine which nodes are connected
+    const allLinks = await db.select().from(links)
+
+    // Build set of TARGET node IDs only (files that are mentioned by wikilinks)
+    // We don't include sources because files should only appear if they are mentioned
+    const targetNodeIds = new Set<string>()
+    for (const link of allLinks) {
+      targetNodeIds.add(link.targetId)
+    }
+
+    // Get all files and filter to only those that are TARGETS of links
     const allFiles = await db.select().from(files)
-    const nodes: GraphNode[] = allFiles.map((file) => {
+    const nodes: GraphNode[] = []
+    const nodeIdSet = new Set<string>()
+
+    for (const file of allFiles) {
+      // Only include files that are TARGETS (mentioned by wikilinks)
+      if (!targetNodeIds.has(file.id)) continue
+
       // Extract folder from path for grouping
       const pathParts = file.path.split('/')
       const group = pathParts.length > 1 ? pathParts[0] : 'root'
@@ -462,19 +482,39 @@ export async function handleGetGraphData(): Promise<GraphData> {
       const fileName = basename(file.path)
       const title = fileName.replace(/\.md$/i, '')
 
-      return {
+      nodes.push({
         id: file.id,
         title,
-        group
-      }
-    })
+        path: file.path,
+        group,
+        exists: true
+      })
+      nodeIdSet.add(file.id)
+    }
 
-    // Get all links
-    const allLinks = await db.select().from(links)
-    const graphLinks: GraphLink[] = allLinks.map((link) => ({
-      source: link.sourceId,
-      target: link.targetId
-    }))
+    // Extract ghost nodes from links (unresolved wikilinks - targets that don't exist)
+    for (const link of allLinks) {
+      if (link.targetId.startsWith('ghost:') && !nodeIdSet.has(link.targetId)) {
+        const ghostTitle = link.targetId.replace('ghost:', '')
+        nodes.push({
+          id: link.targetId,
+          title: ghostTitle,
+          path: '', // No path for ghost nodes
+          group: 'unresolved',
+          exists: false
+        })
+        nodeIdSet.add(link.targetId)
+      }
+    }
+
+    // Filter links to only include those where BOTH source AND target are nodes
+    // This ensures d3-force can find both ends of each link
+    const graphLinks: GraphLink[] = allLinks
+      .filter((link) => nodeIdSet.has(link.sourceId) && nodeIdSet.has(link.targetId))
+      .map((link) => ({
+        source: link.sourceId,
+        target: link.targetId
+      }))
 
     return { nodes, links: graphLinks }
   } catch (error) {

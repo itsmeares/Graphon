@@ -292,7 +292,7 @@ export default function NotesView({ isSidebarVisible = true }: NotesViewProps) {
   // Show loading skeleton
   if (vaultLoading || isLoading) {
     return (
-      <div className="flex-1 h-screen bg-white dark:bg-graphon-dark-bg p-8">
+      <div className="flex-1 h-screen bg-transparent p-8">
         <div className="w-full max-w-3xl mx-auto animate-pulse">
           <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-lg w-1/2 mb-8" />
           <div className="space-y-4">
@@ -307,7 +307,7 @@ export default function NotesView({ isSidebarVisible = true }: NotesViewProps) {
 
   if (!activeFile) {
     return (
-      <div className="flex-1 h-screen flex items-center justify-center text-graphon-text-secondary dark:text-graphon-dark-text-secondary bg-white dark:bg-graphon-dark-bg">
+      <div className="flex-1 h-screen flex items-center justify-center text-graphon-text-secondary dark:text-graphon-dark-text-secondary bg-transparent">
         <div className="text-center">
           <p className="text-lg mb-2">No file selected</p>
           <p className="text-sm opacity-60">Select a file from the sidebar to start editing</p>
@@ -348,7 +348,7 @@ export default function NotesView({ isSidebarVisible = true }: NotesViewProps) {
   )
 
   return (
-    <div className="flex-1 h-screen overflow-hidden bg-white dark:bg-graphon-dark-bg text-graphon-text-main dark:text-graphon-dark-text-main relative">
+    <div className="flex-1 h-screen overflow-hidden bg-transparent text-graphon-text-main dark:text-graphon-dark-text-main relative">
       {/* Saving Indicator */}
       {isSaving && (
         <div className="absolute top-4 right-4 z-50 px-3 py-1.5 bg-(--color-accent)/10 text-(--color-accent) text-xs font-medium rounded-full flex items-center gap-2">
@@ -360,12 +360,12 @@ export default function NotesView({ isSidebarVisible = true }: NotesViewProps) {
       {/* Toolbar - Fixed at top, only visible when text selected */}
       <div
         className={`
-        absolute left-0 right-0 top-0 z-40 transition-all duration-300 bg-white/80 dark:bg-graphon-dark-bg/80 backdrop-blur-xl border-b border-graphon-border dark:border-graphon-dark-border
+        absolute left-0 right-0 top-0 z-40 transition-all duration-300 bg-white/20 dark:bg-black/20 backdrop-blur-xl border-b border-graphon-border dark:border-graphon-dark-border
         ${showToolbar ? 'h-16 opacity-100' : 'h-0 opacity-0 overflow-hidden'}
       `}
       >
         <div className="h-16 flex items-center justify-center">
-          <div className="flex items-center space-x-1 border border-graphon-border dark:border-graphon-dark-border rounded-xl p-1.5 bg-white/50 dark:bg-graphon-dark-sidebar/50">
+          <div className="flex items-center space-x-1 border border-graphon-border dark:border-graphon-dark-border rounded-xl p-1.5 bg-white/20 dark:bg-black/20">
             <MenuButton
               onClick={() => editor.chain().focus().toggleBold().run()}
               isActive={editor.isActive('bold')}

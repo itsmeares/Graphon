@@ -63,7 +63,7 @@ export default function DatabaseList({ onSelectDatabase }: DatabaseListProps) {
   }
 
   return (
-    <div className="flex-1 h-screen bg-graphon-bg dark:bg-graphon-dark-bg p-8 overflow-y-auto">
+    <div className="flex-1 h-screen p-8 overflow-y-auto">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>

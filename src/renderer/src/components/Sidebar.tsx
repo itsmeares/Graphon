@@ -129,7 +129,7 @@ export default function Sidebar({
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
-      className="w-72 h-full flex flex-col glass-sidebar transition-colors duration-300 overflow-hidden"
+      className="w-72 h-full flex flex-col transition-colors duration-300 overflow-hidden"
     >
       {/* Header */}
       <div className="h-16 flex items-center justify-between px-5 shrink-0">
@@ -294,7 +294,7 @@ export default function Sidebar({
         {/* Calendar integrated view */}
         {currentView === 'calendar' && (
           <div className="animate-in fade-in slide-in-from-bottom-2 duration-400 px-3">
-            <div className="rounded-xl overflow-hidden glass border border-graphon-border dark:border-graphon-dark-border mb-4">
+            <div className="rounded-xl overflow-hidden glass-modal border border-graphon-border dark:border-graphon-dark-border mb-4">
               <CalendarSidebar selectedDate={selectedDate} onSelectDate={onSelectDate} />
             </div>
           </div>

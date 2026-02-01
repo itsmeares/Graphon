@@ -111,6 +111,9 @@ export default function CalendarSidebar({ selectedDate, onSelectDate }: Calendar
 
       <div className="mx-4 h-px bg-graphon-border dark:bg-graphon-dark-border my-2 opacity-50" />
 
+      {/* Tasks Section */}
+      <TasksList />
+
       {/* Calendar Sources */}
       <div className="p-4 flex-1">
         <div className="flex items-center justify-between text-[10px] font-bold text-graphon-text-secondary dark:text-graphon-dark-text-secondary mb-3 tracking-widest uppercase px-1">
@@ -132,6 +135,70 @@ export default function CalendarSidebar({ selectedDate, onSelectDate }: Calendar
           </div>
           <span>Add Calendar</span>
         </button>
+      </div>
+    </div>
+  )
+}
+
+import { useDraggable } from '@dnd-kit/core'
+import { CSS } from '@dnd-kit/utilities'
+
+function TasksList() {
+  const [tasks, setTasks] = useState<any[]>([])
+
+  useEffect(() => {
+    // Poll tasks or listen to updates (for now just fetch once)
+    // In a real app we'd want a subscription or context for tasks
+    window.api.getAllTasks().then(setTasks)
+  }, [])
+
+  if (tasks.length === 0) return null
+
+  return (
+    <>
+      <div className="p-4 pb-0">
+        <div className="flex items-center justify-between text-[10px] font-bold text-graphon-text-secondary dark:text-graphon-dark-text-secondary mb-3 tracking-widest uppercase px-1">
+          <span>Tasks</span>
+        </div>
+        <div className="space-y-2 max-h-40 overflow-y-auto custom-scrollbar pr-1">
+          {tasks
+            .filter((t) => !t.completed)
+            .map((task) => (
+              <DraggableTask key={task.id} task={task} />
+            ))}
+        </div>
+      </div>
+      <div className="mx-4 h-px bg-graphon-border dark:bg-graphon-dark-border my-2 opacity-50" />
+    </>
+  )
+}
+
+function DraggableTask({ task }: { task: any }) {
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+    id: `task-${task.id}`,
+    data: {
+      type: 'task',
+      task
+    }
+  })
+
+  const style = {
+    transform: CSS.Translate.toString(transform)
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...listeners}
+      {...attributes}
+      className="p-2 bg-white dark:bg-graphon-dark-sidebar rounded-md shadow-sm border border-graphon-border dark:border-graphon-dark-border text-xs cursor-move hover:border-(--color-accent) transition-colors select-none"
+    >
+      <div className="font-medium text-graphon-text-main dark:text-graphon-dark-text-main truncate">
+        {task.content}
+      </div>
+      <div className="text-[10px] text-graphon-text-secondary dark:text-graphon-dark-text-secondary truncate mt-0.5">
+        {task.fileTitle}
       </div>
     </div>
   )

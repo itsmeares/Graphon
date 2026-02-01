@@ -182,7 +182,7 @@ export default function HomeView({
   }
 
   return (
-    <div className="h-full w-full overflow-y-auto overflow-x-hidden p-6 md:p-12 space-y-12 bg-graphon-bg dark:bg-graphon-dark-bg transition-colors duration-300">
+    <div className="h-full w-full overflow-y-auto overflow-x-hidden p-6 md:p-12 space-y-12">
       {/* Greeting Section */}
       <div className="text-center md:text-left flex flex-col items-center justify-center pt-8 pb-4">
         <h1 className="text-3xl font-bold text-graphon-text-main dark:text-white mb-2">

@@ -43,7 +43,7 @@ export default function WelcomeView() {
         </p>
 
         {/* Vault Info Card */}
-        <div className="mb-8 p-6 rounded-2xl glass border border-graphon-border dark:border-graphon-dark-border animate-in slide-in-from-bottom-4 duration-700 delay-300">
+        <div className="mb-8 p-6 rounded-2xl glass-modal border border-graphon-border dark:border-graphon-dark-border animate-in slide-in-from-bottom-4 duration-700 delay-300">
           <h2 className="text-xl font-semibold mb-3 text-graphon-text-main dark:text-graphon-dark-text-main">
             What is a Vault?
           </h2>

@@ -4,6 +4,16 @@ import FileExplorer from './FileExplorer'
 import Titlebar from './Titlebar'
 import { useVault } from '../../contexts/VaultContext'
 import CalendarSidebar from '../CalendarSidebar'
+import {
+  DndContext,
+  useSensor,
+  useSensors,
+  PointerSensor,
+  DragOverlay,
+  DragStartEvent,
+  DragEndEvent
+} from '@dnd-kit/core'
+import { useState } from 'react'
 
 interface MainLayoutProps {
   children: ReactNode
@@ -20,6 +30,7 @@ interface MainLayoutProps {
   onFavoriteClick?: (databaseId: string, itemId: string) => void
   onToggleFavorite?: (databaseId: string, item: any) => void
   moduleVisibility?: { notes: boolean; calendar: boolean; database: boolean }
+  surfaceMode?: 'glass' | 'solid'
 }
 
 export default function MainLayout({
@@ -30,9 +41,11 @@ export default function MainLayout({
   onActivityChange,
   titlebarStyle = 'macos',
   isSidebarVisible,
-  onToggleSidebar
+  onToggleSidebar,
+  surfaceMode = 'glass'
 }: MainLayoutProps) {
   const { files } = useVault()
+  const [activeDragItem, setActiveDragItem] = useState<any>(null)
 
   // Side Panel Width (Resizable logic could go here, for now static)
   const SIDE_PANEL_WIDTH = 280
@@ -54,38 +67,81 @@ export default function MainLayout({
     }
   }
 
+  // Dnd Sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8
+      }
+    })
+  )
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveDragItem(event.active.data.current)
+  }
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    setActiveDragItem(null)
+  }
+
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-neutral-50 dark:bg-[#1C1C1A] text-neutral-900 dark:text-neutral-100 font-sans border border-neutral-200 dark:border-neutral-800/50 rounded-lg">
-      <Titlebar
-        style={titlebarStyle}
-        isSidebarVisible={isSidebarVisible}
-        onToggleSidebar={onToggleSidebar}
-      />
-
-      <div className="flex-1 flex overflow-hidden">
-        {/* 1. Activity Bar */}
-        <ActivityBar activeId={activeActivity} onSelect={onActivityChange} />
-
-        {/* 2. Side Panel */}
-        <div
-          className="flex flex-col border-r border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-[#1C1C1A]"
-          style={{
-            width: !isSidebarVisible || activeActivity === 'settings' ? 0 : SIDE_PANEL_WIDTH,
-            display: !isSidebarVisible || activeActivity === 'settings' ? 'none' : 'flex'
-          }}
-        >
-          <div className="h-10 border-b border-neutral-200 dark:border-neutral-800 flex items-center px-4 font-bold text-xs uppercase tracking-wider text-neutral-500">
-            {activeActivity.toUpperCase()}
-          </div>
-          {renderSidePanelContent()}
+    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+      <div className="relative flex flex-col h-screen w-screen overflow-hidden text-neutral-900 dark:text-neutral-100 font-sans border-none bg-transparent noise-overlay">
+        <div className="absolute top-0 left-0 w-full z-50">
+          <Titlebar
+            style={titlebarStyle}
+            isSidebarVisible={isSidebarVisible}
+            onToggleSidebar={onToggleSidebar}
+          />
         </div>
 
-        {/* 3. Main Content Area */}
-        <div className="flex-1 flex flex-col overflow-hidden bg-white dark:bg-[#1C1C1A]">
-          {/* Editor / View Content */}
-          <div className="flex-1 overflow-hidden relative">{children}</div>
+        <div className="flex-1 flex gap-3 p-3 pt-12 overflow-hidden z-10">
+          {/* 1. Activity Bar */}
+          <ActivityBar activeId={activeActivity} onSelect={onActivityChange} />
+
+          {/* 2. Side Panel - Ghost (transparent) */}
+          <div
+            className="flex flex-col scrim-high"
+            style={{
+              width: !isSidebarVisible || activeActivity === 'settings' ? 0 : SIDE_PANEL_WIDTH,
+              display: !isSidebarVisible || activeActivity === 'settings' ? 'none' : 'flex'
+            }}
+          >
+            <div className="h-10 border-b border-black/5 dark:border-white/5 flex items-center px-4 font-bold text-xs uppercase tracking-wider text-neutral-500">
+              {activeActivity.toUpperCase()}
+            </div>
+            {renderSidePanelContent()}
+          </div>
+
+          {/* 3. Main Content Area - Dynamic Surface */}
+          <main
+            className={`
+              flex-1 overflow-hidden flex flex-col relative
+              transition-colors duration-300 ease-out
+              ${surfaceMode === 'solid' ? 'surface-opaque specular-border' : 'scrim-low'}
+            `}
+          >
+            {/* Editor / View Content */}
+            <div className="flex-1 overflow-hidden relative z-10">{children}</div>
+          </main>
         </div>
       </div>
-    </div>
+
+      <DragOverlay>
+        {activeDragItem ? (
+          activeDragItem.type === 'task' ? (
+            <div className="p-2 bg-white dark:bg-graphon-dark-sidebar rounded-md shadow-xl border border-graphon-border dark:border-graphon-dark-border text-xs w-48 opacity-90 cursor-grabbing">
+              <div className="font-medium text-graphon-text-main dark:text-graphon-dark-text-main truncate">
+                {activeDragItem.task.content}
+              </div>
+            </div>
+          ) : activeDragItem.type === 'event' ? (
+            <div className="bg-(--color-accent) text-white p-1 rounded text-xs opacity-80 w-40 truncate shadow-xl cursor-grabbing">
+              <div className="font-bold">{activeDragItem.event.title}</div>
+            </div>
+          ) : null
+        ) : null}
+      </DragOverlay>
+    </DndContext>
   )
 }

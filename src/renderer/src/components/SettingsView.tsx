@@ -226,7 +226,7 @@ export default function SettingsView({
   }
 
   return (
-    <div className="flex-1 h-screen overflow-auto bg-graphon-bg dark:bg-graphon-dark-bg text-graphon-text-main dark:text-graphon-dark-text-main transition-colors duration-300">
+    <div className="flex-1 h-screen overflow-auto text-graphon-text-main dark:text-graphon-dark-text-main transition-colors duration-300">
       {/* Header */}
       <div
         className={`h-14 border-b border-graphon-border dark:border-graphon-dark-border flex items-center px-6 ${!isSidebarVisible ? 'pl-14' : ''}`}

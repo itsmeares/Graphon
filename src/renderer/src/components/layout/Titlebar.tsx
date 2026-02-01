@@ -11,56 +11,70 @@ interface TitlebarProps {
 }
 
 export default function Titlebar({ style, isSidebarVisible, onToggleSidebar }: TitlebarProps) {
-  // @ts-ignore
-  const handleMin = () => window.api?.minimize()
-  // @ts-ignore
-  const handleMax = () => window.api?.maximize()
-  // @ts-ignore
-  const handleClose = () => window.api?.close()
+  const platform = (window as any).api?.platform || 'win32'
+  const isMac = platform === 'darwin'
+
+  const handleMin = () => (window as any).api?.minimize()
+  const handleMax = () => (window as any).api?.maximize()
+  const handleClose = () => (window as any).api?.close()
 
   return (
     <div
-      className="h-9 w-full flex items-center bg-neutral-100 dark:bg-[#121212] border-b border-neutral-200 dark:border-neutral-800 select-none shrink-0"
+      className="h-9 w-full flex items-center bg-transparent select-none shrink-0"
       style={{ WebkitAppRegion: 'drag' } as any}
     >
+      {/* macOS style traffic lights simulation for non-macOS platforms */}
       {style === 'macos' && (
-        <div
-          className="px-4 flex items-center space-x-2"
-          style={{ WebkitAppRegion: 'no-drag' } as any}
-        >
-          <button
-            onClick={handleClose}
-            className="w-3 h-3 rounded-full bg-[#FF5F57] hover:bg-[#FF5F57]/80 flex items-center justify-center group outline-none"
-          >
-            <svg
-              className="w-2 h-2 opacity-0 group-hover:opacity-100 text-black/50"
-              viewBox="0 0 10 10"
-            >
-              <path d="M2,2 L8,8 M8,2 L2,8" stroke="currentColor" strokeWidth="1.5" />
-            </svg>
-          </button>
-          <button
-            onClick={handleMin}
-            className="w-3 h-3 rounded-full bg-[#FEBC2E] hover:bg-[#FEBC2E]/80 flex items-center justify-center group outline-none"
-          >
-            <svg
-              className="w-2 h-2 opacity-0 group-hover:opacity-100 text-black/50"
-              viewBox="0 0 10 10"
-            >
-              <path d="M2,5 L8,5" stroke="currentColor" strokeWidth="1.5" />
-            </svg>
-          </button>
-          <button
-            onClick={handleMax}
-            className="w-3 h-3 rounded-full bg-[#28C840] hover:bg-[#28C840]/80 flex items-center justify-center group outline-none"
-          >
-            <svg
-              className="w-2 h-2 opacity-0 group-hover:opacity-100 text-black/50"
-              viewBox="0 0 10 10"
-            >
-              <path d="M2,5 L8,5 M5,2 L5,8" stroke="currentColor" strokeWidth="1.5" />
-            </svg>
-          </button>
+        <div className="w-20 shrink-0 flex items-center justify-center space-x-2 pl-4">
+          {!isMac ? (
+            <div className="flex space-x-2 group/traffic">
+              <button
+                onClick={handleClose}
+                className="w-3 h-3 rounded-full bg-[#FF5F57] flex items-center justify-center transition-all duration-200"
+                style={{ WebkitAppRegion: 'no-drag' } as any}
+              >
+                <svg
+                  className="w-2 h-2 opacity-0 group-hover/traffic:opacity-100 transition-opacity text-black/50"
+                  viewBox="0 0 10 10"
+                >
+                  <line x1="2" y1="2" x2="8" y2="8" stroke="currentColor" strokeWidth="1.2" />
+                  <line x1="8" y1="2" x2="2" y2="8" stroke="currentColor" strokeWidth="1.2" />
+                </svg>
+              </button>
+              <button
+                onClick={handleMin}
+                className="w-3 h-3 rounded-full bg-[#FEBC2E] flex items-center justify-center transition-all duration-200"
+                style={{ WebkitAppRegion: 'no-drag' } as any}
+              >
+                <svg
+                  className="w-2 h-2 opacity-0 group-hover/traffic:opacity-100 transition-opacity text-black/50"
+                  viewBox="0 0 10 10"
+                >
+                  <rect x="1" y="4.5" width="8" height="1" fill="currentColor" />
+                </svg>
+              </button>
+              <button
+                onClick={handleMax}
+                className="w-3 h-3 rounded-full bg-[#28C840] flex items-center justify-center transition-all duration-200"
+                style={{ WebkitAppRegion: 'no-drag' } as any}
+              >
+                <svg
+                  className="w-1.5 h-1.5 opacity-0 group-hover/traffic:opacity-100 transition-opacity text-black/50"
+                  viewBox="0 0 10 10"
+                >
+                  <path
+                    d="M1 1.5L8.5 1.5V9H1V1.5Z"
+                    stroke="currentColor"
+                    strokeWidth="1.2"
+                    fill="none"
+                  />
+                  <path d="M1 9L8.5 1.5" stroke="currentColor" strokeWidth="1.2" />
+                </svg>
+              </button>
+            </div>
+          ) : (
+            <div className="w-20 shrink-0" />
+          )}
         </div>
       )}
 
@@ -122,9 +136,6 @@ export default function Titlebar({ style, isSidebarVisible, onToggleSidebar }: T
           </button>
         </div>
       )}
-
-      {/* Spacer for macOS style to balance center title */}
-      {style === 'macos' && <div className="w-20" />}
     </div>
   )
 }

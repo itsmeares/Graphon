@@ -52,7 +52,7 @@ export default function TasksView({ onOpenFile }: TasksViewProps) {
 
   if (isLoading) {
     return (
-      <div className="flex-1 h-full flex items-center justify-center bg-graphon-bg dark:bg-graphon-dark-bg">
+      <div className="flex-1 h-full flex items-center justify-center">
         <RefreshCw className="w-6 h-6 animate-spin text-neutral-400" />
       </div>
     )
@@ -60,7 +60,7 @@ export default function TasksView({ onOpenFile }: TasksViewProps) {
 
   if (tasks.length === 0) {
     return (
-      <div className="flex-1 h-full flex flex-col items-center justify-center bg-graphon-bg dark:bg-graphon-dark-bg select-none">
+      <div className="flex-1 h-full flex flex-col items-center justify-center select-none">
         <div className="w-16 h-16 mb-6 rounded-2xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
           <CheckCircle2 className="w-8 h-8 text-neutral-400 dark:text-neutral-500" />
         </div>
@@ -79,7 +79,7 @@ export default function TasksView({ onOpenFile }: TasksViewProps) {
   }
 
   return (
-    <div className="flex-1 h-full overflow-hidden bg-graphon-bg dark:bg-graphon-dark-bg">
+    <div className="flex-1 h-full overflow-hidden">
       <div className="h-full overflow-y-auto px-6 py-6">
         {/* Header */}
         <div className="mb-6">

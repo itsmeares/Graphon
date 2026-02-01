@@ -152,9 +152,14 @@ export function CommandPalette({
       />
 
       {/* Dialog */}
-      <div className="relative w-full max-w-160 shadow-2xl rounded-xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-200">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.15 }}
+        className="relative w-full max-w-160 shadow-2xl rounded-xl overflow-hidden"
+      >
         <Command
-          className="w-full bg-white/80 dark:bg-[#1C1C1A]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 rounded-xl overflow-hidden text-graphon-text-main dark:text-graphon-dark-text-main"
+          className="w-full bg-white/40 dark:bg-[#1C1C1A]/40 backdrop-blur-2xl border border-black/5 dark:border-white/10 rounded-xl overflow-hidden text-graphon-text-main dark:text-graphon-dark-text-main"
           loop
           shouldFilter={false}
         >
@@ -339,7 +344,7 @@ export function CommandPalette({
             </AnimatePresence>
           </Command.List>
         </Command>
-      </div>
+      </motion.div>
     </div>
   )
 }
