@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import MainLayout from './components/layout/MainLayout'
 import { ActivityId } from './components/layout/ActivityBar'
 import NotesView from './components/NotesView'
@@ -46,6 +46,15 @@ function AppContent() {
 
   // Computed active tab
   const activeTab = activeTabIndex >= 0 ? tabs[activeTabIndex] : undefined
+
+  // Determine surface mode based on active view
+  // Glass = transparent/glassy for empty/new-page states
+  // Solid = opaque background for focused work (editor, calendar, etc.)
+  const surfaceMode = useMemo(() => {
+    if (!activeTab) return 'glass' // Empty state = glass
+    const solidViews = ['file', 'calendar', 'settings', 'database', 'graph', 'tasks']
+    return solidViews.includes(activeTab.type) ? 'solid' : 'glass'
+  }, [activeTab])
 
   const [isLoading, setIsLoading] = useState(true)
   // State
@@ -403,6 +412,7 @@ function AppContent() {
           titlebarStyle={titlebarStyle}
           isSidebarVisible={isSidebarVisible}
           onToggleSidebar={handleToggleSidebar}
+          surfaceMode={surfaceMode}
         >
           {/* Render Content based on Active Tab */}
           {!activeTab && (
@@ -580,9 +590,27 @@ function AppContent() {
           {activeTab?.type === 'graph' && (
             <GraphView
               isDarkMode={isDarkMode}
-              onSelectNode={(nodeId) => {
-                // Find the file path by nodeId and open it
-                openFile(nodeId)
+              onSelectNode={async (nodeValue) => {
+                if (!nodeValue) return
+
+                if (nodeValue.startsWith('create:')) {
+                  // Ghost node clicked - check if file exists first
+                  const fileName = nodeValue.replace('create:', '')
+                  const fn = fileName.endsWith('.md') ? fileName : `${fileName}.md`
+
+                  // Try to read the file to check if it exists
+                  const existingContent = await window.api.readFile(fn)
+                  if (existingContent !== null) {
+                    // File now exists (was created), just open it
+                    openFile(fn)
+                  } else {
+                    // File doesn't exist, create it
+                    createNote(fileName)
+                  }
+                } else {
+                  // Existing file - open it by path
+                  openFile(nodeValue)
+                }
               }}
             />
           )}

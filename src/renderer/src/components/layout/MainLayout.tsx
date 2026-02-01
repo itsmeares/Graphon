@@ -30,6 +30,7 @@ interface MainLayoutProps {
   onFavoriteClick?: (databaseId: string, itemId: string) => void
   onToggleFavorite?: (databaseId: string, item: any) => void
   moduleVisibility?: { notes: boolean; calendar: boolean; database: boolean }
+  surfaceMode?: 'glass' | 'solid'
 }
 
 export default function MainLayout({
@@ -40,7 +41,8 @@ export default function MainLayout({
   onActivityChange,
   titlebarStyle = 'macos',
   isSidebarVisible,
-  onToggleSidebar
+  onToggleSidebar,
+  surfaceMode = 'glass'
 }: MainLayoutProps) {
   const { files } = useVault()
   const [activeDragItem, setActiveDragItem] = useState<any>(null)
@@ -84,7 +86,7 @@ export default function MainLayout({
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="relative flex flex-col h-screen w-screen overflow-hidden text-neutral-900 dark:text-neutral-100 font-sans border-none bg-transparent">
+      <div className="relative flex flex-col h-screen w-screen overflow-hidden text-neutral-900 dark:text-neutral-100 font-sans border-none bg-transparent noise-overlay">
         <div className="absolute top-0 left-0 w-full z-50">
           <Titlebar
             style={titlebarStyle}
@@ -111,10 +113,16 @@ export default function MainLayout({
             {renderSidePanelContent()}
           </div>
 
-          {/* 3. Main Content Area - Floating Island */}
-          <main className="flex-1 scrim-low overflow-hidden flex flex-col relative">
+          {/* 3. Main Content Area - Dynamic Surface */}
+          <main
+            className={`
+              flex-1 overflow-hidden flex flex-col relative
+              transition-colors duration-300 ease-out
+              ${surfaceMode === 'solid' ? 'surface-opaque specular-border' : 'scrim-low'}
+            `}
+          >
             {/* Editor / View Content */}
-            <div className="flex-1 overflow-hidden relative">{children}</div>
+            <div className="flex-1 overflow-hidden relative z-10">{children}</div>
           </main>
         </div>
       </div>

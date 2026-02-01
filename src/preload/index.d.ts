@@ -44,7 +44,7 @@ interface VaultAPI {
 
   // Graph Data API
   getGraphData: () => Promise<{
-    nodes: Array<{ id: string; title: string; group: string }>
+    nodes: Array<{ id: string; title: string; path: string; group: string; exists: boolean }>
     links: Array<{ source: string; target: string }>
   }>
 
