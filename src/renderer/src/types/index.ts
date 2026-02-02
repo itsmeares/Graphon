@@ -51,6 +51,7 @@ export type ViewType =
   | 'database'
   | 'settings'
   | 'home'
+  | 'graph'
 
 export type Theme = 'light' | 'dark' | 'system'
 

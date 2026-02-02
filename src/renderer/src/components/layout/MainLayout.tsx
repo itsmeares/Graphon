@@ -54,8 +54,6 @@ export default function MainLayout({
     switch (activeActivity) {
       case 'files':
         return <FileExplorer nodes={files} />
-      case 'search':
-        return <div className="p-4 text-neutral-500">Search not implemented yet</div>
       case 'calendar':
         return <CalendarSidebar selectedDate={selectedDate} onSelectDate={onSelectDate} />
       case 'database':
@@ -80,7 +78,7 @@ export default function MainLayout({
     setActiveDragItem(event.active.data.current)
   }
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = (_event: DragEndEvent) => {
     setActiveDragItem(null)
   }
 

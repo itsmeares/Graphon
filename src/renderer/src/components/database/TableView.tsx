@@ -1,4 +1,5 @@
 import { memo, useState, useCallback, useRef, useEffect } from 'react'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import { TrashIcon, PlusIcon, ArrowsUpDownIcon } from '@heroicons/react/24/outline'
 import type { Database, Item, Column } from '../../types'
 
@@ -304,6 +305,9 @@ export default function TableView({
     startWidth: number
   } | null>(null)
 
+  // Ref for the virtualized scroll container
+  const parentRef = useRef<HTMLDivElement>(null)
+
   // Load row height presets
   const [rowHeightPresets] = useState<{ label: string; value: number }[]>(() => {
     const saved = localStorage.getItem('graphon-row-height-presets')
@@ -314,6 +318,17 @@ export default function TableView({
           { label: 'M', value: 44 },
           { label: 'L', value: 64 }
         ]
+  })
+
+  // Current row height (dynamic)
+  const currentRowHeight = database.rowHeight || 36
+
+  // Initialize virtualizer
+  const virtualizer = useVirtualizer({
+    count: items.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => currentRowHeight,
+    overscan: 5
   })
 
   const handleResizeStart = (e: React.PointerEvent, column: Column) => {
@@ -339,8 +354,20 @@ export default function TableView({
     ;(e.target as HTMLElement).releasePointerCapture(e.pointerId)
   }
 
+  // Calculate spacer sizes for virtualization
+  const virtualItems = virtualizer.getVirtualItems()
+  const totalSize = virtualizer.getTotalSize()
+
+  // Padding to simulate scroll height
+  const paddingTop = virtualItems.length > 0 ? virtualItems[0].start : 0
+  const paddingBottom =
+    virtualItems.length > 0 ? totalSize - virtualItems[virtualItems.length - 1].end : 0
+
   return (
-    <div className="h-full overflow-auto bg-white dark:bg-graphon-dark-bg transition-colors duration-300">
+    <div
+      ref={parentRef}
+      className="h-full overflow-auto bg-white dark:bg-graphon-dark-bg transition-colors duration-300"
+    >
       <table className="w-full border-collapse table-fixed">
         {/* Header */}
         <thead className="sticky top-0 bg-graphon-sidebar dark:bg-graphon-dark-sidebar border-b border-graphon-border dark:border-graphon-dark-border z-10 transition-colors">
@@ -397,19 +424,28 @@ export default function TableView({
           </tr>
         </thead>
 
-        {/* Body */}
-        <tbody>
-          {items.map((item) => (
-            <TableRow
-              key={item.id}
-              item={item}
-              columns={visibleColumns}
-              rowHeight={database.rowHeight}
-              onUpdateItem={onUpdateItem}
-              onDeleteItem={() => onDeleteItem(item.id)}
-              onItemClick={onItemClick}
-            />
-          ))}
+        {/* Virtualized Body */}
+        <tbody
+          style={{
+            display: 'block',
+            paddingTop: `${paddingTop}px`,
+            paddingBottom: `${paddingBottom}px`
+          }}
+        >
+          {virtualItems.map((virtualItem) => {
+            const item = items[virtualItem.index]
+            return (
+              <TableRow
+                key={item.id}
+                item={item}
+                columns={visibleColumns}
+                rowHeight={currentRowHeight}
+                onUpdateItem={onUpdateItem}
+                onDeleteItem={() => onDeleteItem(item.id)}
+                onItemClick={onItemClick}
+              />
+            )
+          })}
         </tbody>
       </table>
 

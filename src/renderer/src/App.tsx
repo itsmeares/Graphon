@@ -634,10 +634,20 @@ function AppContent() {
               openTab({ id: 'calendar', type: 'calendar', title: 'Calendar' })
             } else if (view === 'database') {
               openTab({ id: 'database-list', type: 'database', title: 'Databases' })
+            } else if (view === 'home') {
+              openTab({
+                id: `new-page-${Date.now()}`,
+                type: 'new-page',
+                title: 'New Page',
+                icon: '📄'
+              })
+            } else if (view === 'graph') {
+              openTab({ id: 'graph', type: 'graph', title: 'Graph View' })
             }
           }}
           darkMode={isDarkMode}
           onToggleDarkMode={() => handleSetTheme(isDarkMode ? 'light' : 'dark')}
+          onToggleSidebar={handleToggleSidebar}
         />
       </div>
     </div>
