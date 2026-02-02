@@ -1,6 +1,6 @@
 {
   "name": "graphon",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Graphon - A graph-based personal knowledge management and note-taking application",
   "main": "./out/main/index.js",
   "author": "itsmeares",
@@ -34,6 +34,7 @@
     "@heroicons/react": "^2.2.0",
     "@radix-ui/react-context-menu": "^2.2.16",
     "@radix-ui/react-dialog": "^1.1.15",
+    "@tanstack/react-virtual": "^3.13.18",
     "@tiptap/extension-image": "^3.17.0",
     "@tiptap/extension-placeholder": "^3.17.0",
     "@tiptap/extension-task-item": "^3.17.0",

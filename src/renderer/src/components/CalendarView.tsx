@@ -895,7 +895,7 @@ export default function CalendarView({
                       isSelected={isSelected}
                       selectedEventId={selectedEventId}
                       currentTimePosition={timePos}
-                      onEventClick={(e, event) => setSelectedEventId(event.id)}
+                      onEventClick={(_e, event) => setSelectedEventId(event.id)}
                       onResizeStart={(e, event) => {
                         setResizingEvent(event)
                         setResizeStartY(e.clientY)
