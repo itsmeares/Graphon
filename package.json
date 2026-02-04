@@ -6,19 +6,14 @@
   "description": "Graphon - A privacy-focused personal knowledge management and note-taking application",
   "main": "./out/main/index.js",
   "author": "itsmeares",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Graphon-App/graphon.git"
-  },
-  "bugs": {
-    "url": "https://github.com/Graphon-App/graphon/issues"
-  },
+  "repository": { "type": "git", "url": "git+https://github.com/Graphon-App/graphon.git" },
+  "bugs": { "url": "https://github.com/Graphon-App/graphon/issues" },
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint --cache .",
     "start": "electron-vite preview",
     "dev": "electron-vite dev",
-    "build": "electron-vite build",
+    "build": "tsc -p tsconfig.node.json && electron-vite build",
     "postinstall": "node patch-rebuild.mjs && electron-builder install-app-deps",
     "build:unpack": "npm run build && electron-builder --dir",
     "build:win": "npm run build && electron-builder --win",
