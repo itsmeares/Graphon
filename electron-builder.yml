@@ -37,35 +37,36 @@ nsis:
   runAfterFinish: true
   deleteAppDataOnUninstall: true # Silerken temizlesin
 
-# MACOS
-mac:
-  target:
-    - target: default
-      arch:
-        - universal # Hem M1/M2 hem Intel Mac'lerde çalışır
-  icon: build/icon.png
-  entitlementsInherit: build/entitlements.mac.plist
-  notarize: false # Apple Developer hesabı olmadan build almak için
-dmg:
-  artifactName: ${name}-${version}.${ext}
+# MACOS (Disabled - Windows focus)
+# mac:
+#   target:
+#     - target: default
+#       arch:
+#         - universal # Hem M1/M2 hem Intel Mac'lerde çalışır
+#   icon: build/icon.png
+#   entitlementsInherit: build/entitlements.mac.plist
+#   notarize: false # Apple Developer hesabı olmadan build almak için
+# dmg:
+#   artifactName: ${name}-${version}.${ext}
 
-# LINUX
-linux:
-  icon: build/icon.png
-  target:
-    - target: AppImage # Portable
-      arch:
-        - x64
-    - target: deb # Ubuntu Installer
-      arch:
-        - x64
-  maintainer: itsmeares
-  category: Utility
-appImage:
-  artifactName: ${name}-${version}.${ext}
+# LINUX (Disabled - Windows focus)
+# linux:
+#   icon: build/icon.png
+#   target:
+#     - target: AppImage # Portable
+#       arch:
+#         - x64
+#     - target: deb # Ubuntu Installer
+#       arch:
+#         - x64
+#   maintainer: itsmeares
+#   category: Utility
+# appImage:
+#   artifactName: ${name}-${version}.${ext}
 
 npmRebuild: false
 publish:
   provider: github
-  owner: itsmeares
-  repo: Graphon
+  owner: Graphon-App
+  repo: graphon
+  releaseType: release

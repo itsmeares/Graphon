@@ -1,11 +1,20 @@
+import { useState } from 'react'
 import { FolderOpenIcon, SparklesIcon } from '@heroicons/react/24/outline'
 import { useVault } from '../contexts/VaultContext'
 
 export default function WelcomeView() {
   const { selectVault } = useVault()
+  const [rememberVault, setRememberVault] = useState(false)
 
   const handleOpenVault = async () => {
     await selectVault()
+    // If remember is checked, store the preference
+    // The actual vault path is stored by VaultContext/main process
+    if (rememberVault) {
+      localStorage.setItem('graphon-auto-open-vault', 'true')
+    } else {
+      localStorage.removeItem('graphon-auto-open-vault')
+    }
   }
 
   return (
@@ -52,6 +61,23 @@ export default function WelcomeView() {
             files. You have full control over your data, and you can sync it using your preferred
             method (Dropbox, Git, etc.).
           </p>
+        </div>
+
+        {/* Remember Vault Checkbox */}
+        <div className="mb-6 flex items-center justify-center gap-2 animate-in slide-in-from-bottom-4 duration-700 delay-350">
+          <input
+            type="checkbox"
+            id="remember-vault"
+            checked={rememberVault}
+            onChange={(e) => setRememberVault(e.target.checked)}
+            className="w-4 h-4 rounded border-graphon-border dark:border-graphon-dark-border text-(--color-accent) focus:ring-(--color-accent)/50"
+          />
+          <label
+            htmlFor="remember-vault"
+            className="text-sm text-graphon-text-secondary dark:text-graphon-dark-text-secondary cursor-pointer"
+          >
+            Remember this vault
+          </label>
         </div>
 
         {/* Action Buttons */}

@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import MainLayout from './components/layout/MainLayout'
+import Gateway, { AppMode } from './components/gateway/Gateway'
 import { ActivityId } from './components/layout/ActivityBar'
 import NotesView from './components/NotesView'
 import CalendarView from './components/CalendarView'
@@ -14,6 +15,10 @@ import NewPageView from './components/NewPageView'
 import HomeView from './components/HomeView'
 import { Theme } from './types'
 import { CommandPalette } from './components/CommandPalette'
+
+// Edition-specific imports (swappable for Open Core builds)
+import { Components } from './config/edition'
+const { AuthProvider, WorkspaceProvider, TeamLayout, AuthModal, LocalFilePicker } = Components
 
 // Accent colors
 export const ACCENT_COLORS = [
@@ -61,6 +66,29 @@ function AppContent() {
   const [activeActivity, setActiveActivity] = useState<ActivityId>('files')
   const [isSidebarVisible, setIsSidebarVisible] = useState(true)
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false)
+
+  // === GATEWAY STATE MACHINE ===
+  // Always start at gateway - user chooses their path each session
+  const [appMode, setAppMode] = useState<AppMode>('gateway')
+  const [isGatewayAuthModalOpen, setIsGatewayAuthModalOpen] = useState(false)
+  const [isLocalFilePickerOpen, setIsLocalFilePickerOpen] = useState(false)
+
+  // Mode switching handlers
+  const handleSelectMode = (mode: AppMode) => {
+    setAppMode(mode)
+  }
+
+  const handleReturnToGateway = () => {
+    setAppMode('gateway')
+  }
+
+  // Handle import from local vault (mock)
+  const handleImportFromLocal = (filePath: string, fileName: string) => {
+    // TODO: Implement actual import logic
+    console.log('[Airlock] Importing:', filePath, fileName)
+    // Show toast notification (using existing toast system if available)
+    alert(`Imported "${fileName.replace('.md', '')}" to Team Drafts`)
+  }
 
   // Favorites State
   const [favorites, setFavorites] = useState<
@@ -123,6 +151,11 @@ function AppContent() {
       }
 
       if (checkMatch(e, 'newTab')) {
+        // Block new tab shortcut in team mode
+        if (appMode === 'team') {
+          e.preventDefault()
+          return
+        }
         e.preventDefault()
         e.stopPropagation()
         openTab({
@@ -144,7 +177,16 @@ function AppContent() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [checkMatch, activeTabIndex, tabs.length, closeTab, setActiveTab, openTab, createNote])
+  }, [
+    checkMatch,
+    activeTabIndex,
+    tabs.length,
+    closeTab,
+    setActiveTab,
+    openTab,
+    createNote,
+    appMode
+  ])
 
   const handleToggleModule = (module: 'notes' | 'calendar' | 'database') => {
     setModuleVisibility((prev) => ({ ...prev, [module]: !prev[module] }))
@@ -327,8 +369,87 @@ function AppContent() {
     return <LoadingScreen onFinished={() => setIsLoading(false)} />
   }
 
-  // Show welcome screen if no vault is selected
-  if (!vaultLoading && !currentVaultPath) {
+  // === GATEWAY MODE (Always show first!) ===
+  if (appMode === 'gateway') {
+    return (
+      <div className="w-screen h-screen p-[0.5px] bg-transparent overflow-hidden relative">
+        <div className="w-full h-full overflow-hidden bg-white/10 dark:bg-black/10 border border-graphon-border/40 dark:border-graphon-dark-border/20 rounded-xl shadow-2xl transition-colors duration-300 flex flex-col relative z-10">
+          {/* Custom Titlebar for Gateway */}
+          <div
+            className="h-10 w-full flex items-center px-4 shrink-0 select-none drag scrim-high border-b border-graphon-border/10 dark:border-graphon-dark-border/5"
+            style={{ WebkitAppRegion: 'drag' } as any}
+          >
+            {(window as any).api?.platform !== 'darwin' ? (
+              <div
+                className="flex space-x-2 mr-4 group"
+                style={{ WebkitAppRegion: 'no-drag' } as any}
+              >
+                <button
+                  onClick={handleClose}
+                  className="w-3 h-3 rounded-full bg-[#FF5F57] hover:bg-[#FF5F57] flex items-center justify-center group/btn relative overflow-hidden transition-all duration-200"
+                >
+                  <svg
+                    className="w-2 h-2 opacity-0 group-hover:opacity-100 transition-opacity text-black/50"
+                    viewBox="0 0 10 10"
+                  >
+                    <line x1="2" y1="2" x2="8" y2="8" stroke="currentColor" strokeWidth="1.2" />
+                    <line x1="8" y1="2" x2="2" y2="8" stroke="currentColor" strokeWidth="1.2" />
+                  </svg>
+                </button>
+                <button
+                  onClick={handleMinimize}
+                  className="w-3 h-3 rounded-full bg-[#FEBC2E] hover:bg-[#FEBC2E] flex items-center justify-center group/btn relative overflow-hidden transition-all duration-200"
+                >
+                  <svg
+                    className="w-2 h-2 opacity-0 group-hover:opacity-100 transition-opacity text-black/50"
+                    viewBox="0 0 10 10"
+                  >
+                    <rect x="1" y="4.5" width="8" height="1" fill="currentColor" />
+                  </svg>
+                </button>
+                <button
+                  onClick={handleMaximize}
+                  className="w-3 h-3 rounded-full bg-[#28C840] hover:bg-[#28C840] flex items-center justify-center group/btn relative overflow-hidden transition-all duration-200"
+                >
+                  <svg
+                    className="w-1.5 h-1.5 opacity-0 group-hover:opacity-100 transition-opacity text-black/50"
+                    viewBox="0 0 10 10"
+                  >
+                    <path
+                      d="M1 1.5L8.5 1.5V9H1V1.5Z"
+                      stroke="currentColor"
+                      strokeWidth="1.2"
+                      fill="none"
+                    />
+                    <path d="M1 9L8.5 1.5" stroke="currentColor" strokeWidth="1.2" />
+                  </svg>
+                </button>
+              </div>
+            ) : (
+              <div className="w-20" />
+            )}
+            <div className="flex-1 text-center">
+              <span className="text-[10px] font-bold text-graphon-text-secondary/30 dark:text-graphon-dark-text-secondary/40 uppercase tracking-[0.35em]">
+                Graphon
+              </span>
+            </div>
+            <div className="w-20" />
+          </div>
+          <Gateway
+            onSelectMode={handleSelectMode}
+            onOpenAuthModal={() => setIsGatewayAuthModalOpen(true)}
+          />
+          <AuthModal
+            isOpen={isGatewayAuthModalOpen}
+            onClose={() => setIsGatewayAuthModalOpen(false)}
+          />
+        </div>
+      </div>
+    )
+  }
+
+  // === LOCAL MODE: Show vault selector if no vault is selected ===
+  if (appMode === 'local' && !vaultLoading && !currentVaultPath) {
     return (
       <div className="w-screen h-screen p-[0.5px] bg-transparent overflow-hidden relative">
         <div className="w-full h-full overflow-hidden bg-white/10 dark:bg-black/10 border border-graphon-border/40 dark:border-graphon-dark-border/20 rounded-xl shadow-2xl transition-colors duration-300 flex flex-col relative z-10">
@@ -400,6 +521,46 @@ function AppContent() {
     )
   }
 
+  // === TEAM MODE ===
+  if (appMode === 'team') {
+    return (
+      <div className="w-screen h-screen p-[0.5px] bg-transparent overflow-hidden">
+        <div className="w-full h-full overflow-hidden bg-transparent border border-graphon-border/20 dark:border-graphon-dark-border/10 rounded-xl">
+          <TeamLayout titlebarStyle={titlebarStyle} onReturnToGateway={handleReturnToGateway}>
+            {/* Team content placeholder */}
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center">
+                <p className="text-graphon-text-secondary">Team Dashboard coming soon...</p>
+                <button
+                  onClick={() => setIsLocalFilePickerOpen(true)}
+                  className="mt-4 px-4 py-2 rounded-lg bg-(--color-accent) text-white text-sm font-medium"
+                >
+                  Import from Local Vault
+                </button>
+              </div>
+            </div>
+          </TeamLayout>
+          <LocalFilePicker
+            isOpen={isLocalFilePickerOpen}
+            onClose={() => setIsLocalFilePickerOpen(false)}
+            onImport={handleImportFromLocal}
+          />
+          <CommandPalette
+            isOpen={isCommandPaletteOpen}
+            setIsOpen={setIsCommandPaletteOpen}
+            onViewChange={() => {}}
+            darkMode={isDarkMode}
+            onToggleDarkMode={() => handleSetTheme(isDarkMode ? 'light' : 'dark')}
+            onToggleSidebar={() => {}}
+            isTeamMode={true}
+            onImportFromLocal={() => setIsLocalFilePickerOpen(true)}
+          />
+        </div>
+      </div>
+    )
+  }
+
+  // === LOCAL MODE (default) ===
   return (
     <div className="w-screen h-screen p-[0.5px] bg-transparent overflow-hidden">
       {/* Window outer border decorator for rounded appearance */}
@@ -413,6 +574,7 @@ function AppContent() {
           isSidebarVisible={isSidebarVisible}
           onToggleSidebar={handleToggleSidebar}
           surfaceMode={surfaceMode}
+          onSwitchToGateway={handleReturnToGateway}
         >
           {/* Render Content based on Active Tab */}
           {!activeTab && (
@@ -656,11 +818,15 @@ function AppContent() {
 
 function App() {
   return (
-    <VaultProvider>
-      <KeybindingProvider>
-        <AppContent />
-      </KeybindingProvider>
-    </VaultProvider>
+    <AuthProvider>
+      <VaultProvider>
+        <WorkspaceProvider>
+          <KeybindingProvider>
+            <AppContent />
+          </KeybindingProvider>
+        </WorkspaceProvider>
+      </VaultProvider>
+    </AuthProvider>
   )
 }
 

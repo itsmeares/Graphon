@@ -79,6 +79,89 @@ const api = {
   ): Promise<Array<{ id: string; title: string; path: string; score: number }>> =>
     ipcRenderer.invoke('db:semantic-search', query),
 
+  // =============================================================================
+  // SUPABASE APIs (Phase 6: Teamspaces)
+  // =============================================================================
+
+  // Supabase Config API
+  supabaseIsConfigured: (): Promise<boolean> => ipcRenderer.invoke('supabase:is-configured'),
+
+  // Supabase Auth API
+  supabaseSignIn: (
+    email: string,
+    password: string
+  ): Promise<{ user: any | null; error: string | null }> =>
+    ipcRenderer.invoke('supabase:sign-in', email, password),
+
+  supabaseSignUp: (
+    email: string,
+    password: string,
+    username?: string
+  ): Promise<{ user: any | null; error: string | null }> =>
+    ipcRenderer.invoke('supabase:sign-up', email, password, username),
+
+  supabaseSignOut: (): Promise<{ error: string | null }> => ipcRenderer.invoke('supabase:sign-out'),
+
+  supabaseGetUser: (): Promise<any | null> => ipcRenderer.invoke('supabase:get-user'),
+
+  onSupabaseAuthChange: (callback: (user: any | null) => void) => {
+    const listener = (_: any, user: any) => callback(user)
+    ipcRenderer.on('supabase:auth-change', listener)
+    return () => ipcRenderer.removeListener('supabase:auth-change', listener)
+  },
+
+  // Supabase Workspace API
+  supabaseGetWorkspaces: (): Promise<{
+    data: Array<{
+      id: string
+      name: string
+      owner_id: string
+      created_at: string
+      role: 'admin' | 'member'
+    }> | null
+    error: string | null
+  }> => ipcRenderer.invoke('supabase:get-workspaces'),
+
+  // Supabase Channel API
+  supabaseGetChannels: (
+    workspaceId: string
+  ): Promise<{
+    data: Array<{
+      id: string
+      workspace_id: string
+      name: string
+      type: 'chat' | 'board'
+      description: string | null
+      created_at: string
+    }> | null
+    error: string | null
+  }> => ipcRenderer.invoke('supabase:get-channels', workspaceId),
+
+  // Supabase Workspace Create/Join API
+  supabaseCreateWorkspace: (
+    name: string
+  ): Promise<{
+    data: { id: string } | null
+    error: string | null
+  }> => ipcRenderer.invoke('supabase:create-workspace', name),
+
+  supabaseJoinWorkspace: (
+    workspaceId: string
+  ): Promise<{
+    data: { workspace_id: string } | null
+    error: string | null
+  }> => ipcRenderer.invoke('supabase:join-workspace', workspaceId),
+
+  // Supabase Channel Create API
+  supabaseCreateChannel: (
+    workspaceId: string,
+    name: string,
+    type: 'chat' | 'board'
+  ): Promise<{
+    data: { id: string } | null
+    error: string | null
+  }> => ipcRenderer.invoke('supabase:create-channel', workspaceId, name, type),
+
   // Platform info
   platform: process.platform
 }

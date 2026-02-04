@@ -15,7 +15,8 @@ import {
   Settings,
   Calendar,
   Clock,
-  RefreshCw
+  RefreshCw,
+  Upload
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useVault } from '../contexts/VaultContext'
@@ -52,6 +53,9 @@ interface CommandPaletteProps {
   onToggleSidebar?: () => void
   isOpen: boolean
   setIsOpen: (isOpen: boolean) => void
+  /** Team mode specific props */
+  isTeamMode?: boolean
+  onImportFromLocal?: () => void
 }
 
 export function CommandPalette({
@@ -60,7 +64,9 @@ export function CommandPalette({
   onToggleDarkMode,
   onToggleSidebar,
   isOpen,
-  setIsOpen
+  setIsOpen,
+  isTeamMode = false,
+  onImportFromLocal
 }: CommandPaletteProps) {
   const { createNote, setActiveFile, activeFile } = useVault()
   const [searchQuery, setSearchQuery] = useState('')
@@ -78,6 +84,19 @@ export function CommandPalette({
 
   // System commands - static list of power user functions
   const systemCommands: SystemCommand[] = [
+    // Team mode only: Import from Local Vault
+    ...(isTeamMode && onImportFromLocal
+      ? [
+          {
+            id: 'import-from-local',
+            name: 'Import from Local Vault...',
+            icon: <Upload className="w-4 h-4" />,
+            action: () => {
+              onImportFromLocal()
+            }
+          }
+        ]
+      : []),
     {
       id: 'create-note',
       name: 'Create New Note',

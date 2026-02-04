@@ -508,6 +508,136 @@ app.whenReady().then(() => {
       }
     })
 
+    // =========================================================================
+    // SUPABASE HANDLERS (Phase 6: Teamspaces)
+    // =========================================================================
+
+    // Check if Supabase is configured
+    ipcMain.handle('supabase:is-configured', async () => {
+      try {
+        const { isSupabaseConfigured } = await import('./services/SupabaseService')
+        return isSupabaseConfigured()
+      } catch (err) {
+        console.error('Error in supabase:is-configured handler:', err)
+        return false
+      }
+    })
+
+    // Sign in with email/password
+    ipcMain.handle('supabase:sign-in', async (_, email: string, password: string) => {
+      try {
+        const { signIn } = await import('./services/SupabaseService')
+        const result = await signIn(email, password)
+        if (result.user) {
+          mainWindow?.webContents.send('supabase:auth-change', result.user)
+        }
+        return result
+      } catch (err) {
+        console.error('Error in supabase:sign-in handler:', err)
+        return { user: null, error: err instanceof Error ? err.message : 'Unknown error' }
+      }
+    })
+
+    // Sign up with email/password
+    ipcMain.handle(
+      'supabase:sign-up',
+      async (_, email: string, password: string, username?: string) => {
+        try {
+          const { signUp } = await import('./services/SupabaseService')
+          const result = await signUp(email, password, username)
+          if (result.user) {
+            mainWindow?.webContents.send('supabase:auth-change', result.user)
+          }
+          return result
+        } catch (err) {
+          console.error('Error in supabase:sign-up handler:', err)
+          return { user: null, error: err instanceof Error ? err.message : 'Unknown error' }
+        }
+      }
+    )
+
+    // Sign out
+    ipcMain.handle('supabase:sign-out', async () => {
+      try {
+        const { signOut } = await import('./services/SupabaseService')
+        const result = await signOut()
+        mainWindow?.webContents.send('supabase:auth-change', null)
+        return result
+      } catch (err) {
+        console.error('Error in supabase:sign-out handler:', err)
+        return { error: err instanceof Error ? err.message : 'Unknown error' }
+      }
+    })
+
+    // Get current user
+    ipcMain.handle('supabase:get-user', async () => {
+      try {
+        const { getUser } = await import('./services/SupabaseService')
+        return await getUser()
+      } catch (err) {
+        console.error('Error in supabase:get-user handler:', err)
+        return null
+      }
+    })
+
+    // Get user's workspaces
+    ipcMain.handle('supabase:get-workspaces', async () => {
+      try {
+        const { getWorkspaces } = await import('./services/SupabaseService')
+        return await getWorkspaces()
+      } catch (err) {
+        console.error('Error in supabase:get-workspaces handler:', err)
+        return { data: null, error: err instanceof Error ? err.message : 'Unknown error' }
+      }
+    })
+
+    // Get channels for a workspace
+    ipcMain.handle('supabase:get-channels', async (_, workspaceId: string) => {
+      try {
+        const { getChannels } = await import('./services/SupabaseService')
+        return await getChannels(workspaceId)
+      } catch (err) {
+        console.error('Error in supabase:get-channels handler:', err)
+        return { data: null, error: err instanceof Error ? err.message : 'Unknown error' }
+      }
+    })
+
+    // Create a new workspace (calls RPC function)
+    ipcMain.handle('supabase:create-workspace', async (_, name: string) => {
+      try {
+        const { createWorkspace } = await import('./services/SupabaseService')
+        return await createWorkspace(name)
+      } catch (err) {
+        console.error('Error in supabase:create-workspace handler:', err)
+        return { data: null, error: err instanceof Error ? err.message : 'Unknown error' }
+      }
+    })
+
+    // Join an existing workspace
+    ipcMain.handle('supabase:join-workspace', async (_, workspaceId: string) => {
+      try {
+        const { joinWorkspace } = await import('./services/SupabaseService')
+        return await joinWorkspace(workspaceId)
+      } catch (err) {
+        console.error('Error in supabase:join-workspace handler:', err)
+        return { data: null, error: err instanceof Error ? err.message : 'Unknown error' }
+      }
+    })
+
+    // Create a new channel in a workspace
+    ipcMain.handle(
+      'supabase:create-channel',
+      async (_, workspaceId: string, name: string, type: 'chat' | 'board') => {
+        try {
+          const { createChannel } = await import('./services/SupabaseService')
+          return await createChannel(workspaceId, name, type)
+        } catch (err) {
+          console.error('Error in supabase:create-channel handler:', err)
+          return { data: null, error: err instanceof Error ? err.message : 'Unknown error' }
+        }
+      }
+    )
+
     // Indexer events listener
     indexerEvents.on('updated', () => {
       mainWindow?.webContents.send('vault:index-updated')

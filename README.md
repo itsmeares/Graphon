@@ -2,7 +2,7 @@ This project is still in development; any feedbacks, suggestions and contributio
 
 # Graphon
 
-> A modern desktop application developed with TypeScript, featuring Obsidian and Notion-inspired features.
+> A modern desktop application developed with TypeScript, featuring Apple-inspired aesthetics.
 
 ![Electron](https://img.shields.io/badge/Electron-v33-47848F?logo=electron)
 ![React](https://img.shields.io/badge/React-v19-61DAFB?logo=react)
@@ -182,4 +182,4 @@ This project is licensed under the MIT License.
 
 ---
 
-**Graphon v0.1.6** - Modern, Minimalist, Masterful. 🚀
+**Graphon v0.1.9** - Modern, Minimalist, Masterful. 🚀

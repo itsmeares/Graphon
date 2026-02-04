@@ -70,6 +70,66 @@ interface VaultAPI {
   semanticSearch: (
     query: string
   ) => Promise<{ id: string; title: string; path: string; score: number }[]>
+
+  // Supabase APIs (Phase 6: Teamspaces)
+  supabaseIsConfigured: () => Promise<boolean>
+  supabaseSignIn: (
+    email: string,
+    password: string
+  ) => Promise<{ user: any | null; error: string | null }>
+  supabaseSignUp: (
+    email: string,
+    password: string,
+    username?: string
+  ) => Promise<{ user: any | null; error: string | null }>
+  supabaseSignOut: () => Promise<{ error: string | null }>
+  supabaseGetUser: () => Promise<any | null>
+  onSupabaseAuthChange: (callback: (user: any | null) => void) => () => void
+
+  // Supabase Workspace API
+  supabaseGetWorkspaces: () => Promise<{
+    data: Array<{
+      id: string
+      name: string
+      owner_id: string
+      created_at: string
+      role: 'admin' | 'member'
+    }> | null
+    error: string | null
+  }>
+
+  // Supabase Channel API
+  supabaseGetChannels: (workspaceId: string) => Promise<{
+    data: Array<{
+      id: string
+      workspace_id: string
+      name: string
+      type: 'chat' | 'board'
+      description: string | null
+      created_at: string
+    }> | null
+    error: string | null
+  }>
+
+  // Supabase Workspace Create/Join API
+  supabaseCreateWorkspace: (name: string) => Promise<{
+    data: { id: string } | null
+    error: string | null
+  }>
+  supabaseJoinWorkspace: (workspaceId: string) => Promise<{
+    data: { workspace_id: string } | null
+    error: string | null
+  }>
+
+  // Supabase Channel Create API
+  supabaseCreateChannel: (
+    workspaceId: string,
+    name: string,
+    type: 'chat' | 'board'
+  ) => Promise<{
+    data: { id: string } | null
+    error: string | null
+  }>
 }
 
 declare global {

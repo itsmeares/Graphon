@@ -3,6 +3,7 @@ import TabBar from './TabBar'
 
 interface TitlebarProps {
   style: 'macos' | 'windows'
+  mode?: 'local' | 'team'
   onMinimize?: () => void
   onMaximize?: () => void
   onClose?: () => void
@@ -10,9 +11,15 @@ interface TitlebarProps {
   onToggleSidebar?: () => void
 }
 
-export default function Titlebar({ style, isSidebarVisible, onToggleSidebar }: TitlebarProps) {
+export default function Titlebar({
+  style,
+  mode = 'local',
+  isSidebarVisible,
+  onToggleSidebar
+}: TitlebarProps) {
   const platform = (window as any).api?.platform || 'win32'
   const isMac = platform === 'darwin'
+  const isTeamMode = mode === 'team'
 
   const handleMin = () => (window as any).api?.minimize()
   const handleMax = () => (window as any).api?.maximize()
@@ -81,31 +88,44 @@ export default function Titlebar({ style, isSidebarVisible, onToggleSidebar }: T
       <div
         className={`flex-1 flex items-center h-full overflow-hidden ${style === 'windows' ? 'pl-2' : 'px-2'}`}
       >
-        {/* Sidebar Toggle */}
-        <button
-          onClick={onToggleSidebar}
-          className={`p-1 rounded-md mr-2 text-neutral-500 transition-colors ${isSidebarVisible ? 'bg-black/5 dark:bg-white/10 text-neutral-800 dark:text-neutral-200' : 'hover:bg-black/5 dark:hover:bg-white/10'}`}
-          style={{ WebkitAppRegion: 'no-drag' } as any}
-        >
-          <Bars3Icon className="w-4 h-4" />
-        </button>
+        {/* Sidebar Toggle - Only show in local mode */}
+        {!isTeamMode && (
+          <button
+            onClick={onToggleSidebar}
+            className={`p-1 rounded-md mr-2 text-neutral-500 transition-colors ${isSidebarVisible ? 'bg-black/5 dark:bg-white/10 text-neutral-800 dark:text-neutral-200' : 'hover:bg-black/5 dark:hover:bg-white/10'}`}
+            style={{ WebkitAppRegion: 'no-drag' } as any}
+          >
+            <Bars3Icon className="w-4 h-4" />
+          </button>
+        )}
 
-        {/* Dynamic spacer to push tabs to the right of the sidebar: 
-            330px (Sidebar) - ~124px (Traffic Lights + Toggle Area) = ~206px offset needed
-         */}
-        <div
-          className="h-full transition-all duration-300 ease-in-out shrink-0"
-          style={{
-            width: isSidebarVisible
-              ? style === 'macos'
-                ? '206px'
-                : '290px' // Mac: 330-124; Win: 330-40 (approx)
-              : '10px'
-          }}
-        />
+        {/* Team Mode: Centered Title, No Tabs */}
+        {isTeamMode ? (
+          <div className="flex-1 flex items-center justify-center">
+            <span className="text-[10px] font-bold text-graphon-text-secondary/30 dark:text-graphon-dark-text-secondary/40 uppercase tracking-[0.35em]">
+              Graphon • Teamspace
+            </span>
+          </div>
+        ) : (
+          <>
+            {/* Dynamic spacer to push tabs to the right of the sidebar: 
+                330px (Sidebar) - ~124px (Traffic Lights + Toggle Area) = ~206px offset needed
+             */}
+            <div
+              className="h-full transition-all duration-300 ease-in-out shrink-0"
+              style={{
+                width: isSidebarVisible
+                  ? style === 'macos'
+                    ? '206px'
+                    : '290px' // Mac: 330-124; Win: 330-40 (approx)
+                  : '10px'
+              }}
+            />
 
-        {/* Browser-like Tab Bar */}
-        <TabBar />
+            {/* Browser-like Tab Bar */}
+            <TabBar />
+          </>
+        )}
       </div>
 
       {style === 'windows' && (

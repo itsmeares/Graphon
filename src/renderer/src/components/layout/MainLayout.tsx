@@ -14,6 +14,7 @@ import {
   DragEndEvent
 } from '@dnd-kit/core'
 import { useState } from 'react'
+import { LayoutGrid, Settings } from 'lucide-react'
 
 interface MainLayoutProps {
   children: ReactNode
@@ -31,6 +32,7 @@ interface MainLayoutProps {
   onToggleFavorite?: (databaseId: string, item: any) => void
   moduleVisibility?: { notes: boolean; calendar: boolean; database: boolean }
   surfaceMode?: 'glass' | 'solid'
+  onSwitchToGateway?: () => void
 }
 
 export default function MainLayout({
@@ -42,7 +44,8 @@ export default function MainLayout({
   titlebarStyle = 'macos',
   isSidebarVisible,
   onToggleSidebar,
-  surfaceMode = 'glass'
+  surfaceMode = 'glass',
+  onSwitchToGateway
 }: MainLayoutProps) {
   const { files } = useVault()
   const [activeDragItem, setActiveDragItem] = useState<any>(null)
@@ -88,6 +91,7 @@ export default function MainLayout({
         <div className="absolute top-0 left-0 w-full z-50">
           <Titlebar
             style={titlebarStyle}
+            mode="local"
             isSidebarVisible={isSidebarVisible}
             onToggleSidebar={onToggleSidebar}
           />
@@ -105,10 +109,34 @@ export default function MainLayout({
               display: !isSidebarVisible || activeActivity === 'settings' ? 'none' : 'flex'
             }}
           >
+            {/* Vault Label */}
             <div className="h-10 border-b border-black/5 dark:border-white/5 flex items-center px-4 font-bold text-xs uppercase tracking-wider text-neutral-500">
               {activeActivity.toUpperCase()}
             </div>
-            {renderSidePanelContent()}
+
+            {/* Side Panel Content */}
+            <div className="flex-1 overflow-hidden">{renderSidePanelContent()}</div>
+
+            {/* Footer: Gateway + Settings */}
+            <div className="px-2 py-2 border-t border-black/5 dark:border-white/5 space-y-0.5">
+              {onSwitchToGateway && (
+                <button
+                  onClick={onSwitchToGateway}
+                  className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm text-graphon-text-secondary dark:text-graphon-dark-text-secondary hover:bg-graphon-hover dark:hover:bg-graphon-dark-hover transition-colors"
+                  title="Switch to Gateway"
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                  <span className="font-medium">Switch to Gateway</span>
+                </button>
+              )}
+              <button
+                onClick={() => onActivityChange('settings')}
+                className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm text-graphon-text-secondary dark:text-graphon-dark-text-secondary hover:bg-graphon-hover dark:hover:bg-graphon-dark-hover transition-colors"
+              >
+                <Settings className="w-4 h-4" />
+                <span className="font-medium">Settings</span>
+              </button>
+            </div>
           </div>
 
           {/* 3. Main Content Area - Dynamic Surface */}
