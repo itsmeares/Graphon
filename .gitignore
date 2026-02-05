@@ -32,3 +32,10 @@ Thumbs.db
 # IDEs
 .vscode/
 .idea/
+
+# Agent
+.agent/
+AGENT_GUIDELINES.md
+
+# Memory Bank
+memory-bank/
