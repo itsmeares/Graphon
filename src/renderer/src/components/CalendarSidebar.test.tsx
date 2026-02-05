@@ -18,11 +18,9 @@ describe('CalendarSidebar', () => {
     // Find the element for '15'
     const day15 = screen.getByText('15')
     const parentDiv = day15.closest('div')
-
-    // This is a bit fragile without specific test IDs or better role usage,
-    // but we can check for the ring class which indicates the circle/ring styling
-    expect(parentDiv?.className).toContain('ring-1')
-    expect(parentDiv?.className).toContain('ring-graphon-border')
+    // Check for the ring classes used in the component
+    expect(parentDiv?.className).toContain('ring-2')
+    expect(parentDiv?.className).toContain('ring-(--color-accent)')
   })
 
   it('calls onSelectDate when clicked', () => {

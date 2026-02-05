@@ -71,23 +71,23 @@ interface VaultAPI {
     query: string
   ) => Promise<{ id: string; title: string; path: string; score: number }[]>
 
-  // Supabase APIs (Phase 6: Teamspaces)
-  supabaseIsConfigured: () => Promise<boolean>
-  supabaseSignIn: (
+  // Firebase APIs (Phase 6: Teamspaces)
+  firebaseIsConfigured: () => Promise<boolean>
+  firebaseSignIn: (
     email: string,
     password: string
   ) => Promise<{ user: any | null; error: string | null }>
-  supabaseSignUp: (
+  firebaseSignUp: (
     email: string,
     password: string,
     username?: string
   ) => Promise<{ user: any | null; error: string | null }>
-  supabaseSignOut: () => Promise<{ error: string | null }>
-  supabaseGetUser: () => Promise<any | null>
-  onSupabaseAuthChange: (callback: (user: any | null) => void) => () => void
+  firebaseSignOut: () => Promise<{ error: string | null }>
+  firebaseGetUser: () => Promise<any | null>
+  onFirebaseAuthChange: (callback: (user: any | null) => void) => () => void
 
-  // Supabase Workspace API
-  supabaseGetWorkspaces: () => Promise<{
+  // Firebase Workspace API
+  firebaseGetWorkspaces: () => Promise<{
     data: Array<{
       id: string
       name: string
@@ -98,8 +98,8 @@ interface VaultAPI {
     error: string | null
   }>
 
-  // Supabase Channel API
-  supabaseGetChannels: (workspaceId: string) => Promise<{
+  // Firebase Channel API
+  firebaseGetChannels: (workspaceId: string) => Promise<{
     data: Array<{
       id: string
       workspace_id: string
@@ -111,18 +111,18 @@ interface VaultAPI {
     error: string | null
   }>
 
-  // Supabase Workspace Create/Join API
-  supabaseCreateWorkspace: (name: string) => Promise<{
+  // Firebase Workspace Create/Join API
+  firebaseCreateWorkspace: (name: string) => Promise<{
     data: { id: string } | null
     error: string | null
   }>
-  supabaseJoinWorkspace: (workspaceId: string) => Promise<{
+  firebaseJoinWorkspace: (workspaceId: string) => Promise<{
     data: { workspace_id: string } | null
     error: string | null
   }>
 
-  // Supabase Channel Create API
-  supabaseCreateChannel: (
+  // Firebase Channel Create API
+  firebaseCreateChannel: (
     workspaceId: string,
     name: string,
     type: 'chat' | 'board'
@@ -130,6 +130,24 @@ interface VaultAPI {
     data: { id: string } | null
     error: string | null
   }>
+
+  // Firebase Message API
+  firebaseSendMessage: (channelId: string, content: string) => Promise<{
+    data: { id: string } | null
+    error: string | null
+  }>
+  firebaseGetMessages: (channelId: string) => Promise<{
+    data: Array<{
+      id: string
+      channel_id: string
+      user_id: string
+      content: string | null
+      created_at: string
+    }> | null
+    error: string | null
+  }>
+  firebaseSubscribeToMessages: (channelId: string) => Promise<void>
+  onRealtimeMessage: (callback: (payload: any) => void) => () => void
 }
 
 declare global {

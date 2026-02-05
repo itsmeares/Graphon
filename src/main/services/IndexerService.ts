@@ -316,6 +316,13 @@ async function onFileAdd(absolutePath: string): Promise<void> {
     const checksum = await calculateChecksum(absolutePath)
     const now = new Date()
 
+    // Check if file already exists with same checksum
+    const existing = await db.select().from(files).where(eq(files.id, fileId)).get()
+    if (existing && existing.checksum === checksum) {
+      // console.log(`[Indexer] Skipping unchanged: ${relativePath}`)
+      return
+    }
+
     // Read file content for FTS indexing
     const rawContent = await fs.readFile(absolutePath, 'utf-8')
     const title = extractTitle(rawContent, absolutePath)
@@ -330,22 +337,30 @@ async function onFileAdd(absolutePath: string): Promise<void> {
     // Generate embedding
     const embedding = await EmbeddingService.generateEmbedding(plainText)
 
-    // Insert file record
-    await db
-      .insert(files)
-      .values({
+    if (existing) {
+      // Update existing record
+      await db
+        .update(files)
+        .set({
+          checksum,
+          updatedAt: now
+        })
+        .where(eq(files.id, fileId))
+    } else {
+      // Insert new record
+      await db.insert(files).values({
         id: fileId,
         path: relativePath,
         checksum,
         createdAt: now,
         updatedAt: now
       })
-      .onConflictDoNothing()
+    }
 
     // Persist FTS, links, tasks, and embedding in atomic transaction
     persistFileData(fileId, relativePath, title, plainText, wikilinks, tasks, embedding)
 
-    console.log(`[Indexer] Added: ${relativePath}`)
+    console.log(`[Indexer] ${existing ? 'Updated' : 'Added'}: ${relativePath}`)
     notifyUpdate()
   } catch (error) {
     console.error(`[Indexer] Error adding file ${absolutePath}:`, error)
@@ -435,8 +450,8 @@ export function startIndexer(vaultPath: string): void {
   // Stop existing watcher if any
   stopIndexer()
 
-  // Clear database for the new vault
-  clearDatabase()
+  // No longer clearing database on start - we now use checksums to skip unchanged files.
+  // This makes startup much faster.
 
   currentVaultPath = vaultPath
 

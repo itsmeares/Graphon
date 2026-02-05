@@ -18,7 +18,7 @@ interface GatewayProps {
 }
 
 export default function Gateway({ onSelectMode, onOpenAuthModal }: GatewayProps) {
-  const { user } = Hooks.useSupabase()
+  const { user } = Hooks.useFirebase()
 
   // Teamspaces feature availability
   const teamspacesEnabled = FEATURES.teamspaces

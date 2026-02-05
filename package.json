@@ -6,8 +6,13 @@
   "description": "Graphon - A privacy-focused personal knowledge management and note-taking application",
   "main": "./out/main/index.js",
   "author": "itsmeares",
-  "repository": { "type": "git", "url": "git+https://github.com/Graphon-App/graphon.git" },
-  "bugs": { "url": "https://github.com/Graphon-App/graphon/issues" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Graphon-App/graphon.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Graphon-App/graphon/issues"
+  },
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint --cache .",
@@ -33,7 +38,6 @@
     "@heroicons/react": "^2.2.0",
     "@radix-ui/react-context-menu": "^2.2.16",
     "@radix-ui/react-dialog": "^1.1.15",
-    "@supabase/supabase-js": "^2.93.3",
     "@tanstack/react-virtual": "^3.13.18",
     "@tiptap/extension-image": "^3.17.0",
     "@tiptap/extension-placeholder": "^3.17.0",
@@ -53,6 +57,7 @@
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.45.1",
     "electron-updater": "^6.7.3",
+    "firebase": "^12.9.0",
     "framer-motion": "^12.29.2",
     "front-matter": "^4.0.2",
     "lucide-react": "^0.563.0",

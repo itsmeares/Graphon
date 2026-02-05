@@ -80,38 +80,38 @@ const api = {
     ipcRenderer.invoke('db:semantic-search', query),
 
   // =============================================================================
-  // SUPABASE APIs (Phase 6: Teamspaces)
+  // FIREBASE APIs (Phase 6: Teamspaces)
   // =============================================================================
 
-  // Supabase Config API
-  supabaseIsConfigured: (): Promise<boolean> => ipcRenderer.invoke('supabase:is-configured'),
+  // Firebase Config API
+  firebaseIsConfigured: (): Promise<boolean> => ipcRenderer.invoke('firebase:is-configured'),
 
-  // Supabase Auth API
-  supabaseSignIn: (
+  // Firebase Auth API
+  firebaseSignIn: (
     email: string,
     password: string
   ): Promise<{ user: any | null; error: string | null }> =>
-    ipcRenderer.invoke('supabase:sign-in', email, password),
+    ipcRenderer.invoke('firebase:sign-in', email, password),
 
-  supabaseSignUp: (
+  firebaseSignUp: (
     email: string,
     password: string,
     username?: string
   ): Promise<{ user: any | null; error: string | null }> =>
-    ipcRenderer.invoke('supabase:sign-up', email, password, username),
+    ipcRenderer.invoke('firebase:sign-up', email, password, username),
 
-  supabaseSignOut: (): Promise<{ error: string | null }> => ipcRenderer.invoke('supabase:sign-out'),
+  firebaseSignOut: (): Promise<{ error: string | null }> => ipcRenderer.invoke('firebase:sign-out'),
 
-  supabaseGetUser: (): Promise<any | null> => ipcRenderer.invoke('supabase:get-user'),
+  firebaseGetUser: (): Promise<any | null> => ipcRenderer.invoke('firebase:get-user'),
 
-  onSupabaseAuthChange: (callback: (user: any | null) => void) => {
+  onFirebaseAuthChange: (callback: (user: any | null) => void) => {
     const listener = (_: any, user: any) => callback(user)
-    ipcRenderer.on('supabase:auth-change', listener)
-    return () => ipcRenderer.removeListener('supabase:auth-change', listener)
+    ipcRenderer.on('firebase:auth-change', listener)
+    return () => ipcRenderer.removeListener('firebase:auth-change', listener)
   },
 
-  // Supabase Workspace API
-  supabaseGetWorkspaces: (): Promise<{
+  // Firebase Workspace API
+  firebaseGetWorkspaces: (): Promise<{
     data: Array<{
       id: string
       name: string
@@ -120,10 +120,10 @@ const api = {
       role: 'admin' | 'member'
     }> | null
     error: string | null
-  }> => ipcRenderer.invoke('supabase:get-workspaces'),
+  }> => ipcRenderer.invoke('firebase:get-workspaces'),
 
-  // Supabase Channel API
-  supabaseGetChannels: (
+  // Firebase Channel API
+  firebaseGetChannels: (
     workspaceId: string
   ): Promise<{
     data: Array<{
@@ -135,32 +135,63 @@ const api = {
       created_at: string
     }> | null
     error: string | null
-  }> => ipcRenderer.invoke('supabase:get-channels', workspaceId),
+  }> => ipcRenderer.invoke('firebase:get-channels', workspaceId),
 
-  // Supabase Workspace Create/Join API
-  supabaseCreateWorkspace: (
+  // Firebase Workspace Create/Join API
+  firebaseCreateWorkspace: (
     name: string
   ): Promise<{
     data: { id: string } | null
     error: string | null
-  }> => ipcRenderer.invoke('supabase:create-workspace', name),
+  }> => ipcRenderer.invoke('firebase:create-workspace', name),
 
-  supabaseJoinWorkspace: (
+  firebaseJoinWorkspace: (
     workspaceId: string
   ): Promise<{
     data: { workspace_id: string } | null
     error: string | null
-  }> => ipcRenderer.invoke('supabase:join-workspace', workspaceId),
+  }> => ipcRenderer.invoke('firebase:join-workspace', workspaceId),
 
-  // Supabase Channel Create API
-  supabaseCreateChannel: (
+  // Firebase Channel Create API
+  firebaseCreateChannel: (
     workspaceId: string,
     name: string,
     type: 'chat' | 'board'
   ): Promise<{
     data: { id: string } | null
     error: string | null
-  }> => ipcRenderer.invoke('supabase:create-channel', workspaceId, name, type),
+  }> => ipcRenderer.invoke('firebase:create-channel', workspaceId, name, type),
+
+  // Firebase Message API
+  firebaseSendMessage: (
+    channelId: string,
+    content: string
+  ): Promise<{
+    data: { id: string } | null
+    error: string | null
+  }> => ipcRenderer.invoke('firebase:send-message', channelId, content),
+
+  firebaseGetMessages: (
+    channelId: string
+  ): Promise<{
+    data: Array<{
+      id: string
+      channel_id: string
+      user_id: string
+      content: string | null
+      created_at: string
+    }> | null
+    error: string | null
+  }> => ipcRenderer.invoke('firebase:get-messages', channelId),
+
+  firebaseSubscribeToMessages: (channelId: string): Promise<void> =>
+    ipcRenderer.invoke('firebase:subscribe-to-messages', channelId),
+
+  onRealtimeMessage: (callback: (payload: any) => void) => {
+    const listener = (_: any, payload: any) => callback(payload)
+    ipcRenderer.on('firebase:realtime-message', listener)
+    return () => ipcRenderer.removeListener('firebase:realtime-message', listener)
+  },
 
   // Platform info
   platform: process.platform

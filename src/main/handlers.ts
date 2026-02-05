@@ -38,15 +38,15 @@ interface VaultSettings {
 // =============================================================================
 
 /**
- * Validates that a filename is safe (no path traversal)
+ * Validates that a path is safe (no path traversal via ..)
  */
-function isValidFilename(filename: string): boolean {
-  // Reject if contains path separators or parent directory references
-  if (filename.includes('/') || filename.includes('\\') || filename.includes('..')) {
+function isValidPath(filePath: string): boolean {
+  // Reject if contains parent directory references
+  if (filePath.includes('..')) {
     return false
   }
   // Reject empty or only dots
-  if (!filename || filename === '.' || filename === '..') {
+  if (!filePath || filePath === '.' || filePath === '..') {
     return false
   }
   return true
@@ -280,7 +280,7 @@ export async function handleOpenVaultFolder(): Promise<void> {
  */
 export async function handleReadFile(filename: string): Promise<string | null> {
   try {
-    if (!isValidFilename(filename)) {
+    if (!isValidPath(filename)) {
       throw new Error(`Invalid filename: ${filename}`)
     }
     const vaultPath = getVaultPathOrThrow()
@@ -309,7 +309,7 @@ export async function handleReadFile(filename: string): Promise<string | null> {
  */
 export async function handleWriteFile(filename: string, content: string): Promise<void> {
   try {
-    if (!isValidFilename(filename)) {
+    if (!isValidPath(filename)) {
       throw new Error(`Invalid filename: ${filename}`)
     }
     const vaultPath = getVaultPathOrThrow()
@@ -334,7 +334,7 @@ export async function handleWriteFile(filename: string, content: string): Promis
  */
 export async function handleDeleteFile(filename: string): Promise<void> {
   try {
-    if (!isValidFilename(filename)) {
+    if (!isValidPath(filename)) {
       throw new Error(`Invalid filename: ${filename}`)
     }
     const vaultPath = getVaultPathOrThrow()
@@ -361,7 +361,7 @@ export async function handleDeleteFile(filename: string): Promise<void> {
  */
 export async function handleRenameFile(oldName: string, newName: string): Promise<void> {
   try {
-    if (!isValidFilename(oldName) || !isValidFilename(newName)) {
+    if (!isValidPath(oldName) || !isValidPath(newName)) {
       throw new Error(`Invalid filename`)
     }
     const vaultPath = getVaultPathOrThrow()
@@ -385,7 +385,7 @@ export async function handleRenameFile(oldName: string, newName: string): Promis
  */
 export async function handleReadData(key: string): Promise<any | null> {
   try {
-    if (!isValidFilename(key)) {
+    if (!isValidPath(key)) {
       throw new Error(`Invalid data key: ${key}`)
     }
     const vaultPath = getVaultPathOrThrow()
@@ -413,7 +413,7 @@ export async function handleReadData(key: string): Promise<any | null> {
  */
 export async function handleWriteData(key: string, data: any): Promise<void> {
   try {
-    if (!isValidFilename(key)) {
+    if (!isValidPath(key)) {
       throw new Error(`Invalid data key: ${key}`)
     }
     const vaultPath = getVaultPathOrThrow()

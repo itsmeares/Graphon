@@ -63,7 +63,7 @@ const LocalFilePickerStub = () => null
 // STUB HOOKS
 // =============================================================================
 
-interface SupabaseContextValue {
+interface FirebaseContextValue {
   user: null
   isLoading: boolean
   isConfigured: boolean
@@ -72,7 +72,7 @@ interface SupabaseContextValue {
   signOut: () => Promise<{ error: null }>
 }
 
-const SupabaseContext = createContext<SupabaseContextValue>({
+const FirebaseContext = createContext<FirebaseContextValue>({
   user: null,
   isLoading: false,
   isConfigured: false,
@@ -81,7 +81,7 @@ const SupabaseContext = createContext<SupabaseContextValue>({
   signOut: async () => ({ error: null })
 })
 
-const useSupabaseStub = () => useContext(SupabaseContext)
+const useFirebaseStub = () => useContext(FirebaseContext)
 
 interface WorkspaceContextValue {
   currentWorkspaceId: null
@@ -122,7 +122,7 @@ export const Components = {
 }
 
 export const Hooks = {
-  useSupabase: useSupabaseStub,
+  useFirebase: useFirebaseStub,
   useWorkspace: useWorkspaceStub
 }
 

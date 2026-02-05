@@ -1,7 +1,7 @@
 /**
- * Supabase Database Types for Renderer
+ * Team Database Types for Renderer
  *
- * These types mirror the SupabaseService.ts types for use in React components.
+ * These types mirror the FirebaseService.ts types for use in React components.
  */
 
 // =============================================================================
@@ -61,8 +61,9 @@ export interface Task {
 // AUTH TYPES
 // =============================================================================
 
-export interface SupabaseUser {
-  id: string
+export interface FirebaseUser {
+  id?: string
+  uid: string
   email?: string
   user_metadata?: {
     username?: string
@@ -71,6 +72,6 @@ export interface SupabaseUser {
 }
 
 export interface AuthResult {
-  user: SupabaseUser | null
+  user: FirebaseUser | null
   error: string | null
 }
